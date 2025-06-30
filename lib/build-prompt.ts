@@ -7,7 +7,7 @@ const buildBasePrompt = (
   prompt: string,
   profileContext: string,
   workspaceInstructions: string,
-  assistant: Tables<"assistants"> | null
+  assistant: Tables<"public", "assistants"> | null
 ) => {
   let fullPrompt = ""
 
@@ -32,7 +32,7 @@ const buildBasePrompt = (
 
 export async function buildFinalMessages(
   payload: ChatPayload,
-  profile: Tables<"profiles">,
+  profile: Tables<"public", "profiles">,
   chatImages: MessageImage[]
 ) {
   const {
@@ -73,7 +73,7 @@ export async function buildFinalMessages(
         .map(fileItemId =>
           chatFileItems.find(chatFileItem => chatFileItem.id === fileItemId)
         )
-        .filter(item => item !== undefined) as Tables<"file_items">[]
+        .filter(item => item !== undefined) as Tables<"public", "file_items">[]
 
       const retrievalText = buildRetrievalText(findFileItems)
 
@@ -105,7 +105,7 @@ export async function buildFinalMessages(
     }
   }
 
-  let tempSystemMessage: Tables<"messages"> = {
+  let tempSystemMessage: Tables<"public", "messages"> = {
     chat_id: "",
     assistant_id: null,
     content: BUILT_PROMPT,
@@ -175,7 +175,7 @@ export async function buildFinalMessages(
   return finalMessages
 }
 
-function buildRetrievalText(fileItems: Tables<"file_items">[]) {
+function buildRetrievalText(fileItems: Tables<"public", "file_items">[]) {
   const retrievalText = fileItems
     .map(item => `<BEGIN SOURCE>\n${item.content}\n</END SOURCE>`)
     .join("\n\n")
