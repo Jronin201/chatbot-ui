@@ -9,8 +9,7 @@ export async function ensureDefaultUser() {
 
   const password = process.env.DEFAULT_USER_PASSWORD || "Seraphine"
 
-  const { data, error: listError } =
-    await supabaseAdmin.auth.admin.listUsers()
+  const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers()
 
   if (listError) throw listError
 
