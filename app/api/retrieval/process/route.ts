@@ -31,19 +31,28 @@ const SYSTEM_HEADER = `You are an assistant that can reference an internal knowl
 // ────────────────────────────────────────────────────────────
 //  SINGLETON CLIENTS
 // ────────────────────────────────────────────────────────────
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are missing")
+  }
+  return createClient<Database>(url, key)
+}
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is missing")
+  }
+  return new OpenAI({ apiKey })
+}
 
 // ────────────────────────────────────────────────────────────
 //  HELPERS
 // ────────────────────────────────────────────────────────────
 async function embed(text: string): Promise<number[]> {
+  const openai = getOpenAI()
   const {
     data: [{ embedding }]
   } = await openai.embeddings.create({
@@ -58,6 +67,7 @@ async function fetchMatches(
   queryEmbedding: number[],
   fileIdFilter: string | null = null
 ) {
+  const supabase = getSupabase()
   const { data, error } = await supabase.rpc("match_file_items", {
     query_embedding: queryEmbedding,
     match_threshold: MATCH_THRESHOLD,
@@ -126,6 +136,7 @@ export async function POST(req: NextRequest) {
     const messages = buildMessages(prompt, matches)
 
     // 4⃣  Call ChatCompletion --------------------------------------------------------------
+    const openai = getOpenAI()
     const completion = await openai.chat.completions.create({
       model: COMPLETION_MODEL,
       messages: [...messages],
