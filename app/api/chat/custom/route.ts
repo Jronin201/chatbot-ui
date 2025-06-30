@@ -44,6 +44,8 @@ export async function POST(request: Request) {
       stream: true
     })
 
+    //@ts-expect-error OpenAIStream expects a different generic than the
+    // custom client returns, but the runtime behavior is compatible.
     const stream = OpenAIStream(response)
 
     return new StreamingTextResponse(stream)
