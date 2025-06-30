@@ -1466,6 +1466,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      /**  ←–-----------  ADD THIS BLOCK  ---------------- */
+      match_file_items: {
+        Args: {
+          query_embedding: number[]        // vector(1536)
+          match_threshold: number          // double precision
+          match_count: number              // integer
+          file_id_filter?: string | null   // uuid or text, nullable
+        }
+        Returns: {
+          id: string
+          file_id: string
+          content: string
+          similarity: number
+          source: string
+        }[]
+      }
+      /**  -------------------------------------------- */
       create_duplicate_messages_for_new_chat: {
         Args: {
           old_chat_id: string
@@ -1748,7 +1765,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
