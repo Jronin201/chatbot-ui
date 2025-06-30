@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const { chatSettings, messages, selectedTools } = json as {
     chatSettings: ChatSettings
     messages: any[]
-    selectedTools: Tables<"tools">[]
+    selectedTools: Tables<"tools", never>[]
   }
 
   try {
