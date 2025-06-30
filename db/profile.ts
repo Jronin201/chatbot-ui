@@ -1,15 +1,56 @@
 import { supabase } from "@/lib/supabase/browser-client"
 import { TablesInsert, TablesUpdate } from "@/supabase/types"
 
+const fixedUsername = "Jronin201"
+const fixedDisplayName = "Demerzel"
+
 export const getProfileByUserId = async (userId: string) => {
-  const { data: profile, error } = await supabase
+  // Try to find the fixed profile first
+  let { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("user_id", userId)
+    .eq("username", fixedUsername)
     .single()
 
   if (!profile) {
-    throw new Error(error.message)
+    // Fallback to searching by user_id
+    const { data: profileById } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .single()
+
+    if (profileById) {
+      await supabase
+        .from("profiles")
+        .update({ username: fixedUsername })
+        .eq("id", profileById.id)
+      profile = { ...profileById, username: fixedUsername }
+    } else {
+      const insertPayload: TablesInsert<"profiles"> = {
+        user_id: userId,
+        username: fixedUsername,
+        display_name: fixedDisplayName,
+        bio: "",
+        image_url: "",
+        image_path: "",
+        profile_context: "",
+        use_azure_openai: false,
+        has_onboarded: false
+      }
+
+      const { data: created, error } = await supabase
+        .from("profiles")
+        .insert(insertPayload)
+        .select("*")
+        .single()
+
+      if (!created) {
+        throw new Error(error?.message || "Unable to create profile")
+      }
+
+      profile = created
+    }
   }
 
   return profile

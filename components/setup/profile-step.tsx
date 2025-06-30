@@ -21,6 +21,7 @@ interface ProfileStepProps {
   onUsernameAvailableChange: (isAvailable: boolean) => void
   onUsernameChange: (username: string) => void
   onDisplayNameChange: (name: string) => void
+  hideUsername?: boolean
 }
 
 export const ProfileStep: FC<ProfileStepProps> = ({
@@ -29,7 +30,8 @@ export const ProfileStep: FC<ProfileStepProps> = ({
   displayName,
   onUsernameAvailableChange,
   onUsernameChange,
-  onDisplayNameChange
+  onDisplayNameChange,
+  hideUsername = false
 }) => {
   const [loading, setLoading] = useState(false)
 
@@ -86,6 +88,26 @@ export const ProfileStep: FC<ProfileStepProps> = ({
     }, 500),
     []
   )
+
+  if (hideUsername) {
+    return (
+      <div className="space-y-1">
+        <Label>Chat Display Name</Label>
+
+        <Input
+          placeholder="Your Name"
+          value={displayName}
+          onChange={e => onDisplayNameChange(e.target.value)}
+          maxLength={PROFILE_DISPLAY_NAME_MAX}
+        />
+
+        <LimitDisplay
+          used={displayName.length}
+          limit={PROFILE_DISPLAY_NAME_MAX}
+        />
+      </div>
+    )
+  }
 
   return (
     <>
