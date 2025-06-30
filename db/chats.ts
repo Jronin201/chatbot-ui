@@ -25,7 +25,7 @@ export const getChatsByWorkspaceId = async (workspaceId: string) => {
   return chats
 }
 
-export const createChat = async (chat: TablesInsert<"chats">) => {
+export const createChat = async (chat: TablesInsert<"public", "chats">) => {
   const { data: createdChat, error } = await supabase
     .from("chats")
     .insert([chat])
@@ -39,7 +39,7 @@ export const createChat = async (chat: TablesInsert<"chats">) => {
   return createdChat
 }
 
-export const createChats = async (chats: TablesInsert<"chats">[]) => {
+export const createChats = async (chats: TablesInsert<"public", "chats">[]) => {
   const { data: createdChats, error } = await supabase
     .from("chats")
     .insert(chats)
@@ -54,7 +54,7 @@ export const createChats = async (chats: TablesInsert<"chats">[]) => {
 
 export const updateChat = async (
   chatId: string,
-  chat: TablesUpdate<"chats">
+  chat: TablesUpdate<"public", "chats">
 ) => {
   const { data: updatedChat, error } = await supabase
     .from("chats")

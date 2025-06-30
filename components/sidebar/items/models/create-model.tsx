@@ -40,7 +40,7 @@ export const CreateModel: FC<CreateModelProps> = ({ isOpen, onOpenChange }) => {
           context_length: contextLength,
           model_id: modelId,
           name
-        } as TablesInsert<"models">
+        } as TablesInsert<"public", "models">
       }
       renderInputs={() => (
         <>

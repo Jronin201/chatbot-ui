@@ -22,7 +22,7 @@ export const getAssistantFilesByAssistantId = async (assistantId: string) => {
 }
 
 export const createAssistantFile = async (
-  assistantFile: TablesInsert<"assistant_files">
+  assistantFile: TablesInsert<"public", "assistant_files">
 ) => {
   const { data: createdAssistantFile, error } = await supabase
     .from("assistant_files")
@@ -37,7 +37,7 @@ export const createAssistantFile = async (
 }
 
 export const createAssistantFiles = async (
-  assistantFiles: TablesInsert<"assistant_files">[]
+  assistantFiles: TablesInsert<"public", "assistant_files">[]
 ) => {
   const { data: createdAssistantFiles, error } = await supabase
     .from("assistant_files")

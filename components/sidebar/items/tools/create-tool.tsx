@@ -37,7 +37,7 @@ export const CreateTool: FC<CreateToolProps> = ({ isOpen, onOpenChange }) => {
           url,
           custom_headers: customHeaders,
           schema
-        } as TablesInsert<"tools">
+        } as TablesInsert<"public", "tools">
       }
       isOpen={isOpen}
       isTyping={isTyping}

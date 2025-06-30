@@ -3,7 +3,9 @@ import { LLM, LLMID, OpenRouterLLM } from "@/types"
 import { toast } from "sonner"
 import { LLM_LIST_MAP } from "./llm/llm-list"
 
-export const fetchHostedModels = async (profile: Tables<"public", "profiles">) => {
+export const fetchHostedModels = async (
+  profile: Tables<"public", "profiles">
+) => {
   try {
     const providers = ["google", "anthropic", "mistral", "groq", "perplexity"]
 

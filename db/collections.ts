@@ -60,7 +60,7 @@ export const getCollectionWorkspacesByCollectionId = async (
 }
 
 export const createCollection = async (
-  collection: TablesInsert<"collections">,
+  collection: TablesInsert<"public", "collections">,
   workspace_id: string
 ) => {
   const { data: createdCollection, error } = await supabase
@@ -83,7 +83,7 @@ export const createCollection = async (
 }
 
 export const createCollections = async (
-  collections: TablesInsert<"collections">[],
+  collections: TablesInsert<"public", "collections">[],
   workspace_id: string
 ) => {
   const { data: createdCollections, error } = await supabase
@@ -139,7 +139,7 @@ export const createCollectionWorkspaces = async (
 
 export const updateCollection = async (
   collectionId: string,
-  collection: TablesUpdate<"collections">
+  collection: TablesUpdate<"public", "collections">
 ) => {
   const { data: updatedCollection, error } = await supabase
     .from("collections")

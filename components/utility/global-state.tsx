@@ -36,11 +36,17 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
   const router = useRouter()
 
   // PROFILE STORE
-  const [profile, setProfile] = useState<Tables<"public", "profiles"> | null>(null)
+  const [profile, setProfile] = useState<Tables<"public", "profiles"> | null>(
+    null
+  )
 
   // ITEMS STORE
-  const [assistants, setAssistants] = useState<Tables<"public", "assistants">[]>([])
-  const [collections, setCollections] = useState<Tables<"public", "collections">[]>([])
+  const [assistants, setAssistants] = useState<
+    Tables<"public", "assistants">[]
+  >([])
+  const [collections, setCollections] = useState<
+    Tables<"public", "collections">[]
+  >([])
   const [chats, setChats] = useState<Tables<"public", "chats">[]>([])
   const [files, setFiles] = useState<Tables<"public", "files">[]>([])
   const [folders, setFolders] = useState<Tables<"public", "folders">[]>([])
@@ -48,7 +54,9 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
   const [presets, setPresets] = useState<Tables<"public", "presets">[]>([])
   const [prompts, setPrompts] = useState<Tables<"public", "prompts">[]>([])
   const [tools, setTools] = useState<Tables<"public", "tools">[]>([])
-  const [workspaces, setWorkspaces] = useState<Tables<"public", "workspaces">[]>([])
+  const [workspaces, setWorkspaces] = useState<
+    Tables<"public", "workspaces">[]
+  >([])
 
   // MODELS STORE
   const [envKeyMap, setEnvKeyMap] = useState<Record<string, VALID_ENV_KEYS>>({})
@@ -59,17 +67,23 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
   >([])
 
   // WORKSPACE STORE
-  const [selectedWorkspace, setSelectedWorkspace] =
-    useState<Tables<"public", "workspaces"> | null>(null)
+  const [selectedWorkspace, setSelectedWorkspace] = useState<Tables<
+    "public",
+    "workspaces"
+  > | null>(null)
   const [workspaceImages, setWorkspaceImages] = useState<WorkspaceImage[]>([])
 
   // PRESET STORE
-  const [selectedPreset, setSelectedPreset] =
-    useState<Tables<"public", "presets"> | null>(null)
+  const [selectedPreset, setSelectedPreset] = useState<Tables<
+    "public",
+    "presets"
+  > | null>(null)
 
   // ASSISTANT STORE
-  const [selectedAssistant, setSelectedAssistant] =
-    useState<Tables<"public", "assistants"> | null>(null)
+  const [selectedAssistant, setSelectedAssistant] = useState<Tables<
+    "public",
+    "assistants"
+  > | null>(null)
   const [assistantImages, setAssistantImages] = useState<AssistantImage[]>([])
   const [openaiAssistants, setOpenaiAssistants] = useState<any[]>([])
 
@@ -85,8 +99,13 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
     includeWorkspaceInstructions: true,
     embeddingsProvider: "openai"
   })
-  const [selectedChat, setSelectedChat] = useState<Tables<"public", "chats"> | null>(null)
-  const [chatFileItems, setChatFileItems] = useState<Tables<"public", "file_items">[]>([])
+  const [selectedChat, setSelectedChat] = useState<Tables<
+    "public",
+    "chats"
+  > | null>(null)
+  const [chatFileItems, setChatFileItems] = useState<
+    Tables<"public", "file_items">[]
+  >([])
 
   // ACTIVE CHAT STORE
   const [isGenerating, setIsGenerating] = useState<boolean>(false)
@@ -120,7 +139,9 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
   const [sourceCount, setSourceCount] = useState<number>(4)
 
   // TOOL STORE
-  const [selectedTools, setSelectedTools] = useState<Tables<"public", "tools">[]>([])
+  const [selectedTools, setSelectedTools] = useState<
+    Tables<"public", "tools">[]
+  >([])
   const [toolInUse, setToolInUse] = useState<string>("none")
 
   useEffect(() => {

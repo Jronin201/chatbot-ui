@@ -21,7 +21,9 @@ export const getChatFilesByChatId = async (chatId: string) => {
   return chatFiles
 }
 
-export const createChatFile = async (chatFile: TablesInsert<"chat_files">) => {
+export const createChatFile = async (
+  chatFile: TablesInsert<"public", "chat_files">
+) => {
   const { data: createdChatFile, error } = await supabase
     .from("chat_files")
     .insert(chatFile)
@@ -35,7 +37,7 @@ export const createChatFile = async (chatFile: TablesInsert<"chat_files">) => {
 }
 
 export const createChatFiles = async (
-  chatFiles: TablesInsert<"chat_files">[]
+  chatFiles: TablesInsert<"public", "chat_files">[]
 ) => {
   const { data: createdChatFiles, error } = await supabase
     .from("chat_files")

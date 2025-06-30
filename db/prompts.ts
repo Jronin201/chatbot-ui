@@ -56,7 +56,7 @@ export const getPromptWorkspacesByPromptId = async (promptId: string) => {
 }
 
 export const createPrompt = async (
-  prompt: TablesInsert<"prompts">,
+  prompt: TablesInsert<"public", "prompts">,
   workspace_id: string
 ) => {
   const { data: createdPrompt, error } = await supabase
@@ -79,7 +79,7 @@ export const createPrompt = async (
 }
 
 export const createPrompts = async (
-  prompts: TablesInsert<"prompts">[],
+  prompts: TablesInsert<"public", "prompts">[],
   workspace_id: string
 ) => {
   const { data: createdPrompts, error } = await supabase
@@ -135,7 +135,7 @@ export const createPromptWorkspaces = async (
 
 export const updatePrompt = async (
   promptId: string,
-  prompt: TablesUpdate<"prompts">
+  prompt: TablesUpdate<"public", "prompts">
 ) => {
   const { data: updatedPrompt, error } = await supabase
     .from("prompts")

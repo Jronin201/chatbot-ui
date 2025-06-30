@@ -48,7 +48,7 @@ export const CreateFile: FC<CreateFileProps> = ({ isOpen, onOpenChange }) => {
           size: selectedFile?.size || 0,
           tokens: 0,
           type: selectedFile?.type || 0
-        } as TablesInsert<"files">
+        } as TablesInsert<"public", "files">
       }
       isOpen={isOpen}
       isTyping={isTyping}

@@ -56,7 +56,7 @@ export const getToolWorkspacesByToolId = async (toolId: string) => {
 }
 
 export const createTool = async (
-  tool: TablesInsert<"tools">,
+  tool: TablesInsert<"public", "tools">,
   workspace_id: string
 ) => {
   const { data: createdTool, error } = await supabase
@@ -79,7 +79,7 @@ export const createTool = async (
 }
 
 export const createTools = async (
-  tools: TablesInsert<"tools">[],
+  tools: TablesInsert<"public", "tools">[],
   workspace_id: string
 ) => {
   const { data: createdTools, error } = await supabase
@@ -135,7 +135,7 @@ export const createToolWorkspaces = async (
 
 export const updateTool = async (
   toolId: string,
-  tool: TablesUpdate<"tools">
+  tool: TablesUpdate<"public", "tools">
 ) => {
   const { data: updatedTool, error } = await supabase
     .from("tools")

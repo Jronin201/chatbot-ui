@@ -56,7 +56,7 @@ export const getPresetWorkspacesByPresetId = async (presetId: string) => {
 }
 
 export const createPreset = async (
-  preset: TablesInsert<"presets">,
+  preset: TablesInsert<"public", "presets">,
   workspace_id: string
 ) => {
   const { data: createdPreset, error } = await supabase
@@ -79,7 +79,7 @@ export const createPreset = async (
 }
 
 export const createPresets = async (
-  presets: TablesInsert<"presets">[],
+  presets: TablesInsert<"public", "presets">[],
   workspace_id: string
 ) => {
   const { data: createdPresets, error } = await supabase
@@ -135,7 +135,7 @@ export const createPresetWorkspaces = async (
 
 export const updatePreset = async (
   presetId: string,
-  preset: TablesUpdate<"presets">
+  preset: TablesUpdate<"public", "presets">
 ) => {
   const { data: updatedPreset, error } = await supabase
     .from("presets")

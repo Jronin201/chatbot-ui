@@ -7,7 +7,7 @@ import { DeleteFolder } from "./delete-folder"
 import { UpdateFolder } from "./update-folder"
 
 interface FolderProps {
-  folder: Tables<"folders">
+  folder: Tables<"public", "folders">
   contentType: ContentType
   children: React.ReactNode
   onUpdateFolder: (itemId: string, folderId: string | null) => void

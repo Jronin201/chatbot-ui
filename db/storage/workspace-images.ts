@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase/browser-client"
 import { Tables } from "@/supabase/types"
 
 export const uploadWorkspaceImage = async (
-  workspace: Tables<"workspaces">,
+  workspace: Tables<"public", "workspaces">,
   image: File
 ) => {
   const bucket = "workspace_images"

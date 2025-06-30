@@ -15,12 +15,12 @@ export interface ChatPayload {
   chatSettings: ChatSettings
   workspaceInstructions: string
   chatMessages: ChatMessage[]
-  assistant: Tables<"assistants"> | null
-  messageFileItems: Tables<"file_items">[]
-  chatFileItems: Tables<"file_items">[]
+  assistant: Tables<"public", "assistants"> | null
+  messageFileItems: Tables<"public", "file_items">[]
+  chatFileItems: Tables<"public", "file_items">[]
 }
 
 export interface ChatAPIPayload {
   chatSettings: ChatSettings
-  messages: Tables<"messages">[]
+  messages: Tables<"public", "messages">[]
 }

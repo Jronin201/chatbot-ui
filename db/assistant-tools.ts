@@ -22,7 +22,7 @@ export const getAssistantToolsByAssistantId = async (assistantId: string) => {
 }
 
 export const createAssistantTool = async (
-  assistantTool: TablesInsert<"assistant_tools">
+  assistantTool: TablesInsert<"public", "assistant_tools">
 ) => {
   const { data: createdAssistantTool, error } = await supabase
     .from("assistant_tools")
@@ -37,7 +37,7 @@ export const createAssistantTool = async (
 }
 
 export const createAssistantTools = async (
-  assistantTools: TablesInsert<"assistant_tools">[]
+  assistantTools: TablesInsert<"public", "assistant_tools">[]
 ) => {
   const { data: createdAssistantTools, error } = await supabase
     .from("assistant_tools")

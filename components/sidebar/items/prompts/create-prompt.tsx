@@ -35,7 +35,7 @@ export const CreatePrompt: FC<CreatePromptProps> = ({
           user_id: profile.user_id,
           name,
           content
-        } as TablesInsert<"prompts">
+        } as TablesInsert<"public", "prompts">
       }
       renderInputs={() => (
         <>

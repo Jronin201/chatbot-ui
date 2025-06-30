@@ -60,7 +60,7 @@ export const getFileWorkspacesByFileId = async (fileId: string) => {
 
 export const createFileBasedOnExtension = async (
   file: File,
-  fileRecord: TablesInsert<"files">,
+  fileRecord: TablesInsert<"public", "files">,
   workspace_id: string,
   embeddingsProvider: "openai" | "local"
 ) => {
@@ -87,7 +87,7 @@ export const createFileBasedOnExtension = async (
 // For non-docx files
 export const createFile = async (
   file: File,
-  fileRecord: TablesInsert<"files">,
+  fileRecord: TablesInsert<"public", "files">,
   workspace_id: string,
   embeddingsProvider: "openai" | "local"
 ) => {
@@ -160,7 +160,7 @@ export const createFile = async (
 export const createDocXFile = async (
   text: string,
   file: File,
-  fileRecord: TablesInsert<"files">,
+  fileRecord: TablesInsert<"public", "files">,
   workspace_id: string,
   embeddingsProvider: "openai" | "local"
 ) => {
@@ -221,7 +221,7 @@ export const createDocXFile = async (
 }
 
 export const createFiles = async (
-  files: TablesInsert<"files">[],
+  files: TablesInsert<"public", "files">[],
   workspace_id: string
 ) => {
   const { data: createdFiles, error } = await supabase
@@ -277,7 +277,7 @@ export const createFileWorkspaces = async (
 
 export const updateFile = async (
   fileId: string,
-  file: TablesUpdate<"files">
+  file: TablesUpdate<"public", "files">
 ) => {
   const { data: updatedFile, error } = await supabase
     .from("files")

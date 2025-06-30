@@ -121,7 +121,7 @@ export default function SetupPage() {
     const user = session.user
     const profile = await getProfileByUserId(user.id)
 
-    const updateProfilePayload: TablesUpdate<"profiles"> = {
+    const updateProfilePayload: TablesUpdate<"public", "profiles"> = {
       ...profile,
       has_onboarded: true,
       display_name: displayName,

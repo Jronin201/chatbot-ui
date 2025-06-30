@@ -27,7 +27,7 @@ export const getProfileByUserId = async (userId: string) => {
         .eq("id", profileById.id)
       profile = { ...profileById, username: fixedUsername }
     } else {
-      const insertPayload: TablesInsert<"profiles"> = {
+      const insertPayload: TablesInsert<"public", "profiles"> = {
         user_id: userId,
         username: fixedUsername,
         display_name: fixedDisplayName,
@@ -69,7 +69,9 @@ export const getProfilesByUserId = async (userId: string) => {
   return profiles
 }
 
-export const createProfile = async (profile: TablesInsert<"profiles">) => {
+export const createProfile = async (
+  profile: TablesInsert<"public", "profiles">
+) => {
   const { data: createdProfile, error } = await supabase
     .from("profiles")
     .insert([profile])
@@ -85,7 +87,7 @@ export const createProfile = async (profile: TablesInsert<"profiles">) => {
 
 export const updateProfile = async (
   profileId: string,
-  profile: TablesUpdate<"profiles">
+  profile: TablesUpdate<"public", "profiles">
 ) => {
   const { data: updatedProfile, error } = await supabase
     .from("profiles")

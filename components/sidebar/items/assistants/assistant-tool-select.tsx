@@ -15,8 +15,8 @@ import {
 import { FC, useContext, useEffect, useRef, useState } from "react"
 
 interface AssistantToolSelectProps {
-  selectedAssistantTools: Tables<"tools">[]
-  onAssistantToolsSelect: (tool: Tables<"tools">) => void
+  selectedAssistantTools: Tables<"public", "tools">[]
+  onAssistantToolsSelect: (tool: Tables<"public", "tools">) => void
 }
 
 export const AssistantToolSelect: FC<AssistantToolSelectProps> = ({
@@ -39,7 +39,7 @@ export const AssistantToolSelect: FC<AssistantToolSelectProps> = ({
     }
   }, [isOpen])
 
-  const handleToolSelect = (tool: Tables<"tools">) => {
+  const handleToolSelect = (tool: Tables<"public", "tools">) => {
     onAssistantToolsSelect(tool)
   }
 
@@ -126,9 +126,9 @@ export const AssistantToolSelect: FC<AssistantToolSelectProps> = ({
 }
 
 interface AssistantToolItemProps {
-  tool: Tables<"tools">
+  tool: Tables<"public", "tools">
   selected: boolean
-  onSelect: (tool: Tables<"tools">) => void
+  onSelect: (tool: Tables<"public", "tools">) => void
 }
 
 const AssistantToolItem: FC<AssistantToolItemProps> = ({

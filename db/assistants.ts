@@ -65,7 +65,7 @@ export const getAssistantWorkspacesByAssistantId = async (
 }
 
 export const createAssistant = async (
-  assistant: TablesInsert<"assistants">,
+  assistant: TablesInsert<"public", "assistants">,
   workspace_id: string
 ) => {
   const { data: createdAssistant, error } = await supabase
@@ -88,7 +88,7 @@ export const createAssistant = async (
 }
 
 export const createAssistants = async (
-  assistants: TablesInsert<"assistants">[],
+  assistants: TablesInsert<"public", "assistants">[],
   workspace_id: string
 ) => {
   const { data: createdAssistants, error } = await supabase
@@ -144,7 +144,7 @@ export const createAssistantWorkspaces = async (
 
 export const updateAssistant = async (
   assistantId: string,
-  assistant: TablesUpdate<"assistants">
+  assistant: TablesUpdate<"public", "assistants">
 ) => {
   const { data: updatedAssistant, error } = await supabase
     .from("assistants")
