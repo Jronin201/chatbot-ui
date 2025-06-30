@@ -32,6 +32,8 @@ export async function POST(request: Request) {
       stream: true
     })
 
+    //@ts-expect-error OpenRouter client returns `ChatCompletionChunk` which
+    // does not align with the generic expected by `OpenAIStream`.
     const stream = OpenAIStream(response)
 
     return new StreamingTextResponse(stream)

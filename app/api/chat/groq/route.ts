@@ -32,6 +32,8 @@ export async function POST(request: Request) {
     })
 
     // Convert the response into a friendly text-stream.
+    //@ts-expect-error Groq client returns `ChatCompletionChunk` which
+    // doesn't match the generic expected by `OpenAIStream`.
     const stream = OpenAIStream(response)
 
     // Respond with the stream

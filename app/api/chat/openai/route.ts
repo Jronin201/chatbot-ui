@@ -36,6 +36,8 @@ export async function POST(request: Request) {
       stream: true
     })
 
+    //@ts-expect-error OpenAI SDK returns `ChatCompletionChunk` which differs
+    // from the generic expected by `OpenAIStream`.
     const stream = OpenAIStream(response)
 
     return new StreamingTextResponse(stream)

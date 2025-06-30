@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     })
 
     // Convert the response into a friendly text-stream.
+    //@ts-expect-error Mistral client returns `ChatCompletionChunk` which
+    // does not match the generic expected by `OpenAIStream`.
     const stream = OpenAIStream(response)
 
     // Respond with the stream
