@@ -3,6 +3,9 @@ import { VALID_ENV_KEYS } from "@/types/valid-keys"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
+const fixedUsername = "Jronin201"
+const fixedDisplayName = "Demerzel"
+
 export async function getServerProfile() {
   const cookieStore = cookies()
   const supabase = createServerClient<Database>(
@@ -22,14 +25,47 @@ export async function getServerProfile() {
     throw new Error("User not found")
   }
 
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("username", fixedUsername)
     .single()
 
   if (!profile) {
-    throw new Error("Profile not found")
+    const { data: profileById } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single()
+
+    if (profileById) {
+      await supabase
+        .from("profiles")
+        .update({ username: fixedUsername })
+        .eq("id", profileById.id)
+      profile = { ...profileById, username: fixedUsername }
+    } else {
+      const insertPayload = {
+        user_id: user.id,
+        username: fixedUsername,
+        display_name: fixedDisplayName,
+        bio: "",
+        image_url: "",
+        image_path: "",
+        profile_context: "",
+        use_azure_openai: false,
+        has_onboarded: false
+      }
+      const { data: created, error } = await supabase
+        .from("profiles")
+        .insert(insertPayload)
+        .select("*")
+        .single()
+      if (!created) {
+        throw new Error(error?.message || "Profile not created")
+      }
+      profile = created
+    }
   }
 
   const profileWithKeys = addApiKeysToProfile(profile)

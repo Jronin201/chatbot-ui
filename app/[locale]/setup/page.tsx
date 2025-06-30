@@ -22,6 +22,9 @@ import {
   StepContainer
 } from "../../../components/setup/step-container"
 
+const fixedUsername = "Jronin201"
+const fixedDisplayName = "Demerzel"
+
 export default function SetupPage() {
   const {
     profile,
@@ -40,9 +43,7 @@ export default function SetupPage() {
   const [currentStep, setCurrentStep] = useState(1)
 
   // Profile Step
-  const [displayName, setDisplayName] = useState("")
-  const [username, setUsername] = useState(profile?.username || "")
-  const [usernameAvailable, setUsernameAvailable] = useState(true)
+  const [displayName, setDisplayName] = useState(fixedDisplayName)
 
   // API Step
   const [useAzureOpenai, setUseAzureOpenai] = useState(false)
@@ -72,7 +73,7 @@ export default function SetupPage() {
 
         const profile = await getProfileByUserId(user.id)
         setProfile(profile)
-        setUsername(profile.username)
+        setDisplayName(profile.display_name || fixedDisplayName)
 
         if (!profile.has_onboarded) {
           setLoading(false)
@@ -124,7 +125,7 @@ export default function SetupPage() {
       ...profile,
       has_onboarded: true,
       display_name: displayName,
-      username,
+      username: fixedUsername,
       openai_api_key: openaiAPIKey,
       openai_organization_id: openaiOrgID,
       anthropic_api_key: anthropicAPIKey,
@@ -165,16 +166,17 @@ export default function SetupPage() {
             stepNum={currentStep}
             stepTitle="Welcome to Chatbot UI"
             onShouldProceed={handleShouldProceed}
-            showNextButton={!!(username && usernameAvailable)}
+            showNextButton={true}
             showBackButton={false}
           >
             <ProfileStep
-              username={username}
-              usernameAvailable={usernameAvailable}
+              username={fixedUsername}
+              usernameAvailable={true}
               displayName={displayName}
-              onUsernameAvailableChange={setUsernameAvailable}
-              onUsernameChange={setUsername}
+              onUsernameAvailableChange={() => {}}
+              onUsernameChange={() => {}}
               onDisplayNameChange={setDisplayName}
+              hideUsername
             />
           </StepContainer>
         )
