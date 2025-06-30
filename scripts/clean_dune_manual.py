@@ -1,29 +1,35 @@
 import re
 import os
+import textwrap
+import unicodedata
+from pathlib import Path
 
-INPUT_PATH = "documents/dune/dune-manual.txt"
-OUTPUT_PATH = "documents/dune/dune-manual-cleaned.txt"
+INPUT_PATH = Path("documents/dune/dune-manual.txt")
+OUTPUT_PATH = Path("documents/dune/dune-manual-cleaned.txt")
 
-# Read the original file
-with open(INPUT_PATH, "r", encoding="utf-8") as f:
-    text = f.read()
+raw = INPUT_PATH.read_text(encoding="utf-8", errors="ignore")
 
-# Step 1: Normalize & Clean
-text = re.sub(r"\x0c", " ", text)  # form feed
-text = re.sub(r"—+", "-", text)    # em-dashes
-text = re.sub(r"[■•●]+", "", text)
-text = re.sub(r"\n\s*\n", "\n\n", text)  # normalize blank lines
-text = re.sub(r"\n(?=\w)", " ", text)    # fix line breaks inside paragraphs
+# 1️⃣ Unicode normalise and strip weird control chars
+text = unicodedata.normalize("NFKC", raw)
+text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]",
+              " ", text)   # low-ASCII controls
 
-# Step 2: Remove isolated numbers (page #s)
-text = re.sub(r"\n?\s*\d{1,3}\s*\n?", "\n", text)
+# 2️⃣ Remove headers / footers that repeat on every page
+text = re.sub(r"\bD U N E\s*\|\s*A D V E N T U R E S.*?\n",
+              "", text, flags=re.I)
+text = re.sub(r"\b\d{1,3}\s*$", "", text,
+              flags=re.M)        # lone page numbers
 
-# Step 3: Collapse repeated whitespace
-text = re.sub(r"\s{2,}", " ", text)
+# 3️⃣ Collapse hyphenated line-breaks (improves wrapping)
+text = re.sub(r"-\n([a-z])", r"\1", text, flags=re.I)
 
-# Step 4: Save the cleaned version
-os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-    f.write(text)
+# 4️⃣ Separate paragraphs cleanly
+# 3+ → double break
+text = re.sub(r"\n{3,}", "\n\n", text)
+text = re.sub(r"[ \t]+", " ", text)                          # collapse spaces
+text = textwrap.dedent(text).strip()
 
-print(f"✔ Cleaned text written to {OUTPUT_PATH}")
+OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+OUTPUT_PATH.write_text(text, encoding="utf-8")
+
+print(f"✔  Cleaned text written to {OUTPUT_PATH.resolve()}")
