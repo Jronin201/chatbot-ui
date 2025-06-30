@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/ui/submit-button"
 import { createClient } from "@/lib/supabase/server"
 import { Database } from "@/supabase/types"
 import { createServerClient } from "@supabase/ssr"
+import { ensureDefaultUser } from "@/lib/server/ensure-default-user"
 import { get } from "@vercel/edge-config"
 import { Metadata } from "next"
 import { cookies } from "next/headers"
@@ -50,6 +51,8 @@ export default async function Login({
 
   const signIn = async (formData: FormData) => {
     "use server"
+
+    await ensureDefaultUser()
 
     const password = formData.get("password") as string
     const cookieStore = cookies()
