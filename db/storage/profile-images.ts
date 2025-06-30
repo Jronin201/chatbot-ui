@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase/browser-client"
 import { Tables } from "@/supabase/types"
 
 export const uploadProfileImage = async (
-  profile: Tables<"profiles">,
+  profile: Tables<"public", "profiles">,
   image: File
 ) => {
   const bucket = "profile_images"

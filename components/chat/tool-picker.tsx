@@ -33,7 +33,7 @@ export const ToolPicker: FC<ToolPickerProps> = ({}) => {
     setIsToolPickerOpen(isOpen)
   }
 
-  const callSelectTool = (tool: Tables<"tools">) => {
+  const callSelectTool = (tool: Tables<"public", "tools">) => {
     handleSelectTool(tool)
     handleOpenChange(false)
   }
@@ -87,7 +87,7 @@ export const ToolPicker: FC<ToolPickerProps> = ({}) => {
                   }}
                   tabIndex={0}
                   className="hover:bg-accent focus:bg-accent flex cursor-pointer items-center rounded p-2 focus:outline-none"
-                  onClick={() => callSelectTool(item as Tables<"tools">)}
+                  onClick={() => callSelectTool(item as Tables<"public", "tools">)}
                   onKeyDown={getKeyDownHandler(index)}
                 >
                   <IconBolt size={32} />

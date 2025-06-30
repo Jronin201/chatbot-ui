@@ -39,7 +39,7 @@ export const SidebarItem: FC<SidebarItemProps> = ({
     prompts: async (item: any) => {},
     files: async (item: any) => {},
     collections: async (item: any) => {},
-    assistants: async (assistant: Tables<"assistants">) => {
+    assistants: async (assistant: Tables<"public", "assistants">) => {
       if (!selectedWorkspace) return
 
       const createdChat = await createChat({

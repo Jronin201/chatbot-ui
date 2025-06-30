@@ -7,7 +7,7 @@ import { FC, useState } from "react"
 import { SidebarItem } from "../all/sidebar-display-item"
 
 interface ModelItemProps {
-  model: Tables<"models">
+  model: Tables<"public", "models">
 }
 
 export const ModelItem: FC<ModelItemProps> = ({ model }) => {
@@ -34,7 +34,7 @@ export const ModelItem: FC<ModelItemProps> = ({ model }) => {
           context_length: contextLength,
           model_id: modelId,
           name
-        } as TablesUpdate<"models">
+        } as TablesUpdate<"public", "models">
       }
       renderInputs={() => (
         <>

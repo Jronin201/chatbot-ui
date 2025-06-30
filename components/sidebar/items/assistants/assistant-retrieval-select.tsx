@@ -16,9 +16,9 @@ import { FileIcon } from "lucide-react"
 import { FC, useContext, useEffect, useRef, useState } from "react"
 
 interface AssistantRetrievalSelectProps {
-  selectedAssistantRetrievalItems: Tables<"files">[] | Tables<"collections">[]
+  selectedAssistantRetrievalItems: Tables<"public", "files">[] | Tables<"public", "collections">[]
   onAssistantRetrievalItemsSelect: (
-    item: Tables<"files"> | Tables<"collections">
+    item: Tables<"public", "files"> | Tables<"public", "collections">
   ) => void
 }
 
@@ -42,7 +42,7 @@ export const AssistantRetrievalSelect: FC<AssistantRetrievalSelectProps> = ({
     }
   }, [isOpen])
 
-  const handleItemSelect = (item: Tables<"files"> | Tables<"collections">) => {
+  const handleItemSelect = (item: Tables<"public", "files"> | Tables<"public", "collections">) => {
     onAssistantRetrievalItemsSelect(item)
   }
 
@@ -98,7 +98,7 @@ export const AssistantRetrievalSelect: FC<AssistantRetrievalSelectProps> = ({
               contentType={
                 item.hasOwnProperty("type") ? "files" : "collections"
               }
-              item={item as Tables<"files"> | Tables<"collections">}
+              item={item as Tables<"public", "files"> | Tables<"public", "collections">}
               selected={selectedAssistantRetrievalItems.some(
                 selectedAssistantRetrieval =>
                   selectedAssistantRetrieval.id === item.id
@@ -155,9 +155,9 @@ export const AssistantRetrievalSelect: FC<AssistantRetrievalSelectProps> = ({
 
 interface AssistantRetrievalOptionItemProps {
   contentType: "files" | "collections"
-  item: Tables<"files"> | Tables<"collections">
+  item: Tables<"public", "files"> | Tables<"public", "collections">
   selected: boolean
-  onSelect: (item: Tables<"files"> | Tables<"collections">) => void
+  onSelect: (item: Tables<"public", "files"> | Tables<"public", "collections">) => void
 }
 
 const AssistantRetrievalItemOption: FC<AssistantRetrievalOptionItemProps> = ({
@@ -178,7 +178,7 @@ const AssistantRetrievalItemOption: FC<AssistantRetrievalOptionItemProps> = ({
       <div className="flex grow items-center truncate">
         {contentType === "files" ? (
           <div className="mr-2 min-w-[24px]">
-            <FileIcon type={(item as Tables<"files">).type} size={24} />
+            <FileIcon type={(item as Tables<"public", "files">).type} size={24} />
           </div>
         ) : (
           <div className="mr-2 min-w-[24px]">

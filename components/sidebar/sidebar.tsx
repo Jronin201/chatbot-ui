@@ -42,7 +42,7 @@ export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
   const renderSidebarContent = (
     contentType: ContentType,
     data: any[],
-    folders: Tables<"folders">[]
+    folders: Tables<"public", "folders">[]
   ) => {
     return (
       <SidebarContent contentType={contentType} data={data} folders={folders} />
