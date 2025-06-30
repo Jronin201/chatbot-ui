@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     let embeddings: any = []
 
     if (embeddingsProvider === "openai") {
-      checkApiKey(process.env.OPENAI_API_KEY, "OpenAI")
+      checkApiKey(process.env.OPENAI_API_KEY ?? null, "OpenAI")
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY!
       })
