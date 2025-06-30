@@ -81,10 +81,10 @@ export async function POST(req: Request) {
     const { error: insertError } = await supabase.from("files").insert({
       id: file_id,
       name: filename,
-      user_id: "", // Use empty string or a valid user id
+      user_id: null, // Use empty string or a valid user id
       file_path: filepath,
       tokens: chunks.reduce((t, c) => t + c.tokens, 0),
-      description: "", // Provide a default or actual description
+      description: null, // Provide a default or actual description
       size: fileBuffer.length, // Use the file buffer length as size in bytes
       type: ext ?? "unknown" // Use the file extension as type
     })
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     // ------------ 6. Upsert into `file_items` ---------------------------------
     const file_items = chunks.map((chunk, i) => ({
       file_id,
-      user_id: "", // Use an empty string or a valid user id if available
+      user_id: null, // Use an empty string or a valid user id if available
       content: chunk.content,
       tokens: chunk.tokens,
       openai_embedding:
