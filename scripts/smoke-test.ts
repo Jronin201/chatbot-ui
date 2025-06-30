@@ -4,9 +4,11 @@
    5 most-similar chunks from Supabase via match_file_items().
    ----------------------------------------------------------- */
 
-   import "dotenv/config";                      // loads .env.local at runtime
-   import { createClient } from "@supabase/supabase-js";
-   import OpenAI from "openai";
+// scripts/smoke-test.ts
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });       // <-- add this line
+import { createClient } from "@supabase/supabase-js";
+import OpenAI from "openai";
    
    // ---------- helper: generate an embedding for a query ----------
    async function getEmbedding(text: string): Promise<number[]> {
