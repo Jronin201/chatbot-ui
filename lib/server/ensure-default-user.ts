@@ -9,8 +9,30 @@ export async function ensureDefaultUser() {
 
   const password = process.env.DEFAULT_USER_PASSWORD || "Seraphine"
 
-  const { data: existingUser } =
-    await supabaseAdmin.auth.admin.getUserByEmail("jim@demerzel.local")
+const {
+  data: users,
+  error: listError
+} = await supabaseAdmin.auth.admin.listUsers();
+
+if (listError) throw listError;
+
+const existingUser = users.find(u => u.email === "jim@demerzel.local");
+
+if (existingUser) {
+  const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+    existingUser.id,
+    { password }
+  );
+  if (updateError) throw updateError;
+  console.log("✅ Default user password updated.");
+} else {
+  const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    email: "jim@demerzel.local",
+    password
+  });
+  if (createError) throw createError;
+  console.log("✅ Default user created.");
+}
 
   if (existingUser?.user) {
     const { error } = await supabaseAdmin.auth.admin.updateUserById(
