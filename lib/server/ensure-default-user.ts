@@ -9,12 +9,14 @@ export async function ensureDefaultUser() {
 
   const password = process.env.DEFAULT_USER_PASSWORD || "Seraphine"
 
-  const { data: users, error: listError } =
+  const { data, error: listError } =
     await supabaseAdmin.auth.admin.listUsers()
 
   if (listError) throw listError
 
-  const existingUser = users.find((u: User) => u.email === "jim@demerzel.local")
+  const existingUser = data.users.find(
+    (u: User) => u.email === "jim@demerzel.local"
+  )
 
   if (existingUser) {
     const { error: updateError } =
