@@ -65,12 +65,12 @@ export const usePromptAndCommand = () => {
     setUserInput(value)
   }
 
-  const handleSelectPrompt = (prompt: Tables<"prompts">) => {
+  const handleSelectPrompt = (prompt: Tables<"public", "prompts">) => {
     setIsPromptPickerOpen(false)
     setUserInput(userInput.replace(/\/[^ ]*$/, "") + prompt.content)
   }
 
-  const handleSelectUserFile = async (file: Tables<"files">) => {
+  const handleSelectUserFile = async (file: Tables<"public", "files">) => {
     setShowFilesDisplay(true)
     setIsFilePickerOpen(false)
     setUseRetrieval(true)
@@ -98,7 +98,7 @@ export const usePromptAndCommand = () => {
   }
 
   const handleSelectUserCollection = async (
-    collection: Tables<"collections">
+    collection: Tables<"public", "collections">
   ) => {
     setShowFilesDisplay(true)
     setIsFilePickerOpen(false)
@@ -128,13 +128,15 @@ export const usePromptAndCommand = () => {
     setUserInput(userInput.replace(/#[^ ]*$/, ""))
   }
 
-  const handleSelectTool = (tool: Tables<"tools">) => {
+  const handleSelectTool = (tool: Tables<"public", "tools">) => {
     setIsToolPickerOpen(false)
     setUserInput(userInput.replace(/![^ ]*$/, ""))
     setSelectedTools(prev => [...prev, tool])
   }
 
-  const handleSelectAssistant = async (assistant: Tables<"assistants">) => {
+  const handleSelectAssistant = async (
+    assistant: Tables<"public", "assistants">
+  ) => {
     setIsAssistantPickerOpen(false)
     setUserInput(userInput.replace(/@[^ ]*$/, ""))
     setSelectedAssistant(assistant)

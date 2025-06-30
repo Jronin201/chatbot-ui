@@ -36,9 +36,11 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imageLink, setImageLink] = useState("")
   const [selectedAssistantRetrievalItems, setSelectedAssistantRetrievalItems] =
-    useState<Tables<"files">[] | Tables<"collections">[]>([])
+    useState<Tables<"public", "files">[] | Tables<"public", "collections">[]>(
+      []
+    )
   const [selectedAssistantToolItems, setSelectedAssistantToolItems] = useState<
-    Tables<"tools">[]
+    Tables<"public", "tools">[]
   >([])
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
   }, [name])
 
   const handleRetrievalItemSelect = (
-    item: Tables<"files"> | Tables<"collections">
+    item: Tables<"public", "files"> | Tables<"public", "collections">
   ) => {
     setSelectedAssistantRetrievalItems(prevState => {
       const isItemAlreadySelected = prevState.find(
@@ -71,7 +73,7 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
     })
   }
 
-  const handleToolSelect = (item: Tables<"tools">) => {
+  const handleToolSelect = (item: Tables<"public", "tools">) => {
     setSelectedAssistantToolItems(prevState => {
       const isItemAlreadySelected = prevState.find(
         selectedItem => selectedItem.id === item.id
@@ -124,12 +126,12 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
           embeddings_provider: assistantChatSettings.embeddingsProvider,
           files: selectedAssistantRetrievalItems.filter(item =>
             item.hasOwnProperty("type")
-          ) as Tables<"files">[],
+          ) as Tables<"public", "files">[],
           collections: selectedAssistantRetrievalItems.filter(
             item => !item.hasOwnProperty("type")
-          ) as Tables<"collections">[],
+          ) as Tables<"public", "collections">[],
           tools: selectedAssistantToolItems
-        } as TablesInsert<"assistants">
+        } as TablesInsert<"public", "assistants">
       }
       isOpen={isOpen}
       isTyping={isTyping}

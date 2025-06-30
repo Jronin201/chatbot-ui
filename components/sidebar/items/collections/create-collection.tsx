@@ -56,7 +56,7 @@ export const CreateCollection: FC<CreateCollectionProps> = ({
           user_id: profile.user_id,
           name,
           description
-        } as TablesInsert<"collections">
+        } as TablesInsert<"public", "collections">
       }
       isOpen={isOpen}
       isTyping={isTyping}

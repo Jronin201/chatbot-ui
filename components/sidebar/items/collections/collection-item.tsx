@@ -9,7 +9,7 @@ import { SidebarItem } from "../all/sidebar-display-item"
 import { CollectionFileSelect } from "./collection-file-select"
 
 interface CollectionItemProps {
-  collection: Tables<"collections">
+  collection: Tables<"public", "collections">
 }
 
 export const CollectionItem: FC<CollectionItemProps> = ({ collection }) => {

@@ -18,7 +18,7 @@ import { FC, useContext, useRef, useState } from "react"
 import { toast } from "sonner"
 
 interface DeleteFolderProps {
-  folder: Tables<"folders">
+  folder: Tables<"public", "folders">
   contentType: ContentType
 }
 

@@ -12,8 +12,8 @@ import { Input } from "../ui/input"
 import { toast } from "sonner"
 
 interface AssignWorkspaces {
-  selectedWorkspaces: Tables<"workspaces">[]
-  onSelectWorkspace: (workspace: Tables<"workspaces">) => void
+  selectedWorkspaces: Tables<"public", "workspaces">[]
+  onSelectWorkspace: (workspace: Tables<"public", "workspaces">) => void
 }
 
 export const AssignWorkspaces: FC<AssignWorkspaces> = ({
@@ -36,7 +36,7 @@ export const AssignWorkspaces: FC<AssignWorkspaces> = ({
     }
   }, [isOpen])
 
-  const handleWorkspaceSelect = (workspace: Tables<"workspaces">) => {
+  const handleWorkspaceSelect = (workspace: Tables<"public", "workspaces">) => {
     onSelectWorkspace(workspace)
   }
 
@@ -122,10 +122,10 @@ export const AssignWorkspaces: FC<AssignWorkspaces> = ({
 }
 
 interface WorkspaceItemProps {
-  selectedWorkspaces: Tables<"workspaces">[]
-  workspace: Tables<"workspaces">
+  selectedWorkspaces: Tables<"public", "workspaces">[]
+  workspace: Tables<"public", "workspaces">
   selected: boolean
-  onSelect: (workspace: Tables<"workspaces">) => void
+  onSelect: (workspace: Tables<"public", "workspaces">) => void
 }
 
 const WorkspaceItem: FC<WorkspaceItemProps> = ({

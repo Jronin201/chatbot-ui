@@ -54,7 +54,7 @@ export const CreatePreset: FC<CreatePresetProps> = ({
           prompt: presetChatSettings.prompt,
           temperature: presetChatSettings.temperature,
           embeddings_provider: presetChatSettings.embeddingsProvider
-        } as TablesInsert<"presets">
+        } as TablesInsert<"public", "presets">
       }
       renderInputs={() => (
         <>

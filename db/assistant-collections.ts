@@ -24,7 +24,7 @@ export const getAssistantCollectionsByAssistantId = async (
 }
 
 export const createAssistantCollection = async (
-  assistantCollection: TablesInsert<"assistant_collections">
+  assistantCollection: TablesInsert<"public", "assistant_collections">
 ) => {
   const { data: createdAssistantCollection, error } = await supabase
     .from("assistant_collections")
@@ -39,7 +39,7 @@ export const createAssistantCollection = async (
 }
 
 export const createAssistantCollections = async (
-  assistantCollections: TablesInsert<"assistant_collections">[]
+  assistantCollections: TablesInsert<"public", "assistant_collections">[]
 ) => {
   const { data: createdAssistantCollections, error } = await supabase
     .from("assistant_collections")

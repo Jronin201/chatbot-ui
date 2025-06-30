@@ -120,10 +120,10 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
   const [isOpen, setIsOpen] = useState(false)
   const [startingWorkspaces, setStartingWorkspaces] = useState<
-    Tables<"workspaces">[]
+    Tables<"public", "workspaces">[]
   >([])
   const [selectedWorkspaces, setSelectedWorkspaces] = useState<
-    Tables<"workspaces">[]
+    Tables<"public", "workspaces">[]
   >([])
 
   // Collections Render State
@@ -136,20 +136,20 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
   // Assistants Render State
   const [startingAssistantFiles, setStartingAssistantFiles] = useState<
-    Tables<"files">[]
+    Tables<"public", "files">[]
   >([])
   const [startingAssistantCollections, setStartingAssistantCollections] =
-    useState<Tables<"collections">[]>([])
+    useState<Tables<"public", "collections">[]>([])
   const [startingAssistantTools, setStartingAssistantTools] = useState<
-    Tables<"tools">[]
+    Tables<"public", "tools">[]
   >([])
   const [selectedAssistantFiles, setSelectedAssistantFiles] = useState<
-    Tables<"files">[]
+    Tables<"public", "files">[]
   >([])
   const [selectedAssistantCollections, setSelectedAssistantCollections] =
-    useState<Tables<"collections">[]>([])
+    useState<Tables<"public", "collections">[]>([])
   const [selectedAssistantTools, setSelectedAssistantTools] = useState<
-    Tables<"tools">[]
+    Tables<"public", "tools">[]
   >([])
 
   useEffect(() => {
@@ -272,8 +272,8 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
   }
 
   const handleWorkspaceUpdates = async (
-    startingWorkspaces: Tables<"workspaces">[],
-    selectedWorkspaces: Tables<"workspaces">[],
+    startingWorkspaces: Tables<"public", "workspaces">[],
+    selectedWorkspaces: Tables<"public", "workspaces">[],
     itemId: string,
     deleteWorkspaceFn: (
       itemId: string,
@@ -327,7 +327,10 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
   const updateFunctions = {
     chats: updateChat,
-    presets: async (presetId: string, updateState: TablesUpdate<"presets">) => {
+    presets: async (
+      presetId: string,
+      updateState: TablesUpdate<"public", "presets">
+    ) => {
       const updatedPreset = await updatePreset(presetId, updateState)
 
       await handleWorkspaceUpdates(
@@ -341,7 +344,10 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
       return updatedPreset
     },
-    prompts: async (promptId: string, updateState: TablesUpdate<"prompts">) => {
+    prompts: async (
+      promptId: string,
+      updateState: TablesUpdate<"public", "prompts">
+    ) => {
       const updatedPrompt = await updatePrompt(promptId, updateState)
 
       await handleWorkspaceUpdates(
@@ -355,7 +361,10 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
       return updatedPrompt
     },
-    files: async (fileId: string, updateState: TablesUpdate<"files">) => {
+    files: async (
+      fileId: string,
+      updateState: TablesUpdate<"public", "files">
+    ) => {
       const updatedFile = await updateFile(fileId, updateState)
 
       await handleWorkspaceUpdates(
@@ -371,7 +380,7 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
     },
     collections: async (
       collectionId: string,
-      updateState: TablesUpdate<"assistants">
+      updateState: TablesUpdate<"public", "assistants">
     ) => {
       if (!profile) return
 
@@ -420,7 +429,7 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
       updateState: {
         assistantId: string
         image: File
-      } & TablesUpdate<"assistants">
+      } & TablesUpdate<"public", "assistants">
     ) => {
       const { image, ...rest } = updateState
 
@@ -541,7 +550,10 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
       return updatedAssistant
     },
-    tools: async (toolId: string, updateState: TablesUpdate<"tools">) => {
+    tools: async (
+      toolId: string,
+      updateState: TablesUpdate<"public", "tools">
+    ) => {
       const updatedTool = await updateTool(toolId, updateState)
 
       await handleWorkspaceUpdates(
@@ -555,7 +567,10 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
       return updatedTool
     },
-    models: async (modelId: string, updateState: TablesUpdate<"models">) => {
+    models: async (
+      modelId: string,
+      updateState: TablesUpdate<"public", "models">
+    ) => {
       const updatedModel = await updateModel(modelId, updateState)
 
       await handleWorkspaceUpdates(
@@ -606,7 +621,7 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
     }
   }
 
-  const handleSelectWorkspace = (workspace: Tables<"workspaces">) => {
+  const handleSelectWorkspace = (workspace: Tables<"public", "workspaces">) => {
     setSelectedWorkspaces(prevState => {
       const isWorkspaceAlreadySelected = prevState.find(
         selectedWorkspace => selectedWorkspace.id === workspace.id

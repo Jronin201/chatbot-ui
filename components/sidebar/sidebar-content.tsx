@@ -8,7 +8,7 @@ import { SidebarSearch } from "./sidebar-search"
 interface SidebarContentProps {
   contentType: ContentType
   data: DataListType
-  folders: Tables<"folders">[]
+  folders: Tables<"public", "folders">[]
 }
 
 export const SidebarContent: FC<SidebarContentProps> = ({

@@ -9,7 +9,7 @@ import { FC, useState } from "react"
 import { SidebarItem } from "../all/sidebar-display-item"
 
 interface PresetItemProps {
-  preset: Tables<"presets">
+  preset: Tables<"public", "presets">
 }
 
 export const PresetItem: FC<PresetItemProps> = ({ preset }) => {

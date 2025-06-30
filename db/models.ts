@@ -56,7 +56,7 @@ export const getModelWorkspacesByModelId = async (modelId: string) => {
 }
 
 export const createModel = async (
-  model: TablesInsert<"models">,
+  model: TablesInsert<"public", "models">,
   workspace_id: string
 ) => {
   const { data: createdModel, error } = await supabase
@@ -79,7 +79,7 @@ export const createModel = async (
 }
 
 export const createModels = async (
-  models: TablesInsert<"models">[],
+  models: TablesInsert<"public", "models">[],
   workspace_id: string
 ) => {
   const { data: createdModels, error } = await supabase
@@ -135,7 +135,7 @@ export const createModelWorkspaces = async (
 
 export const updateModel = async (
   modelId: string,
-  model: TablesUpdate<"models">
+  model: TablesUpdate<"public", "models">
 ) => {
   const { data: updatedModel, error } = await supabase
     .from("models")

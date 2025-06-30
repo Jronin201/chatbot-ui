@@ -45,7 +45,7 @@ export const getWorkspacesByUserId = async (userId: string) => {
 }
 
 export const createWorkspace = async (
-  workspace: TablesInsert<"workspaces">
+  workspace: TablesInsert<"public", "workspaces">
 ) => {
   const { data: createdWorkspace, error } = await supabase
     .from("workspaces")
@@ -62,7 +62,7 @@ export const createWorkspace = async (
 
 export const updateWorkspace = async (
   workspaceId: string,
-  workspace: TablesUpdate<"workspaces">
+  workspace: TablesUpdate<"public", "workspaces">
 ) => {
   const { data: updatedWorkspace, error } = await supabase
     .from("workspaces")

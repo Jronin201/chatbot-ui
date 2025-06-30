@@ -17,7 +17,7 @@ import { IconTrash } from "@tabler/icons-react"
 import { FC, useContext, useRef, useState } from "react"
 
 interface DeleteChatProps {
-  chat: Tables<"chats">
+  chat: Tables<"public", "chats">
 }
 
 export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {

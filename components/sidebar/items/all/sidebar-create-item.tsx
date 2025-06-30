@@ -68,7 +68,7 @@ export const SidebarCreateItem: FC<SidebarCreateItemProps> = ({
     presets: createPreset,
     prompts: createPrompt,
     files: async (
-      createState: { file: File } & TablesInsert<"files">,
+      createState: { file: File } & TablesInsert<"public", "files">,
       workspaceId: string
     ) => {
       if (!selectedWorkspace) return
@@ -87,8 +87,8 @@ export const SidebarCreateItem: FC<SidebarCreateItemProps> = ({
     collections: async (
       createState: {
         image: File
-        collectionFiles: TablesInsert<"collection_files">[]
-      } & Tables<"collections">,
+        collectionFiles: TablesInsert<"public", "collection_files">[]
+      } & Tables<"public", "collections">,
       workspaceId: string
     ) => {
       const { collectionFiles, ...rest } = createState
@@ -107,10 +107,10 @@ export const SidebarCreateItem: FC<SidebarCreateItemProps> = ({
     assistants: async (
       createState: {
         image: File
-        files: Tables<"files">[]
-        collections: Tables<"collections">[]
-        tools: Tables<"tools">[]
-      } & Tables<"assistants">,
+        files: Tables<"public", "files">[]
+        collections: Tables<"public", "collections">[]
+        tools: Tables<"public", "tools">[]
+      } & Tables<"public", "assistants">,
       workspaceId: string
     ) => {
       const { image, files, collections, tools, ...rest } = createState

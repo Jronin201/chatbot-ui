@@ -14,7 +14,9 @@ export const getFoldersByWorkspaceId = async (workspaceId: string) => {
   return folders
 }
 
-export const createFolder = async (folder: TablesInsert<"folders">) => {
+export const createFolder = async (
+  folder: TablesInsert<"public", "folders">
+) => {
   const { data: createdFolder, error } = await supabase
     .from("folders")
     .insert([folder])
@@ -30,7 +32,7 @@ export const createFolder = async (folder: TablesInsert<"folders">) => {
 
 export const updateFolder = async (
   folderId: string,
-  folder: TablesUpdate<"folders">
+  folder: TablesUpdate<"public", "folders">
 ) => {
   const { data: updatedFolder, error } = await supabase
     .from("folders")

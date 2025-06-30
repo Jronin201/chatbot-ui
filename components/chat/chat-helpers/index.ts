@@ -26,8 +26,8 @@ import { v4 as uuidv4 } from "uuid"
 export const validateChatSettings = (
   chatSettings: ChatSettings | null,
   modelData: LLM | undefined,
-  profile: Tables<"profiles"> | null,
-  selectedWorkspace: Tables<"workspaces"> | null,
+  profile: Tables<"public", "profiles"> | null,
+  selectedWorkspace: Tables<"public", "workspaces"> | null,
   messageContent: string
 ) => {
   if (!chatSettings) {
@@ -73,7 +73,7 @@ export const handleRetrieval = async (
   }
 
   const { results } = (await response.json()) as {
-    results: Tables<"file_items">[]
+    results: Tables<"public", "file_items">[]
   }
 
   return results
@@ -86,7 +86,7 @@ export const createTempMessages = (
   b64Images: string[],
   isRegeneration: boolean,
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
-  selectedAssistant: Tables<"assistants"> | null
+  selectedAssistant: Tables<"public", "assistants"> | null
 ) => {
   let tempUserChatMessage: ChatMessage = {
     message: {
@@ -146,7 +146,7 @@ export const createTempMessages = (
 
 export const handleLocalChat = async (
   payload: ChatPayload,
-  profile: Tables<"profiles">,
+  profile: Tables<"public", "profiles">,
   chatSettings: ChatSettings,
   tempAssistantMessage: ChatMessage,
   isRegeneration: boolean,
@@ -189,7 +189,7 @@ export const handleLocalChat = async (
 
 export const handleHostedChat = async (
   payload: ChatPayload,
-  profile: Tables<"profiles">,
+  profile: Tables<"public", "profiles">,
   modelData: LLM,
   tempAssistantChatMessage: ChatMessage,
   isRegeneration: boolean,
@@ -348,13 +348,15 @@ export const processResponse = async (
 
 export const handleCreateChat = async (
   chatSettings: ChatSettings,
-  profile: Tables<"profiles">,
-  selectedWorkspace: Tables<"workspaces">,
+  profile: Tables<"public", "profiles">,
+  selectedWorkspace: Tables<"public", "workspaces">,
   messageContent: string,
-  selectedAssistant: Tables<"assistants">,
+  selectedAssistant: Tables<"public", "assistants">,
   newMessageFiles: ChatFile[],
-  setSelectedChat: React.Dispatch<React.SetStateAction<Tables<"chats"> | null>>,
-  setChats: React.Dispatch<React.SetStateAction<Tables<"chats">[]>>,
+  setSelectedChat: React.Dispatch<
+    React.SetStateAction<Tables<"public", "chats"> | null>
+  >,
+  setChats: React.Dispatch<React.SetStateAction<Tables<"public", "chats">[]>>,
   setChatFiles: React.Dispatch<React.SetStateAction<ChatFile[]>>
 ) => {
   const createdChat = await createChat({
@@ -389,22 +391,22 @@ export const handleCreateChat = async (
 
 export const handleCreateMessages = async (
   chatMessages: ChatMessage[],
-  currentChat: Tables<"chats">,
-  profile: Tables<"profiles">,
+  currentChat: Tables<"public", "chats">,
+  profile: Tables<"public", "profiles">,
   modelData: LLM,
   messageContent: string,
   generatedText: string,
   newMessageImages: MessageImage[],
   isRegeneration: boolean,
-  retrievedFileItems: Tables<"file_items">[],
+  retrievedFileItems: Tables<"public", "file_items">[],
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
   setChatFileItems: React.Dispatch<
-    React.SetStateAction<Tables<"file_items">[]>
+    React.SetStateAction<Tables<"public", "file_items">[]>
   >,
   setChatImages: React.Dispatch<React.SetStateAction<MessageImage[]>>,
-  selectedAssistant: Tables<"assistants"> | null
+  selectedAssistant: Tables<"public", "assistants"> | null
 ) => {
-  const finalUserMessage: TablesInsert<"messages"> = {
+  const finalUserMessage: TablesInsert<"public", "messages"> = {
     chat_id: currentChat.id,
     assistant_id: null,
     user_id: profile.user_id,
@@ -415,7 +417,7 @@ export const handleCreateMessages = async (
     image_paths: []
   }
 
-  const finalAssistantMessage: TablesInsert<"messages"> = {
+  const finalAssistantMessage: TablesInsert<"public", "messages"> = {
     chat_id: currentChat.id,
     assistant_id: selectedAssistant?.id || null,
     user_id: profile.user_id,

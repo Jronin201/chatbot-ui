@@ -9,7 +9,7 @@ import { FC, useState } from "react"
 import { SidebarItem } from "../all/sidebar-display-item"
 
 interface ToolItemProps {
-  tool: Tables<"tools">
+  tool: Tables<"public", "tools">
 }
 
 export const ToolItem: FC<ToolItemProps> = ({ tool }) => {

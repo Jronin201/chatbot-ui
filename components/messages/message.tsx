@@ -27,11 +27,11 @@ import { MessageMarkdown } from "./message-markdown"
 const ICON_SIZE = 32
 
 interface MessageProps {
-  message: Tables<"messages">
-  fileItems: Tables<"file_items">[]
+  message: Tables<"public", "messages">
+  fileItems: Tables<"public", "file_items">[]
   isEditing: boolean
   isLast: boolean
-  onStartEdit: (message: Tables<"messages">) => void
+  onStartEdit: (message: Tables<"public", "messages">) => void
   onCancelEdit: () => void
   onSubmitEdit: (value: string, sequenceNumber: number) => void
 }
@@ -73,8 +73,10 @@ export const Message: FC<MessageProps> = ({
   const [selectedImage, setSelectedImage] = useState<MessageImage | null>(null)
 
   const [showFileItemPreview, setShowFileItemPreview] = useState(false)
-  const [selectedFileItem, setSelectedFileItem] =
-    useState<Tables<"file_items"> | null>(null)
+  const [selectedFileItem, setSelectedFileItem] = useState<Tables<
+    "public",
+    "file_items"
+  > | null>(null)
 
   const [viewSources, setViewSources] = useState(false)
 

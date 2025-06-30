@@ -28,7 +28,9 @@ export const getMessagesByChatId = async (chatId: string) => {
   return messages
 }
 
-export const createMessage = async (message: TablesInsert<"messages">) => {
+export const createMessage = async (
+  message: TablesInsert<"public", "messages">
+) => {
   const { data: createdMessage, error } = await supabase
     .from("messages")
     .insert([message])
@@ -42,7 +44,9 @@ export const createMessage = async (message: TablesInsert<"messages">) => {
   return createdMessage
 }
 
-export const createMessages = async (messages: TablesInsert<"messages">[]) => {
+export const createMessages = async (
+  messages: TablesInsert<"public", "messages">[]
+) => {
   const { data: createdMessages, error } = await supabase
     .from("messages")
     .insert(messages)
@@ -57,7 +61,7 @@ export const createMessages = async (messages: TablesInsert<"messages">[]) => {
 
 export const updateMessage = async (
   messageId: string,
-  message: TablesUpdate<"messages">
+  message: TablesUpdate<"public", "messages">
 ) => {
   const { data: updatedMessage, error } = await supabase
     .from("messages")

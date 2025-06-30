@@ -24,7 +24,7 @@ export const getCollectionFilesByCollectionId = async (
 }
 
 export const createCollectionFile = async (
-  collectionFile: TablesInsert<"collection_files">
+  collectionFile: TablesInsert<"public", "collection_files">
 ) => {
   const { data: createdCollectionFile, error } = await supabase
     .from("collection_files")
@@ -39,7 +39,7 @@ export const createCollectionFile = async (
 }
 
 export const createCollectionFiles = async (
-  collectionFiles: TablesInsert<"collection_files">[]
+  collectionFiles: TablesInsert<"public", "collection_files">[]
 ) => {
   const { data: createdCollectionFiles, error } = await supabase
     .from("collection_files")
