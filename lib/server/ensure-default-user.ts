@@ -35,9 +35,9 @@ export async function ensureDefaultUser() {
     console.log("✅ Default user created.")
   }
 
-  if (existingUser?.user) {
+  if (existingUser) {
     const { error } = await supabaseAdmin.auth.admin.updateUserById(
-      existingUser.user.id,
+      existingUser.id,
       { password }
     )
     console.log("ensureDefaultUser update", error)
