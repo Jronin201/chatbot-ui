@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/browser-client"
 import { TablesInsert, TablesUpdate } from "@/supabase/types"
+import { AssistantWorkspaceResponse } from "@/types"
 
 export const getAssistantById = async (assistantId: string) => {
   const { data: assistant, error } = await supabase
@@ -17,7 +18,7 @@ export const getAssistantById = async (assistantId: string) => {
 
 export const getAssistantWorkspacesByWorkspaceId = async (
   workspaceId: string
-) => {
+): Promise<AssistantWorkspaceResponse> => {
   const { data: workspace, error } = await supabase
     .from("workspaces")
     .select(
@@ -34,7 +35,11 @@ export const getAssistantWorkspacesByWorkspaceId = async (
     throw new Error(error.message)
   }
 
-  return workspace
+  return {
+    id: workspace.id,
+    name: workspace.name,
+    assistants: workspace.assistants
+  }
 }
 
 export const getAssistantWorkspacesByAssistantId = async (
