@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       user_id: "bfc55e3f-ecfc-42fc-aefc-9ed9c89a62f5", // Use empty string or a valid user id
       file_path: filepath,
       tokens: chunks.reduce((t, c) => t + c.tokens, 0),
-      description: null, // Provide a default or actual description
+      description: "dune_files", // Provide a default or actual description
       size: fileBuffer.length, // Use the file buffer length as size in bytes
       type: ext ?? "unknown" // Use the file extension as type
     })
