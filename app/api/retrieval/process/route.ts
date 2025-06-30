@@ -12,6 +12,7 @@ import { FileItemChunk } from "@/types"
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
+import fs from "fs/promises"
 
 export async function POST(req: Request) {
   try {
@@ -24,8 +25,8 @@ export async function POST(req: Request) {
 
     const file_id = "manual_" + Date.now()
 
-    const fileData = await Bun.file(filepath).text()
-    const blob = new Blob([fileData])
+    const fileBuffer = await fs.readFile(filepath)
+    const blob = new Blob([fileBuffer])
     const fileExtension = filepath.split(".").pop()?.toLowerCase()
 
     let chunks: FileItemChunk[] = []
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
     let embeddings: any[] = []
 
     if (embeddingsProvider === "openai") {
-      checkApiKey(process.env.OPENAI_API_KEY, "OpenAI")
+      checkApiKey(process.env.OPENAI_API_KEY ?? null, "OpenAI")
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
       const response = await openai.embeddings.create({
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
 
     const file_items = chunks.map((chunk, index) => ({
       file_id,
-      user_id: null,
+      user_id: "",
       content: chunk.content,
       tokens: chunk.tokens,
       openai_embedding:
