@@ -59,6 +59,7 @@ export async function POST(request: Request) {
       stream: true
     })
 
+    //@ts-expect-error Azure returns ChatCompletionChunk, which mismatches OpenAIStream default generic
     const stream = OpenAIStream(response)
 
     return new StreamingTextResponse(stream)
