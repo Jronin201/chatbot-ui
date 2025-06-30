@@ -6,7 +6,7 @@ import {
   processPdf,
   processTxt
 } from "@/lib/retrieval/processing"
-import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
+import { checkApiKey } from "@/lib/server/server-chat-helpers"
 import { Database } from "@/supabase/types"
 import { FileItemChunk } from "@/types"
 import { createClient } from "@supabase/supabase-js"
@@ -19,8 +19,6 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-
-    const profile = await getServerProfile()
 
     const formData = await req.formData()
 
@@ -43,10 +41,6 @@ export async function POST(req: Request) {
       throw new Error("File not found")
     }
 
-    if (fileMetadata.user_id !== profile.user_id) {
-      throw new Error("Unauthorized")
-    }
-
     const { data: file, error: fileError } = await supabaseAdmin.storage
       .from("files")
       .download(fileMetadata.file_path)
@@ -57,21 +51,6 @@ export async function POST(req: Request) {
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const blob = new Blob([fileBuffer])
     const fileExtension = fileMetadata.name.split(".").pop()?.toLowerCase()
-
-    if (embeddingsProvider === "openai") {
-      try {
-        if (profile.use_azure_openai) {
-          checkApiKey(profile.azure_openai_api_key, "Azure OpenAI")
-        } else {
-          checkApiKey(profile.openai_api_key, "OpenAI")
-        }
-      } catch (error: any) {
-        error.message =
-          error.message +
-          ", make sure it is configured or else use local embeddings"
-        throw error
-      }
-    }
 
     let chunks: FileItemChunk[] = []
 
@@ -92,44 +71,29 @@ export async function POST(req: Request) {
         chunks = await processTxt(blob)
         break
       default:
-        return new NextResponse("Unsupported file type", {
-          status: 400
-        })
+        return new NextResponse("Unsupported file type", { status: 400 })
     }
 
     let embeddings: any = []
 
-    let openai
-    if (profile.use_azure_openai) {
-      openai = new OpenAI({
-        apiKey: profile.azure_openai_api_key || "",
-        baseURL: `${profile.azure_openai_endpoint}/openai/deployments/${profile.azure_openai_embeddings_id}`,
-        defaultQuery: { "api-version": "2023-12-01-preview" },
-        defaultHeaders: { "api-key": profile.azure_openai_api_key }
-      })
-    } else {
-      openai = new OpenAI({
-        apiKey: profile.openai_api_key || "",
-        organization: profile.openai_organization_id
-      })
-    }
-
     if (embeddingsProvider === "openai") {
+      checkApiKey(process.env.OPENAI_API_KEY, "OpenAI")
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY!
+      })
+
       const response = await openai.embeddings.create({
         model: "text-embedding-3-small",
         input: chunks.map(chunk => chunk.content)
       })
 
-      embeddings = response.data.map((item: any) => {
-        return item.embedding
-      })
+      embeddings = response.data.map((item: any) => item.embedding)
     } else if (embeddingsProvider === "local") {
       const embeddingPromises = chunks.map(async chunk => {
         try {
           return await generateLocalEmbedding(chunk.content)
         } catch (error) {
           console.error(`Error generating embedding for chunk: ${chunk}`, error)
-
           return null
         }
       })
@@ -139,17 +103,13 @@ export async function POST(req: Request) {
 
     const file_items = chunks.map((chunk, index) => ({
       file_id,
-      user_id: profile.user_id,
+      user_id: fileMetadata.user_id, // trust the metadata from Supabase, no auth needed
       content: chunk.content,
       tokens: chunk.tokens,
       openai_embedding:
-        embeddingsProvider === "openai"
-          ? ((embeddings[index] || null) as any)
-          : null,
+        embeddingsProvider === "openai" ? embeddings[index] || null : null,
       local_embedding:
-        embeddingsProvider === "local"
-          ? ((embeddings[index] || null) as any)
-          : null
+        embeddingsProvider === "local" ? embeddings[index] || null : null
     }))
 
     await supabaseAdmin.from("file_items").upsert(file_items)
@@ -161,15 +121,10 @@ export async function POST(req: Request) {
       .update({ tokens: totalTokens })
       .eq("id", file_id)
 
-    return new NextResponse("Embed Successful", {
-      status: 200
-    })
+    return new NextResponse("Embed Successful", { status: 200 })
   } catch (error: any) {
-    console.log(`Error in retrieval/process: ${error.stack}`)
-    const errorMessage = error?.message || "An unexpected error occurred"
-    const errorCode = error.status || 500
-    return new Response(JSON.stringify({ message: errorMessage }), {
-      status: errorCode
-    })
+    console.error(`❌ Error in retrieval/process: ${error.stack}`)
+    const message = error?.message || "Unexpected error occurred"
+    return new Response(JSON.stringify({ message }), { status: 500 })
   }
 }
