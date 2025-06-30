@@ -1,19 +1,28 @@
-# still at repo root
-mkdir -p scripts            # just in case
-cat > scripts/list_users.ts <<'TS'
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js"
 
-const supabase = createClient(
-  process.env.SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
-);
+async function main(): Promise<void> {
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-(async () => {
-  const { data, error } = await supabase.auth.admin.listUsers();
-  if (error) {
-    console.error("❌", error);
-    process.exit(1);
+  if (!url || !key) {
+    throw new Error(
+      "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables are required"
+    )
   }
-  console.log("✅ Users:", data.users);
-})();
-TS
+
+  const supabase = createClient(url, key)
+  const { data, error } = await supabase.auth.admin.listUsers()
+
+  if (error) {
+    throw error
+  }
+
+  console.log(JSON.stringify(data.users, null, 2))
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch(err => {
+    console.error("❌", err)
+    process.exit(1)
+  })
