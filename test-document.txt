@@ -1,0 +1,11 @@
+This is a simple test document for the Dune TTRPG chatbot.
+
+The spice melange is the most valuable substance in the universe.
+It extends life, expands consciousness, and is essential for space travel.
+Only on the desert planet Arrakis can spice be found.
+
+Houses fight for control of Arrakis and its spice production.
+The Fremen are the indigenous people of Arrakis who have adapted to the desert.
+Sandworms are giant creatures that produce spice and rule the deep desert.
+
+This document should be processed, chunked, and embedded for retrieval testing.
