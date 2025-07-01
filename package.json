@@ -23,6 +23,7 @@
     "db-types": "supabase gen types typescript --local > supabase/types.ts",
     "db-pull": "supabase db remote commit",
     "db-push": "supabase db push",
+    "cleanup-files": "node scripts/cleanup-files.js",
     "test": "jest"
   },
   "dependencies": {
