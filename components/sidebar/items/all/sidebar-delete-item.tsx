@@ -18,6 +18,7 @@ import { deletePreset } from "@/db/presets"
 import { deletePrompt } from "@/db/prompts"
 import { deleteFileFromStorage } from "@/db/storage/files"
 import { deleteTool } from "@/db/tools"
+import { supabase } from "@/lib/supabase/browser-client"
 import { Tables } from "@/supabase/types"
 import { ContentType, DataItemType } from "@/types"
 import { FC, useContext, useRef, useState } from "react"
@@ -57,8 +58,44 @@ export const SidebarDeleteItem: FC<SidebarDeleteItemProps> = ({
       await deletePrompt(prompt.id)
     },
     files: async (file: Tables<"files", never>) => {
-      await deleteFileFromStorage(file.file_path)
+      try {
+        // Try to delete from storage first (may fail in local development)
+        await deleteFileFromStorage(file.file_path)
+      } catch (storageError) {
+        console.warn(
+          "Storage deletion failed, continuing with database deletion:",
+          storageError
+        )
+      }
+
+      // Always attempt database deletion
       await deleteFile(file.id)
+
+      // Also clean up related records
+      try {
+        const { error: workspaceError } = await supabase
+          .from("file_workspaces")
+          .delete()
+          .eq("file_id", file.id)
+
+        if (workspaceError) {
+          console.warn(
+            "Failed to delete file workspace relations:",
+            workspaceError.message
+          )
+        }
+
+        const { error: itemsError } = await supabase
+          .from("file_items")
+          .delete()
+          .eq("file_id", file.id)
+
+        if (itemsError) {
+          console.warn("Failed to delete file items:", itemsError.message)
+        }
+      } catch (cleanupError) {
+        console.warn("Cleanup error (non-critical):", cleanupError)
+      }
     },
     collections: async (collection: Tables<"collections", never>) => {
       await deleteCollection(collection.id)

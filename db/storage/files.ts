@@ -35,11 +35,33 @@ export const uploadFile = async (
 }
 
 export const deleteFileFromStorage = async (filePath: string) => {
-  const { error } = await supabase.storage.from("files").remove([filePath])
+  try {
+    const { error } = await supabase.storage.from("files").remove([filePath])
 
-  if (error) {
-    toast.error("Failed to remove file!")
-    return
+    if (error) {
+      // In local development, storage deletion may fail due to DNS issues
+      // Log the error but don't fail the entire deletion process
+      console.warn("Storage deletion failed:", error.message)
+
+      // Only show toast error in production environments
+      if (process.env.NODE_ENV === "production") {
+        toast.error("Failed to remove file from storage!")
+      } else {
+        console.log(
+          "Local development: Continuing with database deletion despite storage error"
+        )
+      }
+      return
+    }
+
+    console.log("File successfully deleted from storage:", filePath)
+  } catch (err) {
+    // Handle network/connection errors gracefully in local development
+    console.warn("Storage deletion error (continuing anyway):", err)
+
+    if (process.env.NODE_ENV === "production") {
+      toast.error("Failed to remove file from storage!")
+    }
   }
 }
 

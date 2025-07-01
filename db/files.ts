@@ -312,13 +312,21 @@ export const updateFile = async (
 }
 
 export const deleteFile = async (fileId: string) => {
-  const { error } = await supabase.from("files").delete().eq("id", fileId)
+  try {
+    const { error } = await supabase.from("files").delete().eq("id", fileId)
 
-  if (error) {
-    throw new Error(error.message)
+    if (error) {
+      // Log the specific error for debugging
+      console.error("Database deletion error:", error.message)
+      throw new Error(`Failed to delete file from database: ${error.message}`)
+    }
+
+    console.log("File successfully deleted from database:", fileId)
+    return true
+  } catch (err) {
+    console.error("Error deleting file:", err)
+    throw err
   }
-
-  return true
 }
 
 export const deleteFileWorkspace = async (
