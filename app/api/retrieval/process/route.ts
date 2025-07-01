@@ -1,0 +1,173 @@
+import { generateLocalEmbedding } from "@/lib/generate-local-embedding"
+import {
+  processTxt,
+  processPdf,
+  processCSV,
+  processMarkdown,
+  processJSON
+} from "@/lib/retrieval/processing"
+import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
+import { Database } from "@/supabase/types"
+import { FileItemChunk } from "@/types"
+import { createClient } from "@supabase/supabase-js"
+import { NextResponse } from "next/server"
+import OpenAI from "openai"
+
+export async function POST(req: Request) {
+  try {
+    const formData = await req.formData()
+    const fileId = formData.get("file_id") as string
+    const embeddingsProvider = formData.get("embeddingsProvider") as
+      | "openai"
+      | "local"
+
+    if (!fileId || !embeddingsProvider) {
+      return NextResponse.json(
+        { message: "file_id and embeddingsProvider are required" },
+        { status: 400 }
+      )
+    }
+
+    const supabaseAdmin = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const profile = await getServerProfile()
+
+    if (embeddingsProvider === "openai") {
+      if (profile.use_azure_openai) {
+        checkApiKey(profile.azure_openai_api_key, "Azure OpenAI")
+      } else {
+        checkApiKey(profile.openai_api_key, "OpenAI")
+      }
+    }
+
+    // Get the file record to get file path and details
+    const { data: file, error: fileError } = await supabaseAdmin
+      .from("files")
+      .select("*")
+      .eq("id", fileId)
+      .single()
+
+    if (fileError || !file) {
+      return NextResponse.json({ message: "File not found" }, { status: 404 })
+    }
+
+    // Get the file content from storage
+    const { data: fileData, error: storageError } = await supabaseAdmin.storage
+      .from("files")
+      .download(file.file_path)
+
+    if (storageError || !fileData) {
+      return NextResponse.json(
+        { message: "Error downloading file from storage" },
+        { status: 500 }
+      )
+    }
+
+    // Process the file based on extension
+    let chunks: FileItemChunk[] = []
+    const fileExtension = file.name.split(".").pop()?.toLowerCase()
+
+    switch (fileExtension) {
+      case "txt":
+        chunks = await processTxt(fileData)
+        break
+      case "pdf":
+        chunks = await processPdf(fileData)
+        break
+      case "csv":
+        chunks = await processCSV(fileData)
+        break
+      case "md":
+        chunks = await processMarkdown(fileData)
+        break
+      case "json":
+        chunks = await processJSON(fileData)
+        break
+      default:
+        // Fallback to text processing
+        chunks = await processTxt(fileData)
+        break
+    }
+
+    let embeddings: any = []
+    let openai
+
+    if (embeddingsProvider === "openai") {
+      if (profile.use_azure_openai) {
+        openai = new OpenAI({
+          apiKey: profile.azure_openai_api_key || "",
+          baseURL: `${profile.azure_openai_endpoint}/openai/deployments/${profile.azure_openai_embeddings_id}`,
+          defaultQuery: { "api-version": "2023-12-01-preview" },
+          defaultHeaders: { "api-key": profile.azure_openai_api_key }
+        })
+      } else {
+        openai = new OpenAI({
+          apiKey: profile.openai_api_key || "",
+          organization: profile.openai_organization_id
+        })
+      }
+
+      const response = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: chunks.map(chunk => chunk.content)
+      })
+
+      embeddings = response.data.map((item: any) => {
+        return item.embedding
+      })
+    } else if (embeddingsProvider === "local") {
+      const embeddingPromises = chunks.map(async chunk => {
+        try {
+          return await generateLocalEmbedding(chunk.content)
+        } catch (error) {
+          console.error(`Error generating embedding for chunk: ${chunk}`, error)
+          return null
+        }
+      })
+
+      embeddings = await Promise.all(embeddingPromises)
+    }
+
+    const file_items = chunks.map((chunk, index) => ({
+      file_id: fileId,
+      user_id: profile.user_id,
+      content: chunk.content,
+      tokens: chunk.tokens,
+      openai_embedding:
+        embeddingsProvider === "openai"
+          ? ((embeddings[index] || null) as any)
+          : null,
+      local_embedding:
+        embeddingsProvider === "local"
+          ? ((embeddings[index] || null) as any)
+          : null
+    }))
+
+    await supabaseAdmin.from("file_items").upsert(file_items)
+
+    const totalTokens = file_items.reduce((acc, item) => acc + item.tokens, 0)
+
+    await supabaseAdmin
+      .from("files")
+      .update({ tokens: totalTokens })
+      .eq("id", fileId)
+
+    return NextResponse.json(
+      {
+        message: "File processed successfully",
+        chunks: chunks.length,
+        tokens: totalTokens
+      },
+      { status: 200 }
+    )
+  } catch (error: any) {
+    console.error("[file-processing] error:", error)
+    const errorMessage =
+      error.error?.message || error.message || "An unexpected error occurred"
+    const errorCode = error.status || 500
+    return NextResponse.json({ message: errorMessage }, { status: errorCode })
+  }
+}
