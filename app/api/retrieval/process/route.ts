@@ -29,21 +29,32 @@ const MAX_CONTEXT_CHARS = 2_400 // trim long chunk blobs
 const SYSTEM_HEADER = `You are an assistant that can reference an internal knowledge base extracted from the Dune: Adventures in the Imperium rulebook. Cite facts accurately and do not fabricate details. When you use a retrieved chunk, cite it with (source).`
 
 // ────────────────────────────────────────────────────────────
-//  SINGLETON CLIENTS
+//  HELPER FUNCTIONS FOR CLIENT INITIALIZATION
 // ────────────────────────────────────────────────────────────
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function createSupabaseClient() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Missing required Supabase environment variables")
+  }
+  return createClient<Database>(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-})
+function createOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("Missing required OpenAI API key")
+  }
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  })
+}
 
 // ────────────────────────────────────────────────────────────
 //  HELPERS
 // ────────────────────────────────────────────────────────────
 async function embed(text: string): Promise<number[]> {
+  const openai = createOpenAIClient()
   const {
     data: [{ embedding }]
   } = await openai.embeddings.create({
@@ -58,6 +69,7 @@ async function fetchMatches(
   queryEmbedding: number[],
   fileIdFilter: string | null = null
 ) {
+  const supabase = createSupabaseClient()
   const { data, error } = await supabase.rpc("match_file_items", {
     query_embedding: queryEmbedding,
     match_threshold: MATCH_THRESHOLD,
@@ -126,6 +138,7 @@ export async function POST(req: NextRequest) {
     const messages = buildMessages(prompt, matches)
 
     // 4⃣  Call ChatCompletion --------------------------------------------------------------
+    const openai = createOpenAIClient()
     const completion = await openai.chat.completions.create({
       model: COMPLETION_MODEL,
       messages: [...messages],
