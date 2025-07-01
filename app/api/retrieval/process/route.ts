@@ -17,6 +17,10 @@ import OpenAI from "openai"
 
 import type { Database } from "@/supabase/types"
 
+// Ensure this route is not statically optimized
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
 // ────────────────────────────────────────────────────────────
 //  CONSTANTS  (adjust if you want different defaults)
 // ────────────────────────────────────────────────────────────
