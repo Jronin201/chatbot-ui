@@ -47,32 +47,32 @@ export const SidebarDeleteItem: FC<SidebarDeleteItemProps> = ({
   const [showDialog, setShowDialog] = useState(false)
 
   const deleteFunctions = {
-    chats: async (chat: Tables<"chats">) => {
+    chats: async (chat: Tables<"chats", never>) => {
       await deleteChat(chat.id)
     },
-    presets: async (preset: Tables<"presets">) => {
+    presets: async (preset: Tables<"presets", never>) => {
       await deletePreset(preset.id)
     },
-    prompts: async (prompt: Tables<"prompts">) => {
+    prompts: async (prompt: Tables<"prompts", never>) => {
       await deletePrompt(prompt.id)
     },
-    files: async (file: Tables<"files">) => {
+    files: async (file: Tables<"files", never>) => {
       await deleteFileFromStorage(file.file_path)
       await deleteFile(file.id)
     },
-    collections: async (collection: Tables<"collections">) => {
+    collections: async (collection: Tables<"collections", never>) => {
       await deleteCollection(collection.id)
     },
-    assistants: async (assistant: Tables<"assistants">) => {
+    assistants: async (assistant: Tables<"assistants", never>) => {
       await deleteAssistant(assistant.id)
       setChats(prevState =>
         prevState.filter(chat => chat.assistant_id !== assistant.id)
       )
     },
-    tools: async (tool: Tables<"tools">) => {
+    tools: async (tool: Tables<"tools", never>) => {
       await deleteTool(tool.id)
     },
-    models: async (model: Tables<"models">) => {
+    models: async (model: Tables<"models", never>) => {
       await deleteModel(model.id)
     }
   }

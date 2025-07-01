@@ -231,7 +231,7 @@ export const useChatHandler = () => {
 
       const b64Images = newMessageImages.map(image => image.base64)
 
-      let retrievedFileItems: Tables<"file_items">[] = []
+      let retrievedFileItems: Tables<"file_items", never>[] = []
 
       if (
         (newMessageFiles.length > 0 || chatFiles.length > 0) &&

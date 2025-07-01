@@ -35,7 +35,7 @@ export const AssistantPicker: FC<AssistantPickerProps> = ({}) => {
     setIsAssistantPickerOpen(isOpen)
   }
 
-  const callSelectAssistant = (assistant: Tables<"assistants">) => {
+  const callSelectAssistant = (assistant: Tables<"assistants", never>) => {
     handleSelectAssistant(assistant)
     handleOpenChange(false)
   }
@@ -90,7 +90,7 @@ export const AssistantPicker: FC<AssistantPickerProps> = ({}) => {
                   tabIndex={0}
                   className="hover:bg-accent focus:bg-accent flex cursor-pointer items-center rounded p-2 focus:outline-none"
                   onClick={() =>
-                    callSelectAssistant(item as Tables<"assistants">)
+                    callSelectAssistant(item as Tables<"assistants", never>)
                   }
                   onKeyDown={getKeyDownHandler(index)}
                 >

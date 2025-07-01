@@ -14,30 +14,30 @@ import { Dispatch, SetStateAction, createContext } from "react"
 
 interface ChatbotUIContext {
   // PROFILE STORE
-  profile: Tables<"profiles"> | null
-  setProfile: Dispatch<SetStateAction<Tables<"profiles"> | null>>
+  profile: Tables<"profiles", never> | null
+  setProfile: Dispatch<SetStateAction<Tables<"profiles", never> | null>>
 
   // ITEMS STORE
-  assistants: Tables<"assistants">[]
-  setAssistants: Dispatch<SetStateAction<Tables<"assistants">[]>>
-  collections: Tables<"collections">[]
-  setCollections: Dispatch<SetStateAction<Tables<"collections">[]>>
-  chats: Tables<"chats">[]
-  setChats: Dispatch<SetStateAction<Tables<"chats">[]>>
-  files: Tables<"files">[]
-  setFiles: Dispatch<SetStateAction<Tables<"files">[]>>
-  folders: Tables<"folders">[]
-  setFolders: Dispatch<SetStateAction<Tables<"folders">[]>>
-  models: Tables<"models">[]
-  setModels: Dispatch<SetStateAction<Tables<"models">[]>>
-  presets: Tables<"presets">[]
-  setPresets: Dispatch<SetStateAction<Tables<"presets">[]>>
-  prompts: Tables<"prompts">[]
-  setPrompts: Dispatch<SetStateAction<Tables<"prompts">[]>>
-  tools: Tables<"tools">[]
-  setTools: Dispatch<SetStateAction<Tables<"tools">[]>>
-  workspaces: Tables<"workspaces">[]
-  setWorkspaces: Dispatch<SetStateAction<Tables<"workspaces">[]>>
+  assistants: Tables<"assistants", never>[]
+  setAssistants: Dispatch<SetStateAction<Tables<"assistants", never>[]>>
+  collections: Tables<"collections", never>[]
+  setCollections: Dispatch<SetStateAction<Tables<"collections", never>[]>>
+  chats: Tables<"chats", never>[]
+  setChats: Dispatch<SetStateAction<Tables<"chats", never>[]>>
+  files: Tables<"files", never>[]
+  setFiles: Dispatch<SetStateAction<Tables<"files", never>[]>>
+  folders: Tables<"folders", never>[]
+  setFolders: Dispatch<SetStateAction<Tables<"folders", never>[]>>
+  models: Tables<"models", never>[]
+  setModels: Dispatch<SetStateAction<Tables<"models", never>[]>>
+  presets: Tables<"presets", never>[]
+  setPresets: Dispatch<SetStateAction<Tables<"presets", never>[]>>
+  prompts: Tables<"prompts", never>[]
+  setPrompts: Dispatch<SetStateAction<Tables<"prompts", never>[]>>
+  tools: Tables<"tools", never>[]
+  setTools: Dispatch<SetStateAction<Tables<"tools", never>[]>>
+  workspaces: Tables<"workspaces", never>[]
+  setWorkspaces: Dispatch<SetStateAction<Tables<"workspaces", never>[]>>
 
   // MODELS STORE
   envKeyMap: Record<string, VALID_ENV_KEYS>
@@ -50,18 +50,22 @@ interface ChatbotUIContext {
   setAvailableOpenRouterModels: Dispatch<SetStateAction<OpenRouterLLM[]>>
 
   // WORKSPACE STORE
-  selectedWorkspace: Tables<"workspaces"> | null
-  setSelectedWorkspace: Dispatch<SetStateAction<Tables<"workspaces"> | null>>
+  selectedWorkspace: Tables<"workspaces", never> | null
+  setSelectedWorkspace: Dispatch<
+    SetStateAction<Tables<"workspaces", never> | null>
+  >
   workspaceImages: WorkspaceImage[]
   setWorkspaceImages: Dispatch<SetStateAction<WorkspaceImage[]>>
 
   // PRESET STORE
-  selectedPreset: Tables<"presets"> | null
-  setSelectedPreset: Dispatch<SetStateAction<Tables<"presets"> | null>>
+  selectedPreset: Tables<"presets", never> | null
+  setSelectedPreset: Dispatch<SetStateAction<Tables<"presets", never> | null>>
 
   // ASSISTANT STORE
-  selectedAssistant: Tables<"assistants"> | null
-  setSelectedAssistant: Dispatch<SetStateAction<Tables<"assistants"> | null>>
+  selectedAssistant: Tables<"assistants", never> | null
+  setSelectedAssistant: Dispatch<
+    SetStateAction<Tables<"assistants", never> | null>
+  >
   assistantImages: AssistantImage[]
   setAssistantImages: Dispatch<SetStateAction<AssistantImage[]>>
   openaiAssistants: any[]
@@ -74,10 +78,10 @@ interface ChatbotUIContext {
   setChatMessages: Dispatch<SetStateAction<ChatMessage[]>>
   chatSettings: ChatSettings | null
   setChatSettings: Dispatch<SetStateAction<ChatSettings>>
-  selectedChat: Tables<"chats"> | null
-  setSelectedChat: Dispatch<SetStateAction<Tables<"chats"> | null>>
-  chatFileItems: Tables<"file_items">[]
-  setChatFileItems: Dispatch<SetStateAction<Tables<"file_items">[]>>
+  selectedChat: Tables<"chats", never> | null
+  setSelectedChat: Dispatch<SetStateAction<Tables<"chats", never> | null>>
+  chatFileItems: Tables<"file_items", never>[]
+  setChatFileItems: Dispatch<SetStateAction<Tables<"file_items", never>[]>>
 
   // ACTIVE CHAT STORE
   abortController: AbortController | null
@@ -132,8 +136,8 @@ interface ChatbotUIContext {
   setSourceCount: Dispatch<SetStateAction<number>>
 
   // TOOL STORE
-  selectedTools: Tables<"tools">[]
-  setSelectedTools: Dispatch<SetStateAction<Tables<"tools">[]>>
+  selectedTools: Tables<"tools", never>[]
+  setSelectedTools: Dispatch<SetStateAction<Tables<"tools", never>[]>>
   toolInUse: string
   setToolInUse: Dispatch<SetStateAction<string>>
 }

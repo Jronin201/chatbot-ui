@@ -36,9 +36,9 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imageLink, setImageLink] = useState("")
   const [selectedAssistantRetrievalItems, setSelectedAssistantRetrievalItems] =
-    useState<Tables<"files">[] | Tables<"collections">[]>([])
+    useState<Tables<"files", never>[] | Tables<"collections", never>[]>([])
   const [selectedAssistantToolItems, setSelectedAssistantToolItems] = useState<
-    Tables<"tools">[]
+    Tables<"tools", never>[]
   >([])
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
   }, [name])
 
   const handleRetrievalItemSelect = (
-    item: Tables<"files"> | Tables<"collections">
+    item: Tables<"files", never> | Tables<"collections", never>
   ) => {
     setSelectedAssistantRetrievalItems(prevState => {
       const isItemAlreadySelected = prevState.find(
@@ -71,7 +71,7 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
     })
   }
 
-  const handleToolSelect = (item: Tables<"tools">) => {
+  const handleToolSelect = (item: Tables<"tools", never>) => {
     setSelectedAssistantToolItems(prevState => {
       const isItemAlreadySelected = prevState.find(
         selectedItem => selectedItem.id === item.id
@@ -124,10 +124,10 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({
           embeddings_provider: assistantChatSettings.embeddingsProvider,
           files: selectedAssistantRetrievalItems.filter(item =>
             item.hasOwnProperty("type")
-          ) as Tables<"files">[],
+          ) as Tables<"files", never>[],
           collections: selectedAssistantRetrievalItems.filter(
             item => !item.hasOwnProperty("type")
-          ) as Tables<"collections">[],
+          ) as Tables<"collections", never>[],
           tools: selectedAssistantToolItems
         } as TablesInsert<"assistants">
       }

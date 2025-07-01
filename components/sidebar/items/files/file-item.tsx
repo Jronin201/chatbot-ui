@@ -8,7 +8,7 @@ import { FC, useState } from "react"
 import { SidebarItem } from "../all/sidebar-display-item"
 
 interface FileItemProps {
-  file: Tables<"files">
+  file: Tables<"files", never>
 }
 
 export const FileItem: FC<FileItemProps> = ({ file }) => {

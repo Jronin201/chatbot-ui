@@ -25,7 +25,7 @@ import { ToolItem } from "./items/tools/tool-item"
 interface SidebarDataListProps {
   contentType: ContentType
   data: DataListType
-  folders: Tables<"folders">[]
+  folders: Tables<"folders", never>[]
 }
 
 export const SidebarDataList: FC<SidebarDataListProps> = ({
@@ -55,22 +55,26 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   ) => {
     switch (contentType) {
       case "chats":
-        return <ChatItem key={item.id} chat={item as Tables<"chats">} />
+        return <ChatItem key={item.id} chat={item as Tables<"chats", never>} />
 
       case "presets":
-        return <PresetItem key={item.id} preset={item as Tables<"presets">} />
+        return (
+          <PresetItem key={item.id} preset={item as Tables<"presets", never>} />
+        )
 
       case "prompts":
-        return <PromptItem key={item.id} prompt={item as Tables<"prompts">} />
+        return (
+          <PromptItem key={item.id} prompt={item as Tables<"prompts", never>} />
+        )
 
       case "files":
-        return <FileItem key={item.id} file={item as Tables<"files">} />
+        return <FileItem key={item.id} file={item as Tables<"files", never>} />
 
       case "collections":
         return (
           <CollectionItem
             key={item.id}
-            collection={item as Tables<"collections">}
+            collection={item as Tables<"collections", never>}
           />
         )
 
@@ -78,15 +82,17 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
         return (
           <AssistantItem
             key={item.id}
-            assistant={item as Tables<"assistants">}
+            assistant={item as Tables<"assistants", never>}
           />
         )
 
       case "tools":
-        return <ToolItem key={item.id} tool={item as Tables<"tools">} />
+        return <ToolItem key={item.id} tool={item as Tables<"tools", never>} />
 
       case "models":
-        return <ModelItem key={item.id} model={item as Tables<"models">} />
+        return (
+          <ModelItem key={item.id} model={item as Tables<"models", never>} />
+        )
 
       default:
         return null

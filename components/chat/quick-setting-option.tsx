@@ -9,7 +9,7 @@ import { DropdownMenuItem } from "../ui/dropdown-menu"
 interface QuickSettingOptionProps {
   contentType: "presets" | "assistants"
   isSelected: boolean
-  item: Tables<"presets"> | Tables<"assistants">
+  item: Tables<"presets", never> | Tables<"assistants", never>
   onSelect: () => void
   image: string
 }

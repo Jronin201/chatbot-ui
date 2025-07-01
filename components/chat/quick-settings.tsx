@@ -60,12 +60,12 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   }, [isOpen])
 
   const handleSelectQuickSetting = async (
-    item: Tables<"presets"> | Tables<"assistants"> | null,
+    item: Tables<"presets", never> | Tables<"assistants", never> | null,
     contentType: "presets" | "assistants" | "remove"
   ) => {
     console.log({ item, contentType })
     if (contentType === "assistants" && item) {
-      setSelectedAssistant(item as Tables<"assistants">)
+      setSelectedAssistant(item as Tables<"assistants", never>)
       setLoading(true)
       let allFiles = []
       const assistantFiles = (await getAssistantFilesByAssistantId(item.id))
@@ -95,7 +95,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       setLoading(false)
       setSelectedPreset(null)
     } else if (contentType === "presets" && item) {
-      setSelectedPreset(item as Tables<"presets">)
+      setSelectedPreset(item as Tables<"presets", never>)
       setSelectedAssistant(null)
       setChatFiles([])
       setSelectedTools([])
@@ -260,8 +260,8 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                 item={
                   selectedPreset ||
                   (selectedAssistant as
-                    | Tables<"presets">
-                    | Tables<"assistants">)
+                    | Tables<"presets", never>
+                    | Tables<"assistants", never>)
                 }
                 onSelect={() => {
                   handleSelectQuickSetting(null, "remove")
@@ -294,7 +294,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                       ? assistantImages.find(
                           image =>
                             image.path ===
-                            (item as Tables<"assistants">).image_path
+                            (item as Tables<"assistants", never>).image_path
                         )?.base64 || ""
                       : ""
                   }

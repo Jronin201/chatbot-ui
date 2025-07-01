@@ -16,7 +16,7 @@ import { IconEdit } from "@tabler/icons-react"
 import { FC, useContext, useRef, useState } from "react"
 
 interface UpdateChatProps {
-  chat: Tables<"chats">
+  chat: Tables<"chats", never>
 }
 
 export const UpdateChat: FC<UpdateChatProps> = ({ chat }) => {

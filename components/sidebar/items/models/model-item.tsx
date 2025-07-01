@@ -7,7 +7,7 @@ import { FC, useState } from "react"
 import { SidebarItem } from "../all/sidebar-display-item"
 
 interface ModelItemProps {
-  model: Tables<"models">
+  model: Tables<"models", never>
 }
 
 export const ModelItem: FC<ModelItemProps> = ({ model }) => {

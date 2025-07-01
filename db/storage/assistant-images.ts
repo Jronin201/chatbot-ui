@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase/browser-client"
 import { Tables } from "@/supabase/types"
 
 export const uploadAssistantImage = async (
-  assistant: Tables<"assistants">,
+  assistant: Tables<"assistants", never>,
   image: File
 ) => {
   const bucket = "assistant_images"

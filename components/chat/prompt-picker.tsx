@@ -47,7 +47,7 @@ export const PromptPicker: FC<PromptPickerProps> = ({}) => {
     setIsPromptPickerOpen(isOpen)
   }
 
-  const callSelectPrompt = (prompt: Tables<"prompts">) => {
+  const callSelectPrompt = (prompt: Tables<"prompts", never>) => {
     const regex = /\{\{.*?\}\}/g
     const matches = prompt.content.match(regex)
 

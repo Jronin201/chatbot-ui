@@ -13,7 +13,7 @@ import { DeleteChat } from "./delete-chat"
 import { UpdateChat } from "./update-chat"
 
 interface ChatItemProps {
-  chat: Tables<"chats">
+  chat: Tables<"chats", never>
 }
 
 export const ChatItem: FC<ChatItemProps> = ({ chat }) => {

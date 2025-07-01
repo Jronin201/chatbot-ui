@@ -120,10 +120,10 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
   const [isOpen, setIsOpen] = useState(false)
   const [startingWorkspaces, setStartingWorkspaces] = useState<
-    Tables<"workspaces">[]
+    Tables<"workspaces", never>[]
   >([])
   const [selectedWorkspaces, setSelectedWorkspaces] = useState<
-    Tables<"workspaces">[]
+    Tables<"workspaces", never>[]
   >([])
 
   // Collections Render State
@@ -136,20 +136,20 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
 
   // Assistants Render State
   const [startingAssistantFiles, setStartingAssistantFiles] = useState<
-    Tables<"files">[]
+    Tables<"files", never>[]
   >([])
   const [startingAssistantCollections, setStartingAssistantCollections] =
-    useState<Tables<"collections">[]>([])
+    useState<Tables<"collections", never>[]>([])
   const [startingAssistantTools, setStartingAssistantTools] = useState<
-    Tables<"tools">[]
+    Tables<"tools", never>[]
   >([])
   const [selectedAssistantFiles, setSelectedAssistantFiles] = useState<
-    Tables<"files">[]
+    Tables<"files", never>[]
   >([])
   const [selectedAssistantCollections, setSelectedAssistantCollections] =
-    useState<Tables<"collections">[]>([])
+    useState<Tables<"collections", never>[]>([])
   const [selectedAssistantTools, setSelectedAssistantTools] = useState<
-    Tables<"tools">[]
+    Tables<"tools", never>[]
   >([])
 
   useEffect(() => {
@@ -272,8 +272,8 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
   }
 
   const handleWorkspaceUpdates = async (
-    startingWorkspaces: Tables<"workspaces">[],
-    selectedWorkspaces: Tables<"workspaces">[],
+    startingWorkspaces: Tables<"workspaces", never>[],
+    selectedWorkspaces: Tables<"workspaces", never>[],
     itemId: string,
     deleteWorkspaceFn: (
       itemId: string,
@@ -606,7 +606,7 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
     }
   }
 
-  const handleSelectWorkspace = (workspace: Tables<"workspaces">) => {
+  const handleSelectWorkspace = (workspace: Tables<"workspaces", never>) => {
     setSelectedWorkspaces(prevState => {
       const isWorkspaceAlreadySelected = prevState.find(
         selectedWorkspace => selectedWorkspace.id === workspace.id

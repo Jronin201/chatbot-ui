@@ -14,7 +14,7 @@ import { AssistantRetrievalSelect } from "./assistant-retrieval-select"
 import { AssistantToolSelect } from "./assistant-tool-select"
 
 interface AssistantItemProps {
-  assistant: Tables<"assistants">
+  assistant: Tables<"assistants", never>
 }
 
 export const AssistantItem: FC<AssistantItemProps> = ({ assistant }) => {
@@ -42,9 +42,9 @@ export const AssistantItem: FC<AssistantItemProps> = ({ assistant }) => {
   }, [assistant, assistantImages])
 
   const handleFileSelect = (
-    file: Tables<"files">,
+    file: Tables<"files", never>,
     setSelectedAssistantFiles: React.Dispatch<
-      React.SetStateAction<Tables<"files">[]>
+      React.SetStateAction<Tables<"files", never>[]>
     >
   ) => {
     setSelectedAssistantFiles(prevState => {
@@ -61,9 +61,9 @@ export const AssistantItem: FC<AssistantItemProps> = ({ assistant }) => {
   }
 
   const handleCollectionSelect = (
-    collection: Tables<"collections">,
+    collection: Tables<"collections", never>,
     setSelectedAssistantCollections: React.Dispatch<
-      React.SetStateAction<Tables<"collections">[]>
+      React.SetStateAction<Tables<"collections", never>[]>
     >
   ) => {
     setSelectedAssistantCollections(prevState => {
@@ -82,9 +82,9 @@ export const AssistantItem: FC<AssistantItemProps> = ({ assistant }) => {
   }
 
   const handleToolSelect = (
-    tool: Tables<"tools">,
+    tool: Tables<"tools", never>,
     setSelectedAssistantTools: React.Dispatch<
-      React.SetStateAction<Tables<"tools">[]>
+      React.SetStateAction<Tables<"tools", never>[]>
     >
   ) => {
     setSelectedAssistantTools(prevState => {
@@ -140,29 +140,29 @@ export const AssistantItem: FC<AssistantItemProps> = ({ assistant }) => {
         temperature: assistantChatSettings.temperature
       }}
       renderInputs={(renderState: {
-        startingAssistantFiles: Tables<"files">[]
+        startingAssistantFiles: Tables<"files", never>[]
         setStartingAssistantFiles: React.Dispatch<
-          React.SetStateAction<Tables<"files">[]>
+          React.SetStateAction<Tables<"files", never>[]>
         >
-        selectedAssistantFiles: Tables<"files">[]
+        selectedAssistantFiles: Tables<"files", never>[]
         setSelectedAssistantFiles: React.Dispatch<
-          React.SetStateAction<Tables<"files">[]>
+          React.SetStateAction<Tables<"files", never>[]>
         >
-        startingAssistantCollections: Tables<"collections">[]
+        startingAssistantCollections: Tables<"collections", never>[]
         setStartingAssistantCollections: React.Dispatch<
-          React.SetStateAction<Tables<"collections">[]>
+          React.SetStateAction<Tables<"collections", never>[]>
         >
-        selectedAssistantCollections: Tables<"collections">[]
+        selectedAssistantCollections: Tables<"collections", never>[]
         setSelectedAssistantCollections: React.Dispatch<
-          React.SetStateAction<Tables<"collections">[]>
+          React.SetStateAction<Tables<"collections", never>[]>
         >
-        startingAssistantTools: Tables<"tools">[]
+        startingAssistantTools: Tables<"tools", never>[]
         setStartingAssistantTools: React.Dispatch<
-          React.SetStateAction<Tables<"tools">[]>
+          React.SetStateAction<Tables<"tools", never>[]>
         >
-        selectedAssistantTools: Tables<"tools">[]
+        selectedAssistantTools: Tables<"tools", never>[]
         setSelectedAssistantTools: React.Dispatch<
-          React.SetStateAction<Tables<"tools">[]>
+          React.SetStateAction<Tables<"tools", never>[]>
         >
       }) => (
         <>

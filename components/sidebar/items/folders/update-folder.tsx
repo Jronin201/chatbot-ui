@@ -16,7 +16,7 @@ import { IconEdit } from "@tabler/icons-react"
 import { FC, useContext, useRef, useState } from "react"
 
 interface UpdateFolderProps {
-  folder: Tables<"folders">
+  folder: Tables<"folders", never>
 }
 
 export const UpdateFolder: FC<UpdateFolderProps> = ({ folder }) => {

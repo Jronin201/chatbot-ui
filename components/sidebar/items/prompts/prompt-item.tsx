@@ -8,7 +8,7 @@ import { FC, useState } from "react"
 import { SidebarItem } from "../all/sidebar-display-item"
 
 interface PromptItemProps {
-  prompt: Tables<"prompts">
+  prompt: Tables<"prompts", never>
 }
 
 export const PromptItem: FC<PromptItemProps> = ({ prompt }) => {

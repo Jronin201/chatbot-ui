@@ -17,7 +17,7 @@ import { Input } from "../ui/input"
 import { useRouter } from "next/navigation"
 
 interface DeleteWorkspaceProps {
-  workspace: Tables<"workspaces">
+  workspace: Tables<"workspaces", never>
   onDelete: () => void
 }
 

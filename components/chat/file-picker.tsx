@@ -10,8 +10,8 @@ interface FilePickerProps {
   onOpenChange: (isOpen: boolean) => void
   selectedFileIds: string[]
   selectedCollectionIds: string[]
-  onSelectFile: (file: Tables<"files">) => void
-  onSelectCollection: (collection: Tables<"collections">) => void
+  onSelectFile: (file: Tables<"files", never>) => void
+  onSelectCollection: (collection: Tables<"collections", never>) => void
   isFocused: boolean
 }
 
@@ -52,12 +52,12 @@ export const FilePicker: FC<FilePickerProps> = ({
     onOpenChange(isOpen)
   }
 
-  const handleSelectFile = (file: Tables<"files">) => {
+  const handleSelectFile = (file: Tables<"files", never>) => {
     onSelectFile(file)
     handleOpenChange(false)
   }
 
-  const handleSelectCollection = (collection: Tables<"collections">) => {
+  const handleSelectCollection = (collection: Tables<"collections", never>) => {
     onSelectCollection(collection)
     handleOpenChange(false)
   }
@@ -121,7 +121,7 @@ export const FilePicker: FC<FilePickerProps> = ({
                   className="hover:bg-accent focus:bg-accent flex cursor-pointer items-center rounded p-2 focus:outline-none"
                   onClick={() => {
                     if ("type" in item) {
-                      handleSelectFile(item as Tables<"files">)
+                      handleSelectFile(item as Tables<"files", never>)
                     } else {
                       handleSelectCollection(item)
                     }
@@ -135,7 +135,10 @@ export const FilePicker: FC<FilePickerProps> = ({
                   }
                 >
                   {"type" in item ? (
-                    <FileIcon type={(item as Tables<"files">).type} size={32} />
+                    <FileIcon
+                      type={(item as Tables<"files", never>).type}
+                      size={32}
+                    />
                   ) : (
                     <IconBooks size={32} />
                   )}

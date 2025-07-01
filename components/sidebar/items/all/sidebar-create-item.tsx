@@ -88,7 +88,7 @@ export const SidebarCreateItem: FC<SidebarCreateItemProps> = ({
       createState: {
         image: File
         collectionFiles: TablesInsert<"collection_files">[]
-      } & Tables<"collections">,
+      } & Tables<"collections", never>,
       workspaceId: string
     ) => {
       const { collectionFiles, ...rest } = createState
@@ -107,10 +107,10 @@ export const SidebarCreateItem: FC<SidebarCreateItemProps> = ({
     assistants: async (
       createState: {
         image: File
-        files: Tables<"files">[]
-        collections: Tables<"collections">[]
-        tools: Tables<"tools">[]
-      } & Tables<"assistants">,
+        files: Tables<"files", never>[]
+        collections: Tables<"collections", never>[]
+        tools: Tables<"tools", never>[]
+      } & Tables<"assistants", never>,
       workspaceId: string
     ) => {
       const { image, files, collections, tools, ...rest } = createState
