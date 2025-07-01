@@ -5,6 +5,7 @@ import { ChatSettings } from "@/types"
 import { OpenAIStream, StreamingTextResponse } from "ai"
 import OpenAI from "openai"
 import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions.mjs"
+import { diagnostics } from "@/lib/diagnostics"
 
 export async function POST(request: Request) {
   const json = await request.json()
@@ -12,6 +13,12 @@ export async function POST(request: Request) {
     chatSettings: ChatSettings
     messages: any[]
     selectedTools: Tables<"tools", never>[]
+  }
+
+  // Validate chat settings for debugging
+  const validation = diagnostics.validateChatSettings(chatSettings)
+  if (!validation.valid) {
+    console.warn("⚠️ Tools route: Chat settings validation issues detected")
   }
 
   try {
