@@ -39,9 +39,10 @@ export async function POST(req: Request) {
         chunks = await processDocX(text)
         break
       default:
-        return new NextResponse("Unsupported file type", {
-          status: 400
-        })
+        return NextResponse.json(
+          { message: "Unsupported file type" },
+          { status: 400 }
+        )
     }
 
     let embeddings: any = []
@@ -107,9 +108,7 @@ export async function POST(req: Request) {
       .update({ tokens: totalTokens })
       .eq("id", fileId)
 
-    return new NextResponse("Embed Successful", {
-      status: 200
-    })
+    return NextResponse.json({ message: "Embed Successful" }, { status: 200 })
   } catch (error: any) {
     console.error(error)
     const errorMessage = error.error?.message || "An unexpected error occurred"
