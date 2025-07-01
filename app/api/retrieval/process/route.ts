@@ -10,16 +10,13 @@
 ------------------------------------------------------------------- */
 
 import "server-only"
+import "dotenv/config"
 
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import OpenAI from "openai"
 
 import type { Database } from "@/supabase/types"
-
-// Ensure this route is not statically optimized
-export const runtime = "nodejs"
-export const dynamic = "force-dynamic"
 
 // ────────────────────────────────────────────────────────────
 //  CONSTANTS  (adjust if you want different defaults)
@@ -114,25 +111,10 @@ function buildMessages(
 }
 
 // ────────────────────────────────────────────────────────────
-//  ROUTE HANDLER  (POST /api/retrieval/process)
+//  ROUTE HANDLER  (POST /api/chat/openai)
 // ────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    // Validate environment variables at runtime
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json(
-        { message: "Missing required Supabase environment variables" },
-        { status: 500 }
-      )
-    }
-
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { message: "Missing required OpenAI API key" },
-        { status: 500 }
-      )
-    }
-
     const body = await req.json()
     const { prompt, fileId = null } = body as {
       prompt: string
@@ -170,7 +152,7 @@ export async function POST(req: NextRequest) {
       matches // send back the chunks for debugging / highlighting
     })
   } catch (err: any) {
-    console.error("[retrieval/process] error:", err)
+    console.error("[chat/openai] error:", err)
     return NextResponse.json(
       { message: err?.message ?? "Unknown error" },
       { status: 500 }
