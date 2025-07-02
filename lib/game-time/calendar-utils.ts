@@ -314,16 +314,13 @@ export class GameTimeManager {
     calendarSystem: CalendarSystem
   ): boolean {
     try {
-      console.log(`Validating ${calendarSystem} date: "${dateString}"`)
       switch (calendarSystem) {
         case "dune":
           const parsed = this.parseDuneDate(dateString)
-          console.log(`Dune date parsed successfully:`, parsed)
           return true
         case "standard":
           const date = new Date(dateString)
           const isValid = !isNaN(date.getTime())
-          console.log(`Standard date valid: ${isValid}`)
           return isValid
         default:
           return true
