@@ -3,6 +3,7 @@ import { ChatbotUIContext } from "@/context/context"
 import { IconInfoCircle, IconMessagePlus } from "@tabler/icons-react"
 import { FC, useContext } from "react"
 import { WithTooltip } from "../ui/with-tooltip"
+import { GameTimeCompactDisplay } from "../game-time/game-time-compact-display"
 
 interface ChatSecondaryButtonsProps {}
 
@@ -13,6 +14,9 @@ export const ChatSecondaryButtons: FC<ChatSecondaryButtonsProps> = ({}) => {
 
   return (
     <>
+      {/* Game Time Display */}
+      <GameTimeCompactDisplay />
+
       {selectedChat && (
         <>
           <WithTooltip

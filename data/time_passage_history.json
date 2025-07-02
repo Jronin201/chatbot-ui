@@ -1,0 +1,44 @@
+[
+  {
+    "description": "Campaign started",
+    "daysElapsed": 0,
+    "previousDate": "1 Ignis 10191 A.G.",
+    "newDate": "1 Ignis 10191 A.G.",
+    "timestamp": "2025-07-02T03:00:03.109Z"
+  },
+  {
+    "description": "Traveled to test location",
+    "daysElapsed": 3,
+    "previousDate": "1 Ignis 10191 A.G.",
+    "newDate": "4 Ignis 10191 A.G.",
+    "timestamp": "2025-07-02T03:00:03.158Z"
+  },
+  {
+    "description": "Set to specific date for testing",
+    "daysElapsed": 6,
+    "previousDate": "4 Ignis 10191 A.G.",
+    "newDate": "10 Ignis 10191 A.G.",
+    "timestamp": "2025-07-02T03:00:03.203Z"
+  },
+  {
+    "description": "Campaign started",
+    "daysElapsed": 0,
+    "previousDate": "1 Ignis 10191 A.G.",
+    "newDate": "1 Ignis 10191 A.G.",
+    "timestamp": "2025-07-02T03:00:32.173Z"
+  },
+  {
+    "description": "Traveled to test location",
+    "daysElapsed": 3,
+    "previousDate": "1 Ignis 10191 A.G.",
+    "newDate": "4 Ignis 10191 A.G.",
+    "timestamp": "2025-07-02T03:00:32.230Z"
+  },
+  {
+    "description": "Set to specific date for testing",
+    "daysElapsed": 6,
+    "previousDate": "4 Ignis 10191 A.G.",
+    "newDate": "10 Ignis 10191 A.G.",
+    "timestamp": "2025-07-02T03:00:32.240Z"
+  }
+]
