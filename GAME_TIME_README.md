@@ -245,9 +245,17 @@ types/
 
 ```
 Start: 1 Ignis 10191 A.G.
-+ 30 days → 1 Leonis 10191 A.G.
-+ 360 days → 1 Ignis 10192 A.G.
++ 29 days → 30 Ignis 10191 A.G. (end of first month)
++ 30 days → 1 Leonis 10191 A.G. (start of second month)
++ 44 days → 15 Leonis 10191 A.G. (15th day of second month)
++ 360 days → 1 Ignis 10192 A.G. (next year)
 ```
+
+The Dune Imperial Calendar system:
+- **12 months** with 30 days each = **360 days per year**
+- **6-day weeks**: Solis, Lunis, Terris, Aquae, Ventis, Ignis
+- **A.G. dating**: After Guild (from Spacing Guild establishment)
+- **No leap years**: Precise 360-day calendar system
 
 ## Storage
 

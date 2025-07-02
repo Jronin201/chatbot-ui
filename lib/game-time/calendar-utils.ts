@@ -25,9 +25,19 @@ export const DUNE_CALENDAR = {
     "Frigidus",
     "Kamar"
   ],
-  DAYS_IN_MONTH: 30, // Standard 30 days per month in Dune calendar
-  DAYS_IN_YEAR: 360, // 12 months × 30 days
-  IMPERIAL_EPOCH: 10191 // Standard Imperial dating epoch
+  DAYS_IN_MONTH: 30, // Each month has exactly 30 days
+  DAYS_IN_YEAR: 360, // 12 months × 30 days = 360 days per year
+  MONTHS_IN_YEAR: 12,
+  DAYS_IN_WEEK: 6, // Six-day weeks
+  WEEK_DAYS: [
+    "Solis", // Day of the Sun
+    "Lunis", // Day of the Moon
+    "Terris", // Day of the Earth
+    "Aquae", // Day of Water
+    "Ventis", // Day of Wind
+    "Ignis" // Day of Fire
+  ],
+  IMPERIAL_EPOCH: 10191 // Standard Imperial dating epoch (A.G. - After Guild)
 }
 
 export class GameTimeManager {
@@ -182,6 +192,21 @@ export class GameTimeManager {
   }
 
   /**
+   * Format a Dune date with additional information (day of week, etc.)
+   */
+  static formatDuneDateExtended(dateString: string): string {
+    try {
+      const duneDate = this.parseDuneDate(dateString)
+      const monthName = DUNE_CALENDAR.MONTHS[duneDate.month - 1]
+      const weekDay = this.getDuneWeekDay(duneDate)
+      const baseFormat = `${duneDate.day} ${monthName} ${duneDate.year} A.G.`
+      return `${weekDay}, ${baseFormat}`
+    } catch (error) {
+      return dateString
+    }
+  }
+
+  /**
    * Format a standard date
    */
   static formatStandardDate(dateString: string): string {
@@ -236,27 +261,13 @@ export class GameTimeManager {
   }
 
   /**
-   * Add days to a Dune calendar date
+   * Add days to a Dune calendar date string
    */
   static addDaysDuneDate(dateString: string, daysToAdd: number): string {
     const duneDate = this.parseDuneDate(dateString)
-
-    // Convert to days since epoch
-    const totalDays =
-      duneDate.year * DUNE_CALENDAR.DAYS_IN_YEAR +
-      (duneDate.month - 1) * DUNE_CALENDAR.DAYS_IN_MONTH +
-      (duneDate.day - 1)
-
-    const newTotalDays = totalDays + daysToAdd
-
-    // Convert back to date components
-    const newYear = Math.floor(newTotalDays / DUNE_CALENDAR.DAYS_IN_YEAR)
-    const remainingDays = newTotalDays % DUNE_CALENDAR.DAYS_IN_YEAR
-    const newMonth = Math.floor(remainingDays / DUNE_CALENDAR.DAYS_IN_MONTH) + 1
-    const newDay = (remainingDays % DUNE_CALENDAR.DAYS_IN_MONTH) + 1
-
-    const monthName = DUNE_CALENDAR.MONTHS[newMonth - 1]
-    return `${newDay} ${monthName} ${newYear} A.G.`
+    const newDuneDate = this.addDaysToDuneDate(duneDate, daysToAdd)
+    const monthName = DUNE_CALENDAR.MONTHS[newDuneDate.month - 1]
+    return `${newDuneDate.day} ${monthName} ${newDuneDate.year} A.G.`
   }
 
   /**
@@ -296,18 +307,7 @@ export class GameTimeManager {
   static daysDifferenceDune(date1: string, date2: string): number {
     const duneDate1 = this.parseDuneDate(date1)
     const duneDate2 = this.parseDuneDate(date2)
-
-    const totalDays1 =
-      duneDate1.year * DUNE_CALENDAR.DAYS_IN_YEAR +
-      (duneDate1.month - 1) * DUNE_CALENDAR.DAYS_IN_MONTH +
-      (duneDate1.day - 1)
-
-    const totalDays2 =
-      duneDate2.year * DUNE_CALENDAR.DAYS_IN_YEAR +
-      (duneDate2.month - 1) * DUNE_CALENDAR.DAYS_IN_MONTH +
-      (duneDate2.day - 1)
-
-    return Math.abs(totalDays2 - totalDays1)
+    return this.daysBetweenDuneDates(duneDate1, duneDate2)
   }
 
   /**
@@ -355,5 +355,77 @@ export class GameTimeManager {
       default:
         return new Date().toISOString().split("T")[0]
     }
+  }
+
+  /**
+   * Convert a Dune calendar date to total days since epoch
+   * This enables proper date arithmetic for the Dune calendar system
+   */
+  static duneDateToDays(duneDate: DuneCalendarDate): number {
+    const { year, month, day } = duneDate
+
+    // Calculate total days from years (360 days per year)
+    const yearDays =
+      (year - DUNE_CALENDAR.IMPERIAL_EPOCH) * DUNE_CALENDAR.DAYS_IN_YEAR
+
+    // Calculate days from completed months in current year (30 days per month)
+    const monthDays = (month - 1) * DUNE_CALENDAR.DAYS_IN_MONTH
+
+    // Add the current day
+    return yearDays + monthDays + day - 1 // -1 because we count from day 0
+  }
+
+  /**
+   * Convert total days since epoch back to Dune calendar date
+   */
+  static daysToDuneDate(totalDays: number): DuneCalendarDate {
+    // Calculate the year
+    const yearsSinceEpoch = Math.floor(totalDays / DUNE_CALENDAR.DAYS_IN_YEAR)
+    const year = DUNE_CALENDAR.IMPERIAL_EPOCH + yearsSinceEpoch
+
+    // Calculate remaining days in the current year
+    const daysInCurrentYear = totalDays % DUNE_CALENDAR.DAYS_IN_YEAR
+
+    // Calculate the month (1-based)
+    const month =
+      Math.floor(daysInCurrentYear / DUNE_CALENDAR.DAYS_IN_MONTH) + 1
+
+    // Calculate the day within the month (1-based)
+    const day = (daysInCurrentYear % DUNE_CALENDAR.DAYS_IN_MONTH) + 1
+
+    return { year, month, day }
+  }
+
+  /**
+   * Add days to a Dune calendar date
+   */
+  static addDaysToDuneDate(
+    duneDate: DuneCalendarDate,
+    daysToAdd: number
+  ): DuneCalendarDate {
+    const totalDays = this.duneDateToDays(duneDate)
+    const newTotalDays = totalDays + daysToAdd
+    return this.daysToDuneDate(newTotalDays)
+  }
+
+  /**
+   * Calculate the difference in days between two Dune calendar dates
+   */
+  static daysBetweenDuneDates(
+    startDate: DuneCalendarDate,
+    endDate: DuneCalendarDate
+  ): number {
+    const startDays = this.duneDateToDays(startDate)
+    const endDays = this.duneDateToDays(endDate)
+    return endDays - startDays
+  }
+
+  /**
+   * Get the day of the week for a Dune calendar date
+   */
+  static getDuneWeekDay(duneDate: DuneCalendarDate): string {
+    const totalDays = this.duneDateToDays(duneDate)
+    const weekDayIndex = totalDays % DUNE_CALENDAR.DAYS_IN_WEEK
+    return DUNE_CALENDAR.WEEK_DAYS[weekDayIndex]
   }
 }
