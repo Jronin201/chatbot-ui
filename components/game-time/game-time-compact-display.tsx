@@ -45,7 +45,7 @@ export const GameTimeCompactDisplay: React.FC<
           className="h-8 px-2 text-xs"
         >
           <IconCalendar className="mr-1 size-3" />
-          Set Game Time
+          Game Time
         </Button>
         <GameTimeInitDialog
           isOpen={showInitDialog}
