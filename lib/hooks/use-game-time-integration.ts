@@ -34,9 +34,23 @@ export const useGameTimeIntegration = (
 
   const { gameTimeData, settings, formatDate, updateGameTime } = useGameTime()
   const gameTimeService = GameTimeService.getInstance()
+
+  // Simple hash function for message content
+  const hashMessage = (message: string): string => {
+    let hash = 0
+    for (let i = 0; i < message.length; i++) {
+      const char = message.charCodeAt(i)
+      hash = (hash << 5) - hash + char
+      hash = hash & hash // Convert to 32-bit integer
+    }
+    return hash.toString()
+  }
   const [lastProcessedMessageId, setLastProcessedMessageId] = useState<
     string | null
   >(null)
+  const [processedMessageHashes, setProcessedMessageHashes] = useState<
+    Set<string>
+  >(new Set())
   const [timePassageNotifications, setTimePassageNotifications] = useState<
     Array<{
       id: string
@@ -56,7 +70,15 @@ export const useGameTimeIntegration = (
       return { timeUpdated: false }
     }
 
-    // Don't process the same message twice
+    // Create a hash of the message content for deduplication
+    const messageHash = hashMessage(messageContent.trim().toLowerCase())
+
+    // Don't process the same message content twice
+    if (processedMessageHashes.has(messageHash)) {
+      return { timeUpdated: false }
+    }
+
+    // Also check by message ID if provided
     if (messageId && messageId === lastProcessedMessageId) {
       return { timeUpdated: false }
     }
@@ -65,7 +87,17 @@ export const useGameTimeIntegration = (
       const result = await gameTimeService.processMessage(messageContent)
 
       if (result.timeUpdated && result.timePassageInfo) {
+        // Mark this message as processed
         setLastProcessedMessageId(messageId || null)
+        setProcessedMessageHashes(prev => {
+          const newSet = new Set([...prev, messageHash])
+          // Limit to last 100 hashes to prevent memory issues
+          if (newSet.size > 100) {
+            const hashArray = Array.from(newSet)
+            return new Set(hashArray.slice(-100))
+          }
+          return newSet
+        })
 
         const timePassageResult: TimePassageResult = {
           timeUpdated: true,

@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import { useContext, useEffect, useRef } from "react"
 import { LLM_LIST } from "../../../lib/models/llm/llm-list"
 import { useGameTime } from "@/context/game-time-context"
+import { useGameTimeIntegration } from "@/lib/hooks/use-game-time-integration"
 import { toast } from "sonner"
 import {
   createTempMessages,
@@ -78,6 +79,11 @@ export const useChatHandler = () => {
     updateGameTime,
     formatDate
   } = useGameTime()
+
+  const { processMessage } = useGameTimeIntegration({
+    enabled: true,
+    showNotifications: true
+  })
 
   const chatInputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -390,27 +396,16 @@ export const useChatHandler = () => {
         selectedAssistant
       )
 
-      // Game Time Integration: Analyze message for time passage
+      // Game Time Integration: Process message for time passage
       if (
         gameTimeData &&
         gameTimeSettings.autoDetectTimePassage &&
         !isRegeneration
       ) {
         try {
-          const daysElapsed = await analyzeMessageForTimePassage(messageContent)
-          if (daysElapsed > 0) {
-            await updateGameTime(
-              daysElapsed,
-              `Time passage detected from: "${messageContent.substring(0, 100)}..."`
-            )
-
-            if (gameTimeSettings.showTimePassageNotifications) {
-              const newDate = formatDate(gameTimeData.currentDate)
-              toast.success(
-                `🕒 ${daysElapsed} day(s) passed! Current date: ${newDate}`
-              )
-            }
-          }
+          // Create a unique ID for this message to prevent duplicate processing
+          const messageId = `${Date.now()}-${messageContent.substring(0, 50).replace(/\s+/g, "-")}`
+          await processMessage(messageContent, messageId)
         } catch (error) {
           console.error("Error processing time passage:", error)
           // Don't throw - time passage detection failures shouldn't break chat
