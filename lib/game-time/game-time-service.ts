@@ -205,7 +205,11 @@ export class GameTimeService {
     if (Object.keys(settings.customKeywords).length > 0) {
       // Convert custom keywords to the format expected by analyzer
       for (const [keyword, days] of Object.entries(settings.customKeywords)) {
-        this.analyzer.addCustomActivity(`custom_${keyword}`, [keyword], days)
+        this.analyzer.addCustomActivity(
+          `custom_${keyword}`,
+          [keyword],
+          Number(days)
+        )
       }
     }
 

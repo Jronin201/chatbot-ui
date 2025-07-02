@@ -4,43 +4,40 @@ import {
   GameTimeSettings
 } from "@/types/game-time"
 
-const GAME_TIME_FILE = "game_time.json"
-const TIME_HISTORY_FILE = "time_passage_history.json"
-const GAME_TIME_SETTINGS_FILE = "game_time_settings.json"
+// Storage keys for localStorage
+const GAME_TIME_KEY = "chatbot-ui-game-time"
+const TIME_HISTORY_KEY = "chatbot-ui-time-history"
+const GAME_TIME_SETTINGS_KEY = "chatbot-ui-game-time-settings"
 
+/**
+ * Simple localStorage-based storage for game time data.
+ * This avoids Node.js file system dependencies that cause issues in production builds.
+ */
 export class GameTimeStorage {
   /**
-   * Check if running in browser environment
+   * Check if localStorage is available
    */
-  private static isBrowser(): boolean {
-    return typeof window !== "undefined" && typeof localStorage !== "undefined"
+  private static isStorageAvailable(): boolean {
+    try {
+      return (
+        typeof window !== "undefined" && typeof localStorage !== "undefined"
+      )
+    } catch {
+      return false
+    }
   }
 
   /**
-   * Load game time data from storage
+   * Load game time data from localStorage
    */
   static async loadGameTime(): Promise<GameTimeData | null> {
     try {
-      if (this.isBrowser()) {
-        const data = localStorage.getItem(GAME_TIME_FILE)
-        return data ? JSON.parse(data) : null
-      } else {
-        // Server-side: use file system
-        const fs = await import("fs/promises")
-        const path = await import("path")
-
-        const filePath = path.join(process.cwd(), "data", GAME_TIME_FILE)
-
-        try {
-          const data = await fs.readFile(filePath, "utf-8")
-          return JSON.parse(data)
-        } catch (error: any) {
-          if (error.code === "ENOENT") {
-            return null // File doesn't exist
-          }
-          throw error
-        }
+      if (!this.isStorageAvailable()) {
+        return null
       }
+
+      const data = localStorage.getItem(GAME_TIME_KEY)
+      return data ? JSON.parse(data) : null
     } catch (error) {
       console.error("Error loading game time data:", error)
       return null
@@ -48,31 +45,16 @@ export class GameTimeStorage {
   }
 
   /**
-   * Save game time data to storage
+   * Save game time data to localStorage
    */
   static async saveGameTime(gameTimeData: GameTimeData): Promise<void> {
     try {
-      const data = JSON.stringify(gameTimeData, null, 2)
-
-      if (this.isBrowser()) {
-        localStorage.setItem(GAME_TIME_FILE, data)
-      } else {
-        // Server-side: use file system
-        const fs = await import("fs/promises")
-        const path = await import("path")
-
-        const dataDir = path.join(process.cwd(), "data")
-        const filePath = path.join(dataDir, GAME_TIME_FILE)
-
-        // Ensure data directory exists
-        try {
-          await fs.access(dataDir)
-        } catch {
-          await fs.mkdir(dataDir, { recursive: true })
-        }
-
-        await fs.writeFile(filePath, data, "utf-8")
+      if (!this.isStorageAvailable()) {
+        throw new Error("Storage not available")
       }
+
+      const data = JSON.stringify(gameTimeData)
+      localStorage.setItem(GAME_TIME_KEY, data)
     } catch (error) {
       console.error("Error saving game time data:", error)
       throw new Error("Failed to save game time data")
@@ -84,33 +66,13 @@ export class GameTimeStorage {
    */
   static async deleteGameTime(): Promise<void> {
     try {
-      if (this.isBrowser()) {
-        localStorage.removeItem(GAME_TIME_FILE)
-        localStorage.removeItem(TIME_HISTORY_FILE)
-        localStorage.removeItem(GAME_TIME_SETTINGS_FILE)
-      } else {
-        // Server-side: delete files
-        const fs = await import("fs/promises")
-        const path = await import("path")
-
-        const dataDir = path.join(process.cwd(), "data")
-        const files = [
-          GAME_TIME_FILE,
-          TIME_HISTORY_FILE,
-          GAME_TIME_SETTINGS_FILE
-        ]
-
-        for (const file of files) {
-          const filePath = path.join(dataDir, file)
-          try {
-            await fs.unlink(filePath)
-          } catch (error: any) {
-            if (error.code !== "ENOENT") {
-              console.error(`Error deleting ${file}:`, error)
-            }
-          }
-        }
+      if (!this.isStorageAvailable()) {
+        return
       }
+
+      localStorage.removeItem(GAME_TIME_KEY)
+      localStorage.removeItem(TIME_HISTORY_KEY)
+      localStorage.removeItem(GAME_TIME_SETTINGS_KEY)
     } catch (error) {
       console.error("Error deleting game time data:", error)
       throw new Error("Failed to delete game time data")
@@ -122,26 +84,12 @@ export class GameTimeStorage {
    */
   static async loadTimePassageHistory(): Promise<TimePassageEvent[]> {
     try {
-      if (this.isBrowser()) {
-        const data = localStorage.getItem(TIME_HISTORY_FILE)
-        return data ? JSON.parse(data) : []
-      } else {
-        // Server-side: use file system
-        const fs = await import("fs/promises")
-        const path = await import("path")
-
-        const filePath = path.join(process.cwd(), "data", TIME_HISTORY_FILE)
-
-        try {
-          const data = await fs.readFile(filePath, "utf-8")
-          return JSON.parse(data)
-        } catch (error: any) {
-          if (error.code === "ENOENT") {
-            return [] // File doesn't exist
-          }
-          throw error
-        }
+      if (!this.isStorageAvailable()) {
+        return []
       }
+
+      const data = localStorage.getItem(TIME_HISTORY_KEY)
+      return data ? JSON.parse(data) : []
     } catch (error) {
       console.error("Error loading time passage history:", error)
       return []
@@ -155,27 +103,12 @@ export class GameTimeStorage {
     history: TimePassageEvent[]
   ): Promise<void> {
     try {
-      const data = JSON.stringify(history, null, 2)
-
-      if (this.isBrowser()) {
-        localStorage.setItem(TIME_HISTORY_FILE, data)
-      } else {
-        // Server-side: use file system
-        const fs = await import("fs/promises")
-        const path = await import("path")
-
-        const dataDir = path.join(process.cwd(), "data")
-        const filePath = path.join(dataDir, TIME_HISTORY_FILE)
-
-        // Ensure data directory exists
-        try {
-          await fs.access(dataDir)
-        } catch {
-          await fs.mkdir(dataDir, { recursive: true })
-        }
-
-        await fs.writeFile(filePath, data, "utf-8")
+      if (!this.isStorageAvailable()) {
+        throw new Error("Storage not available")
       }
+
+      const data = JSON.stringify(history)
+      localStorage.setItem(TIME_HISTORY_KEY, data)
     } catch (error) {
       console.error("Error saving time passage history:", error)
       throw new Error("Failed to save time passage history")
@@ -202,29 +135,17 @@ export class GameTimeStorage {
    */
   static async loadGameTimeSettings(): Promise<GameTimeSettings> {
     try {
-      if (this.isBrowser()) {
-        const data = localStorage.getItem(GAME_TIME_SETTINGS_FILE)
-        return data ? JSON.parse(data) : this.getDefaultSettings()
-      } else {
-        // Server-side: use file system
-        const fs = await import("fs/promises")
-        const path = await import("path")
+      if (!this.isStorageAvailable()) {
+        return this.getDefaultSettings()
+      }
 
-        const filePath = path.join(
-          process.cwd(),
-          "data",
-          GAME_TIME_SETTINGS_FILE
-        )
+      const data = localStorage.getItem(GAME_TIME_SETTINGS_KEY)
+      const settings = data ? JSON.parse(data) : this.getDefaultSettings()
 
-        try {
-          const data = await fs.readFile(filePath, "utf-8")
-          return JSON.parse(data)
-        } catch (error: any) {
-          if (error.code === "ENOENT") {
-            return this.getDefaultSettings() // File doesn't exist
-          }
-          throw error
-        }
+      // Ensure all required properties exist (for backward compatibility)
+      return {
+        ...this.getDefaultSettings(),
+        ...settings
       }
     } catch (error) {
       console.error("Error loading game time settings:", error)
@@ -237,27 +158,12 @@ export class GameTimeStorage {
    */
   static async saveGameTimeSettings(settings: GameTimeSettings): Promise<void> {
     try {
-      const data = JSON.stringify(settings, null, 2)
-
-      if (this.isBrowser()) {
-        localStorage.setItem(GAME_TIME_SETTINGS_FILE, data)
-      } else {
-        // Server-side: use file system
-        const fs = await import("fs/promises")
-        const path = await import("path")
-
-        const dataDir = path.join(process.cwd(), "data")
-        const filePath = path.join(dataDir, GAME_TIME_SETTINGS_FILE)
-
-        // Ensure data directory exists
-        try {
-          await fs.access(dataDir)
-        } catch {
-          await fs.mkdir(dataDir, { recursive: true })
-        }
-
-        await fs.writeFile(filePath, data, "utf-8")
+      if (!this.isStorageAvailable()) {
+        throw new Error("Storage not available")
       }
+
+      const data = JSON.stringify(settings)
+      localStorage.setItem(GAME_TIME_SETTINGS_KEY, data)
     } catch (error) {
       console.error("Error saving game time settings:", error)
       throw new Error("Failed to save game time settings")
@@ -287,22 +193,11 @@ export class GameTimeStorage {
    */
   static async hasGameTimeData(): Promise<boolean> {
     try {
-      if (this.isBrowser()) {
-        return localStorage.getItem(GAME_TIME_FILE) !== null
-      } else {
-        // Server-side: check file existence
-        const fs = await import("fs/promises")
-        const path = await import("path")
-
-        const filePath = path.join(process.cwd(), "data", GAME_TIME_FILE)
-
-        try {
-          await fs.access(filePath)
-          return true
-        } catch {
-          return false
-        }
+      if (!this.isStorageAvailable()) {
+        return false
       }
+
+      return localStorage.getItem(GAME_TIME_KEY) !== null
     } catch (error) {
       console.error("Error checking game time data existence:", error)
       return false
@@ -310,12 +205,14 @@ export class GameTimeStorage {
   }
 
   /**
-   * Export all game time data as JSON
+   * Export all game time data for backup
    */
   static async exportAllData(): Promise<{
     gameTime: GameTimeData | null
     history: TimePassageEvent[]
     settings: GameTimeSettings
+    exportDate: string
+    version: string
   }> {
     const [gameTime, history, settings] = await Promise.all([
       this.loadGameTime(),
@@ -326,12 +223,14 @@ export class GameTimeStorage {
     return {
       gameTime,
       history,
-      settings
+      settings,
+      exportDate: new Date().toISOString(),
+      version: "1.0"
     }
   }
 
   /**
-   * Import all game time data from JSON
+   * Import all game time data from backup
    */
   static async importAllData(data: {
     gameTime?: GameTimeData
