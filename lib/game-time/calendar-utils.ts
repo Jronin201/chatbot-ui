@@ -172,21 +172,8 @@ export class GameTimeManager {
       const monthName = DUNE_CALENDAR.MONTHS[duneDate.month - 1]
       return `${duneDate.day} ${monthName} ${duneDate.year} A.G.`
     } catch (error) {
-      // If parsing as Dune date fails, try to convert from standard date
-      try {
-        const standardDate = new Date(dateString)
-        if (!isNaN(standardDate.getTime())) {
-          // Convert to Dune calendar (simplified conversion)
-          const year =
-            DUNE_CALENDAR.IMPERIAL_EPOCH + standardDate.getFullYear() - 2000
-          const month = standardDate.getMonth() + 1
-          const day = standardDate.getDate()
-          const monthName = DUNE_CALENDAR.MONTHS[month - 1]
-          return `${day} ${monthName} ${year} A.G.`
-        }
-      } catch (conversionError) {
-        // Fall back to original string
-      }
+      // If parsing fails, return the original string
+      console.warn(`Could not format Dune date: ${dateString}`, error)
       return dateString
     }
   }
