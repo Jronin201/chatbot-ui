@@ -74,7 +74,11 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
       }
 
       if (!gameTimeService.isValidDate(startDate, calendarSystem)) {
-        toast.error(`Invalid date format for ${calendarSystem} calendar`)
+        const errorMsg =
+          calendarSystem === "dune"
+            ? "Invalid date format for Dune Calendar. Please use format like '1 Ignis 10191 A.G.' with valid Dune month names."
+            : `Invalid date format for ${calendarSystem} calendar`
+        toast.error(errorMsg)
         return
       }
 
@@ -190,12 +194,30 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                   id="start-date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  placeholder="Enter the starting date"
-                  className="font-mono"
+                  placeholder={
+                    calendarSystem === "dune"
+                      ? "1 Ignis 10191 A.G."
+                      : "Enter the starting date"
+                  }
+                  className={`font-mono ${
+                    startDate &&
+                    !gameTimeService.isValidDate(startDate, calendarSystem)
+                      ? "border-destructive"
+                      : ""
+                  }`}
                 />
                 <p className="text-muted-foreground text-sm">
                   {getDateExample(calendarSystem)}
                 </p>
+                {startDate &&
+                  !gameTimeService.isValidDate(startDate, calendarSystem) && (
+                    <p className="text-destructive text-sm">
+                      ⚠️ Invalid date format.{" "}
+                      {calendarSystem === "dune"
+                        ? "Use format like '1 Ignis 10191 A.G.'"
+                        : "Please check the date format."}
+                    </p>
+                  )}
               </div>
             </CardContent>
           </Card>

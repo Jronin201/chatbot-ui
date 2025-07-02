@@ -64,13 +64,17 @@ export class GameTimeManager {
 
     for (const pattern of patterns) {
       const match = cleanDate.match(pattern)
+
       if (match) {
         if (pattern === patterns[0]) {
           // "15 Ignis 10191"
           const day = parseInt(match[1])
           const monthName = match[2]
           const year = parseInt(match[3])
-          const month = DUNE_CALENDAR.MONTHS.indexOf(monthName) + 1
+          const monthIndex = DUNE_CALENDAR.MONTHS.findIndex(
+            m => m.toLowerCase() === monthName.toLowerCase()
+          )
+          const month = monthIndex + 1
 
           if (month > 0 && day >= 1 && day <= 30) {
             return { year, month, day }
@@ -80,7 +84,10 @@ export class GameTimeManager {
           const monthName = match[1]
           const day = parseInt(match[2])
           const year = parseInt(match[3])
-          const month = DUNE_CALENDAR.MONTHS.indexOf(monthName) + 1
+          const monthIndex = DUNE_CALENDAR.MONTHS.findIndex(
+            m => m.toLowerCase() === monthName.toLowerCase()
+          )
+          const month = monthIndex + 1
 
           if (month > 0 && day >= 1 && day <= 30) {
             return { year, month, day }
@@ -98,7 +105,17 @@ export class GameTimeManager {
       }
     }
 
-    throw new Error(`Invalid Dune calendar date format: ${dateString}`)
+    const validFormats = [
+      'Day Month Year A.G. (e.g., "1 Ignis 10191 A.G.")',
+      'Day Month Year (e.g., "1 Ignis 10191")',
+      'Month Day, Year (e.g., "Ignis 1, 10191")'
+    ]
+
+    throw new Error(
+      `Invalid Dune calendar date format: "${dateString}"\n\n` +
+        `Valid formats:\n${validFormats.map(f => `• ${f}`).join("\n")}\n\n` +
+        `Valid months: ${DUNE_CALENDAR.MONTHS.join(", ")}`
+    )
   }
 
   /**
