@@ -69,7 +69,7 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
   const [showAddTimeDialog, setShowAddTimeDialog] = useState(false)
   const [showSetDateDialog, setShowSetDateDialog] = useState(false)
 
-  // Add time form state
+  // Adjust time form state
   const [daysToAdd, setDaysToAdd] = useState("")
   const [timeDescription, setTimeDescription] = useState("")
 
@@ -141,7 +141,7 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
     }
 
     const days = parseFloat(daysToAdd)
-    if (isNaN(days) || days < 0) {
+    if (isNaN(days)) {
       toast.error("Please enter a valid number of days")
       return
     }
@@ -149,7 +149,11 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
     setIsUpdating(true)
     try {
       await updateGameTime(days, timeDescription)
-      toast.success(`Added ${days} day(s) to game time`)
+      const action = days >= 0 ? "Added" : "Subtracted"
+      const absoluteDays = Math.abs(days)
+      toast.success(
+        `${action} ${absoluteDays} day(s) ${days >= 0 ? "to" : "from"} game time`
+      )
       setShowAddTimeDialog(false)
       setDaysToAdd("")
       setTimeDescription("")
@@ -245,7 +249,7 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setShowAddTimeDialog(true)}>
                   <IconPlus className="mr-2 size-4" />
-                  Add Time
+                  Adjust Time
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowSetDateDialog(true)}>
                   <IconEdit className="mr-2 size-4" />
@@ -311,7 +315,7 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
               className="flex-1"
             >
               <IconPlus className="mr-1 size-3" />
-              Add Time
+              Adjust Time
             </Button>
             <Button
               size="sm"
@@ -344,27 +348,30 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
         onClose={() => setShowSettingsDialog(false)}
       />
 
-      {/* Add Time Dialog */}
+      {/* Adjust Time Dialog */}
       <Dialog open={showAddTimeDialog} onOpenChange={setShowAddTimeDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Time</DialogTitle>
+            <DialogTitle>Adjust Time</DialogTitle>
             <DialogDescription>
-              Add time to the current campaign date
+              Add or subtract time from the current campaign date
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddTime} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="days">Days to Add</Label>
+              <Label htmlFor="days">Days to Add/Subtract</Label>
               <Input
                 id="days"
                 type="number"
                 step="0.1"
-                min="0"
                 value={daysToAdd}
                 onChange={e => setDaysToAdd(e.target.value)}
-                placeholder="e.g., 3.5"
+                placeholder="e.g., 3.5 or -2 to subtract"
               />
+              <p className="text-muted-foreground text-sm">
+                💡 Use positive numbers to add time, negative numbers to
+                subtract time
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
@@ -385,7 +392,7 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
                 Cancel
               </Button>
               <Button type="submit" disabled={isUpdating}>
-                {isUpdating ? "Adding..." : "Add Time"}
+                {isUpdating ? "Updating..." : "Update Time"}
               </Button>
             </div>
           </form>
