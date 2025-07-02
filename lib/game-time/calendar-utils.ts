@@ -56,9 +56,7 @@ export class GameTimeManager {
       default:
         return this.parseStandardDate(dateString)
     }
-  }
-
-  /**
+  } /**
    * Parse Dune calendar date (format: "Day Month Year A.G." or "15 Ignis 10191 A.G.")
    */
   static parseDuneDate(dateString: string): DuneCalendarDate {
@@ -72,7 +70,8 @@ export class GameTimeManager {
       /^(\d{1,2})\/(\d{1,2})\/(\d+)$/ // "15/1/10191" (day/month/year)
     ]
 
-    for (const pattern of patterns) {
+    for (let i = 0; i < patterns.length; i++) {
+      const pattern = patterns[i]
       const match = cleanDate.match(pattern)
 
       if (match) {
@@ -315,17 +314,22 @@ export class GameTimeManager {
     calendarSystem: CalendarSystem
   ): boolean {
     try {
+      console.log(`Validating ${calendarSystem} date: "${dateString}"`)
       switch (calendarSystem) {
         case "dune":
-          this.parseDuneDate(dateString)
+          const parsed = this.parseDuneDate(dateString)
+          console.log(`Dune date parsed successfully:`, parsed)
           return true
         case "standard":
           const date = new Date(dateString)
-          return !isNaN(date.getTime())
+          const isValid = !isNaN(date.getTime())
+          console.log(`Standard date valid: ${isValid}`)
+          return isValid
         default:
           return true
       }
     } catch (error) {
+      console.error(`Date validation failed for "${dateString}":`, error)
       return false
     }
   }
