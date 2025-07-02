@@ -7,7 +7,7 @@ import useHotkey from "@/lib/hooks/use-hotkey"
 import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { Tables } from "@/supabase/types"
 import { LLMID } from "@/types"
-import { IconChevronDown, IconRobotFace } from "@tabler/icons-react"
+import { IconChevronDown, IconRobotFace, IconClock } from "@tabler/icons-react"
 import Image from "next/image"
 import { FC, useContext, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -16,10 +16,13 @@ import { Button } from "../ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator
 } from "../ui/dropdown-menu"
 import { Input } from "../ui/input"
 import { QuickSettingOption } from "./quick-setting-option"
+import { GameTimeCompactDisplay } from "../game-time/game-time-compact-display"
 import { set } from "date-fns"
 
 interface QuickSettingsProps {}
@@ -252,6 +255,15 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => e.stopPropagation()}
             />
+
+            {/* Game Time Section */}
+            <div className="rounded-lg border p-3">
+              <div className="mb-2 flex items-center space-x-2">
+                <IconClock size={16} />
+                <span className="font-medium">Game Time</span>
+              </div>
+              <GameTimeCompactDisplay />
+            </div>
 
             {!!(selectedPreset || selectedAssistant) && (
               <QuickSettingOption
