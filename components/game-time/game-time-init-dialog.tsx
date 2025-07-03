@@ -53,6 +53,7 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
   // Removed gameMaster and characters for single-player setup
   const [characterName, setCharacterName] = useState("")
   const [characterInfo, setCharacterInfo] = useState("")
+  const [keyNPCs, setKeyNPCs] = useState("")
   const [notes, setNotes] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -89,6 +90,7 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
         // Only one character for single-player setup
         characters: characterName.trim() ? [characterName.trim()] : undefined,
         characterInfo: characterInfo.trim() || undefined,
+        keyNPCs: keyNPCs.trim() || undefined,
         notes: notes.trim() ? [notes.trim()] : undefined
       }
 
@@ -278,6 +280,20 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                 <p className="text-muted-foreground text-sm">
                   Store your character&apos;s stats, abilities, background, and
                   other sheet information
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="key-npcs">Key NPCs</Label>
+                <Textarea
+                  id="key-npcs"
+                  value={keyNPCs}
+                  onChange={e => setKeyNPCs(e.target.value)}
+                  placeholder="Track important Non-Player Characters, their stats, personality, goals, and relationships"
+                  rows={4}
+                />
+                <p className="text-muted-foreground text-sm">
+                  Record key NPCs, their stats, personality traits, attitude toward your character, goals, and current situations
                 </p>
               </div>
 

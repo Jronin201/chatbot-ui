@@ -50,6 +50,8 @@ export interface CampaignMetadata {
   characters?: string[]
   /** Character sheet information */
   characterInfo?: string
+  /** Key Non-Player Characters information */
+  keyNPCs?: string
   /** Important notes or reminders */
   notes?: string[]
 }
