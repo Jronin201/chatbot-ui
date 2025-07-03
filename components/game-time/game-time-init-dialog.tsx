@@ -1,9 +1,11 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useContext } from "react"
 import { CalendarSystem, CampaignMetadata } from "@/types/game-time"
 import { useGameTime } from "@/context/game-time-context"
+import { ChatbotUIContext } from "@/context/context"
 import { GameTimeService } from "@/lib/game-time/game-time-service"
+import { GameTimeStorage } from "@/lib/game-time/storage"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,7 +44,10 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
   onClose
 }) => {
   const { initializeGameTime } = useGameTime()
+  const { selectedWorkspace } = useContext(ChatbotUIContext)
   const gameTimeService = GameTimeService.getInstance()
+
+  const workspaceId = selectedWorkspace?.id || "default"
 
   const [calendarSystem, setCalendarSystem] = useState<CalendarSystem>("dune")
   const [startDate, setStartDate] = useState("")
@@ -87,12 +92,19 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
       const campaignMetadata: CampaignMetadata = {
         campaignName: campaignName.trim() || "New Campaign",
         gameSystem: gameSystem.trim() || "Unknown",
+        workspaceId,
         // Only one character for single-player setup
         characters: characterName.trim() ? [characterName.trim()] : undefined,
         characterInfo: characterInfo.trim() || undefined,
         keyNPCs: keyNPCs.trim() || undefined,
         notes: notes.trim() ? [notes.trim()] : undefined
       }
+
+      // Generate a campaign ID for this new campaign
+      const campaignId = GameTimeStorage.generateCampaignId()
+
+      // Set this as the current campaign
+      GameTimeStorage.setCurrentCampaignId(campaignId)
 
       await initializeGameTime(startDate, calendarSystem, campaignMetadata)
 

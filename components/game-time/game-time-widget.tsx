@@ -128,10 +128,25 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
               Initialize game time tracking to begin monitoring your
               campaign&apos;s temporal progress.
             </p>
-            <Button onClick={() => setShowInitDialog(true)}>
-              <IconPlus className="mr-2 size-4" />
-              Initialize Game Time
-            </Button>
+
+            {/* Campaign Management for new users */}
+            <div className="mb-6 space-y-4">
+              <CampaignSelector
+                workspaceId={workspaceId}
+                userId={userId}
+                onCampaignChange={campaignId => {
+                  // Campaign change is handled internally by CampaignSelector
+                  // The useGameTime hook will automatically refresh
+                }}
+              />
+            </div>
+
+            <div className="flex justify-center gap-2">
+              <Button onClick={() => setShowInitDialog(true)}>
+                <IconPlus className="mr-2 size-4" />
+                Initialize Game Time
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

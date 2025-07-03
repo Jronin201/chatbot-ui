@@ -1,7 +1,8 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useContext } from "react"
 import { useGameTime } from "@/context/game-time-context"
+import { ChatbotUIContext } from "@/context/context"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -24,7 +25,11 @@ export const GameTimeCompactDisplay: React.FC<
   GameTimeCompactDisplayProps
 > = () => {
   const { gameTimeData, formatDate, isLoading } = useGameTime()
+  const { selectedWorkspace, profile } = useContext(ChatbotUIContext)
   const [showInitDialog, setShowInitDialog] = useState(false)
+
+  const workspaceId = selectedWorkspace?.id || "default"
+  const userId = profile?.id
 
   if (isLoading) {
     return (
@@ -76,7 +81,7 @@ export const GameTimeCompactDisplay: React.FC<
         </Button>
       </PopoverTrigger>
       <PopoverContent side="left" align="start" className="w-80 p-0">
-        <GameTimeWidget />
+        <GameTimeWidget workspaceId={workspaceId} userId={userId} />
       </PopoverContent>
     </Popover>
   )
