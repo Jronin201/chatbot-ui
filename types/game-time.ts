@@ -13,6 +13,45 @@ export interface GameTimeData {
   customCalendarConfig?: CustomCalendarConfig
   /** Campaign-specific metadata */
   campaignMetadata?: CampaignMetadata
+  /** Campaign ID for database persistence */
+  campaignId?: string
+}
+
+export interface CampaignRecord {
+  /** Database ID */
+  id: string
+  /** User ID who owns this campaign */
+  user_id: string
+  /** Workspace this campaign belongs to */
+  workspace_id: string
+  /** Name of the campaign */
+  name: string
+  /** TTRPG system being used */
+  game_system: string
+  /** Game Master name */
+  game_master?: string
+  /** Current in-game date */
+  current_date: string
+  /** Calendar system being used */
+  calendar_system: CalendarSystem
+  /** Starting date of the campaign */
+  start_date: string
+  /** Total days elapsed since campaign start */
+  total_days_elapsed: number
+  /** Custom calendar configuration if using a custom system */
+  custom_calendar_config?: CustomCalendarConfig
+  /** Character sheet information */
+  character_info?: string
+  /** Key Non-Player Characters information */
+  key_npcs?: string
+  /** Important notes or reminders */
+  notes?: string[]
+  /** Player characters */
+  characters?: string[]
+  /** Creation timestamp */
+  created_at: string
+  /** Last updated timestamp */
+  updated_at: string
 }
 
 export interface CustomCalendarConfig {
@@ -54,6 +93,8 @@ export interface CampaignMetadata {
   keyNPCs?: string
   /** Important notes or reminders */
   notes?: string[]
+  /** Workspace ID this campaign belongs to */
+  workspaceId?: string
 }
 
 export interface TimePassageEvent {
