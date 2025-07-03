@@ -15,6 +15,8 @@ import {
 } from "@/types/game-time"
 import { useGameTime } from "@/context/game-time-context"
 import { ChatbotUIContext } from "@/context/context"
+import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
+import { useRouter } from "next/navigation"
 import { GameTimeService } from "@/lib/game-time/game-time-service"
 import { GameTimeStorage, CampaignSummary } from "@/lib/game-time/storage"
 import GameTimeAIIntegration from "@/lib/game-time/ai-integration"
@@ -103,6 +105,8 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
     formatDate
   } = useGameTime()
   const { selectedWorkspace, profile } = useContext(ChatbotUIContext)
+  const { handleNewChat, handleSendMessage } = useChatHandler()
+  const router = useRouter()
   const gameTimeService = GameTimeService.getInstance()
 
   const workspaceId = selectedWorkspace?.id || "default"
@@ -272,8 +276,8 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
 
       toast.success("Campaign started successfully!")
 
-      // Generate and display the starting description
-      const startingDescription = generateStartingDescription(
+      // Generate concrete starting scenario
+      const startingScenario = generateConcreteStartingScenario(
         campaignMetadata,
         startDate
       )
@@ -281,12 +285,15 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
       // Close dialog first
       onClose()
 
-      // Show the starting description as a success message with longer duration
-      setTimeout(() => {
-        toast.success(startingDescription, {
-          duration: 12000,
-          style: { maxWidth: "600px" }
-        })
+      // Create a new chat and start with the scenario
+      setTimeout(async () => {
+        try {
+          // Start a new chat
+          await handleNewChatWithStartingMessage(startingScenario)
+        } catch (error) {
+          console.error("Error starting campaign chat:", error)
+          toast.error("Failed to start campaign chat")
+        }
       }, 500)
 
       setActiveTab("overview")
@@ -338,6 +345,93 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
     description += `🎲 What would you like to do first? Describe your character's initial actions to begin the adventure!`
 
     return description
+  }
+
+  const generateConcreteStartingScenario = (
+    metadata: CampaignMetadata,
+    date: string
+  ): string => {
+    const character = metadata.characters?.[0] || "you"
+    const system = metadata.gameSystem || "this world"
+    const notes = metadata.notes?.[0] || ""
+
+    // Generate concrete, immediate scenarios based on the campaign system
+    if (system.toLowerCase().includes("dune")) {
+      const duneScenarios = [
+        `You awaken in your quarters within Arrakeen Palace to the sound of urgent knocking at your door. Through the narrow window, the first light of dawn reveals the familiar orange haze of the desert dawn. The air recycling system hums quietly, but something feels different today - there's an unusual tension in the palace corridors.
+
+The knocking persists. "My lord/lady," comes a voice through the door, "Duke Leto requests your immediate presence in the war room. There's been an incident at the spice harvesting operation in Sector 7."
+
+What do you do?`,
+
+        `You stand on the landing platform of Arrakeen Spaceport as the evening winds carry the scent of cinnamon and ozone across the tarmac. Your transport from Caladan arrived just hours ago, and already the harsh beauty of Arrakis makes itself known - the twin moons rising over endless dunes, the distant shimmer of a spice blow on the horizon.
+
+A hooded figure approaches you, moving with the fluid grace of someone born to the desert. "Are you the one sent by House Atreides?" they ask in accented Galach, glancing around nervously. "I bring word from the deep desert - the Harkonnens left more than industrial equipment behind."
+
+What is your response?`,
+
+        `The morning silence of Sietch Tabr is broken by the sound of running feet echoing through the rock corridors. You're in the water storage chamber, checking the precious reserves, when a young Fremen bursts in, eyes wide with alarm.
+
+"The watchers report movement to the south - a patrol of suspicious vehicles approaching the hidden entrance. They bear no House markings, but their path is too direct to be coincidence. Stilgar calls for all able fighters to prepare for possible infiltration."
+
+The sound of a horn echoes through the sietch - the signal for heightened alert. What are your immediate actions?`
+      ]
+      return duneScenarios[Math.floor(Math.random() * duneScenarios.length)]
+    } else {
+      const genericScenarios = [
+        `You wake to the sound of frantic pounding on the tavern door below. The inn is unusually quiet for this hour - no sounds of the usual morning bustle from the common room. Through your small window, you can see the village square is empty except for a lone figure running between the buildings, shouting something you can't quite make out.
+
+Suddenly, the pounding stops. An eerie silence falls over the village, broken only by the distant sound of what might be... growling? Your door handle rattles as someone tries to open it from the hallway outside.
+
+What do you do?`,
+
+        `The merchant caravan has stopped unexpectedly. You're traveling the old forest road when the lead wagon master calls for a halt, his voice tight with concern. Ahead, blocking the narrow mountain pass, lies an overturned merchant cart. Its contents are scattered across the roadway, but there's no sign of the merchants or their guards.
+
+The forest around you seems unusually quiet - no birdsong, no rustling of small creatures in the underbrush. Your fellow travelers look to you uncertainly. The sun will set in a few hours, and these roads are dangerous after dark.
+
+How do you proceed?`,
+
+        `You're examining an ancient stone tablet in the ruins of the old temple when you hear footsteps echoing from the chamber behind you. The inscription on the tablet speaks of a "guardian awakened by the light of two moons" - and you realize with a chill that tonight is indeed a night when both moons will be visible.
+
+The footsteps are getting closer, but they sound wrong somehow - too heavy, with an odd scraping quality as if stone were grinding against stone. Your torch flickers, casting dancing shadows on the crumbling walls covered in warning symbols.
+
+What is your next move?`
+      ]
+      return genericScenarios[
+        Math.floor(Math.random() * genericScenarios.length)
+      ]
+    }
+  }
+
+  const handleNewChatWithStartingMessage = async (startingMessage: string) => {
+    try {
+      if (!selectedWorkspace) {
+        throw new Error("No workspace selected")
+      }
+
+      // Navigate to the main chat page first
+      router.push(`/${selectedWorkspace.id}/chat`)
+
+      // Wait a moment for navigation to complete
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Create a new chat (this will clear any existing chat)
+      await handleNewChat()
+
+      // Wait another moment for the new chat to be ready
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Send the starting message automatically
+      await handleSendMessage(startingMessage, [], false)
+
+      toast.success("Campaign started! The adventure begins in your chat.")
+    } catch (error) {
+      console.error("Error creating chat with starting message:", error)
+      toast.error(
+        "Failed to start campaign chat. Please try starting a new chat manually."
+      )
+      throw error
+    }
   }
 
   const generateRandomCampaignContent = (
