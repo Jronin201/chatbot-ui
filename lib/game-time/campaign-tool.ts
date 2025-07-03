@@ -8,13 +8,13 @@ import { CampaignMetadata } from "@/types/game-time"
 
 export interface GameTimeCampaignTool {
   name: "update_campaign_info"
-  description: "Update campaign information including character details and key NPCs"
+  description: "Update campaign information including character details, key NPCs, and campaign notes"
   parameters: {
     type: "object"
     properties: {
       field: {
         type: "string"
-        enum: ["characterInfo", "keyNPCs"]
+        enum: ["characterInfo", "keyNPCs", "notes"]
         description: "The campaign field to update"
       }
       content: {
@@ -34,13 +34,13 @@ export interface GameTimeCampaignTool {
 export const gameTimeCampaignTool: GameTimeCampaignTool = {
   name: "update_campaign_info",
   description:
-    "Update campaign information including character details and key NPCs",
+    "Update campaign information including character details, key NPCs, and campaign notes",
   parameters: {
     type: "object",
     properties: {
       field: {
         type: "string",
-        enum: ["characterInfo", "keyNPCs"],
+        enum: ["characterInfo", "keyNPCs", "notes"],
         description: "The campaign field to update"
       },
       content: {
@@ -62,7 +62,7 @@ export const gameTimeCampaignTool: GameTimeCampaignTool = {
  * Handle the campaign update tool call
  */
 export async function handleCampaignUpdateTool(params: {
-  field: "characterInfo" | "keyNPCs"
+  field: "characterInfo" | "keyNPCs" | "notes"
   content: string
   action: "replace" | "append" | "update"
 }): Promise<{
@@ -72,6 +72,17 @@ export async function handleCampaignUpdateTool(params: {
 }> {
   try {
     const aiIntegration = GameTimeAIIntegration.getInstance()
+
+    // Handle notes field differently
+    if (params.field === "notes") {
+      const success = await aiIntegration.updateCampaignNotes(params.content)
+      return {
+        success,
+        message: success
+          ? "Successfully updated campaign notes"
+          : "Failed to update campaign notes"
+      }
+    }
 
     let finalContent = params.content
 
@@ -98,7 +109,7 @@ export async function handleCampaignUpdateTool(params: {
     }
 
     const success = await aiIntegration.updateCampaignField(
-      params.field,
+      params.field as "characterInfo" | "keyNPCs",
       finalContent
     )
 

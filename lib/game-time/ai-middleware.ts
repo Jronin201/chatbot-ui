@@ -8,6 +8,7 @@ import {
   gameTimeCampaignTool,
   handleCampaignUpdateTool
 } from "@/lib/game-time/campaign-tool"
+import TimeChangeHandler from "@/lib/game-time/time-change-handler"
 
 /**
  * Process AI response to extract and save campaign information updates
@@ -106,6 +107,10 @@ async function processExplicitCampaignUpdates(response: string): Promise<void> {
     {
       pattern: /\[NPC_UPDATE\](.*?)\[\/NPC_UPDATE\]/s,
       field: "keyNPCs" as const
+    },
+    {
+      pattern: /\[CAMPAIGN_UPDATE\](.*?)\[\/CAMPAIGN_UPDATE\]/s,
+      field: "notes" as const
     }
   ]
 
@@ -145,17 +150,35 @@ You are running a TTRPG campaign with persistent character and world state. When
    - NPC goals, motivations, current status
    - Important NPC actions or developments
 
-3. Use these special tags in your responses to update campaign data:
+3. AUTOMATICALLY track campaign progression:
+   - Important events and their consequences
+   - Time-sensitive developments
+   - World state changes
+   - Story progression notes
+
+4. When time passes in-game:
+   - Update campaign notes with progression effects
+   - Review and update NPC statuses and situations
+   - Consider what happens during time passage
+   - Update character circumstances as appropriate
+
+5. Use these special tags in your responses to update campaign data:
    - [CHARACTER_UPDATE]new character info here[/CHARACTER_UPDATE]
    - [NPC_UPDATE]new NPC info here[/NPC_UPDATE]
+   - [CAMPAIGN_UPDATE]campaign progression notes here[/CAMPAIGN_UPDATE]
 
-4. Maintain campaign continuity by:
+6. Use the update_campaign_info function to make explicit updates to:
+   - characterInfo: Character stats, abilities, equipment, status
+   - keyNPCs: NPC information, relationships, current situations
+   - notes: Campaign progression, important events, consequences
+
+7. Maintain campaign continuity by:
    - Referencing established character details
    - Remembering NPC relationships and history
    - Considering time passage and its effects
    - Building on previous campaign events
 
-The system will automatically save important campaign information from your responses.
+The system will automatically save important campaign information from your responses and process time changes.
 </GAME_TIME_INSTRUCTIONS>
 
 `
@@ -188,8 +211,49 @@ Remember: You have access to update this campaign information as the story progr
   }
 }
 
+/**
+ * Process time change events and update campaign information
+ */
+export async function processTimeChangeForCampaign(
+  timePassageEvent: {
+    previousDate: string
+    newDate: string
+    daysElapsed: number
+    description: string
+  },
+  chatContext: string = ""
+): Promise<void> {
+  try {
+    const timeChangeHandler = TimeChangeHandler.getInstance()
+
+    // Check if this time change warrants automatic updates
+    if (
+      timeChangeHandler.shouldTriggerAutomaticUpdate(
+        timePassageEvent.daysElapsed
+      )
+    ) {
+      const result = await timeChangeHandler.handleTimeChange(
+        {
+          ...timePassageEvent,
+          timestamp: new Date().toISOString()
+        },
+        chatContext
+      )
+
+      if (result.success) {
+        console.log("Time change processed successfully:", result.updates)
+      } else {
+        console.error("Time change processing failed:", result.errors)
+      }
+    }
+  } catch (error) {
+    console.error("Error processing time change for campaign:", error)
+  }
+}
+
 export default {
   processAIResponseForCampaign,
+  processTimeChangeForCampaign,
   addGameTimeInstructions,
   getCampaignAwarenessPrompt
 }

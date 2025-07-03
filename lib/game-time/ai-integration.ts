@@ -178,6 +178,265 @@ export class GameTimeAIIntegration {
   }
 
   /**
+   * Update campaign notes with AI-generated content and chat context
+   */
+  async updateCampaignNotes(
+    newNotes: string,
+    chatContext?: string
+  ): Promise<boolean> {
+    try {
+      const gameTimeData = await this.gameTimeService.loadGameTime()
+      if (!gameTimeData?.campaignMetadata) {
+        console.warn("No campaign metadata found")
+        return false
+      }
+
+      const existingNotes = gameTimeData.campaignMetadata.notes || []
+      const existingNotesText = existingNotes.join("\n")
+
+      // Combine existing notes with new notes and chat context
+      let combinedContent = existingNotesText
+      if (chatContext) {
+        combinedContent += `\n\n[Recent Events]\n${chatContext}`
+      }
+      combinedContent += `\n\n[Updated Notes]\n${newNotes}`
+
+      // Condense the combined content
+      const condensedContent = this.condenseText(
+        combinedContent,
+        FIELD_TOKEN_LIMITS.notes
+      )
+
+      // Convert back to array format
+      const updatedNotes = condensedContent
+        .split("\n")
+        .filter(line => line.trim())
+
+      // Update the campaign metadata
+      const updatedMetadata: CampaignMetadata = {
+        ...gameTimeData.campaignMetadata,
+        notes: updatedNotes
+      }
+
+      // Save the updated metadata
+      const updatedGameTimeData = {
+        ...gameTimeData,
+        campaignMetadata: updatedMetadata
+      }
+
+      await GameTimeStorage.saveGameTime(updatedGameTimeData)
+      return true
+    } catch (error) {
+      console.error("Error updating campaign notes:", error)
+      return false
+    }
+  }
+
+  /**
+   * Process time change and update campaign information accordingly
+   */
+  async processTimeChange(
+    previousDate: string,
+    newDate: string,
+    daysElapsed: number,
+    chatContext: string
+  ): Promise<{
+    notesUpdated: boolean
+    npcsUpdated: boolean
+    updates: string[]
+  }> {
+    const updates: string[] = []
+    let notesUpdated = false
+    let npcsUpdated = false
+
+    try {
+      // Generate time-based campaign notes update
+      const timeBasedNotes = this.generateTimeBasedNotes(
+        previousDate,
+        newDate,
+        daysElapsed,
+        chatContext
+      )
+
+      if (timeBasedNotes) {
+        notesUpdated = await this.updateCampaignNotes(
+          timeBasedNotes,
+          chatContext
+        )
+        if (notesUpdated) {
+          updates.push("Campaign notes updated with time progression")
+        }
+      }
+
+      // Check and update NPC information based on time passage
+      const npcUpdates = await this.checkAndUpdateNPCsForTimeChange(
+        daysElapsed,
+        chatContext
+      )
+
+      if (npcUpdates) {
+        npcsUpdated = await this.updateCampaignField("keyNPCs", npcUpdates)
+        if (npcsUpdated) {
+          updates.push("NPC information updated for time progression")
+        }
+      }
+
+      return { notesUpdated, npcsUpdated, updates }
+    } catch (error) {
+      console.error("Error processing time change:", error)
+      return { notesUpdated: false, npcsUpdated: false, updates: [] }
+    }
+  }
+
+  /**
+   * Generate time-based notes for campaign progression
+   */
+  private generateTimeBasedNotes(
+    previousDate: string,
+    newDate: string,
+    daysElapsed: number,
+    chatContext: string
+  ): string {
+    const timeFrames = [
+      { threshold: 1, label: "day" },
+      { threshold: 7, label: "week" },
+      { threshold: 30, label: "month" },
+      { threshold: 365, label: "year" }
+    ]
+
+    const timeFrame =
+      timeFrames.find(tf => daysElapsed <= tf.threshold) ||
+      timeFrames[timeFrames.length - 1]
+
+    const notes = [
+      `Time Progression: ${previousDate} → ${newDate} (${daysElapsed} days)`,
+      `Context: ${chatContext}`,
+      `Duration: ${Math.floor(daysElapsed / (timeFrame.threshold === 1 ? 1 : timeFrame.threshold === 7 ? 7 : timeFrame.threshold === 30 ? 30 : 365))} ${timeFrame.label}${Math.floor(daysElapsed / (timeFrame.threshold === 1 ? 1 : timeFrame.threshold === 7 ? 7 : timeFrame.threshold === 30 ? 30 : 365)) > 1 ? "s" : ""}`
+    ]
+
+    // Add time-specific considerations
+    if (daysElapsed >= 7) {
+      notes.push("Consider: Weekly activities, market changes, NPC actions")
+    }
+    if (daysElapsed >= 30) {
+      notes.push(
+        "Consider: Monthly events, seasonal changes, long-term consequences"
+      )
+    }
+    if (daysElapsed >= 365) {
+      notes.push(
+        "Consider: Annual events, major world changes, character aging"
+      )
+    }
+
+    return notes.join("\n")
+  }
+
+  /**
+   * Check and update NPC information based on time passage
+   */
+  private async checkAndUpdateNPCsForTimeChange(
+    daysElapsed: number,
+    chatContext: string
+  ): Promise<string | null> {
+    try {
+      const gameTimeData = await this.gameTimeService.loadGameTime()
+      if (!gameTimeData?.campaignMetadata?.keyNPCs) return null
+
+      const currentNPCs = gameTimeData.campaignMetadata.keyNPCs
+      const npcUpdates: string[] = []
+
+      // Parse existing NPCs
+      const npcLines = currentNPCs.split("\n").filter(line => line.trim())
+
+      for (const npcLine of npcLines) {
+        const timeBasedUpdate = this.generateNPCTimeUpdate(
+          npcLine,
+          daysElapsed,
+          chatContext
+        )
+        if (timeBasedUpdate) {
+          npcUpdates.push(timeBasedUpdate)
+        }
+      }
+
+      if (npcUpdates.length === 0) return null
+
+      // Combine original NPCs with time-based updates
+      const updatedNPCContent = [
+        currentNPCs,
+        "",
+        "[Time-based Updates]",
+        ...npcUpdates
+      ].join("\n")
+
+      return updatedNPCContent
+    } catch (error) {
+      console.error("Error checking NPCs for time change:", error)
+      return null
+    }
+  }
+
+  /**
+   * Generate time-based updates for individual NPCs
+   */
+  private generateNPCTimeUpdate(
+    npcLine: string,
+    daysElapsed: number,
+    chatContext: string
+  ): string | null {
+    // Extract NPC name (assuming format like "Name: description" or "Name - description")
+    const nameMatch = npcLine.match(/^([^:\-]+)/)
+    if (!nameMatch) return null
+
+    const npcName = nameMatch[1].trim()
+    const updates: string[] = []
+
+    // Generate context-aware updates based on time passage
+    if (daysElapsed >= 1) {
+      // Daily considerations
+      if (npcLine.match(/injured|wounded|sick|ill/i)) {
+        updates.push(`${npcName}: May have recovered from injuries/illness`)
+      }
+      if (npcLine.match(/traveling|journey|quest/i)) {
+        updates.push(`${npcName}: Travel progress should be considered`)
+      }
+    }
+
+    if (daysElapsed >= 7) {
+      // Weekly considerations
+      if (npcLine.match(/merchant|trader|shopkeeper/i)) {
+        updates.push(`${npcName}: Likely restocked inventory`)
+      }
+      if (npcLine.match(/angry|hostile|upset/i)) {
+        updates.push(`${npcName}: Anger may have cooled over time`)
+      }
+    }
+
+    if (daysElapsed >= 30) {
+      // Monthly considerations
+      if (npcLine.match(/pregnant|expecting/i)) {
+        updates.push(`${npcName}: Pregnancy progression should be noted`)
+      }
+      if (npcLine.match(/training|learning|studying/i)) {
+        updates.push(`${npcName}: May have completed training/studies`)
+      }
+    }
+
+    if (daysElapsed >= 365) {
+      // Yearly considerations
+      updates.push(`${npcName}: Consider aging and long-term life changes`)
+    }
+
+    // Context-specific updates
+    if (chatContext.toLowerCase().includes(npcName.toLowerCase())) {
+      updates.push(`${npcName}: Directly involved in recent events`)
+    }
+
+    return updates.length > 0 ? updates.join("\n") : null
+  }
+
+  /**
    * Get condensed campaign information formatted for AI context
    */
   async getCampaignContextForAI(): Promise<string> {

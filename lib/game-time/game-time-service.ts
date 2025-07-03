@@ -125,6 +125,17 @@ export class GameTimeService {
 
     await GameTimeStorage.addTimePassageEvent(event)
 
+    // Process time change for campaign updates
+    try {
+      const { processTimeChangeForCampaign } = await import(
+        "@/lib/game-time/ai-middleware"
+      )
+      await processTimeChangeForCampaign(event, description)
+    } catch (error) {
+      console.error("Error processing time change for campaign:", error)
+      // Don't fail the time update if campaign processing fails
+    }
+
     return updatedData
   }
 
@@ -179,6 +190,17 @@ export class GameTimeService {
     }
 
     await GameTimeStorage.addTimePassageEvent(event)
+
+    // Process time change for campaign updates
+    try {
+      const { processTimeChangeForCampaign } = await import(
+        "@/lib/game-time/ai-middleware"
+      )
+      await processTimeChangeForCampaign(event, description)
+    } catch (error) {
+      console.error("Error processing time change for campaign:", error)
+      // Don't fail the time update if campaign processing fails
+    }
 
     return updatedData
   }
