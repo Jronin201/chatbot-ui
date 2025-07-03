@@ -13,6 +13,7 @@ import {
   TimePassageEvent,
   GameTimeSettings
 } from "@/types/game-time"
+import { ChatMessage } from "@/types"
 import { useGameTime } from "@/context/game-time-context"
 import { ChatbotUIContext } from "@/context/context"
 import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
@@ -83,6 +84,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { v4 as uuidv4 } from "uuid"
 
 interface GameTimeInitDialogProps {
   isOpen: boolean
@@ -104,7 +106,13 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
     updateSettings,
     formatDate
   } = useGameTime()
-  const { selectedWorkspace, profile } = useContext(ChatbotUIContext)
+  const {
+    selectedWorkspace,
+    profile,
+    setChatMessages,
+    chatSettings,
+    selectedAssistant
+  } = useContext(ChatbotUIContext)
   const { handleNewChat, handleSendMessage } = useChatHandler()
   const router = useRouter()
   const gameTimeService = GameTimeService.getInstance()
@@ -421,10 +429,28 @@ What is your next move?`
       // Wait another moment for the new chat to be ready
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Send the starting message automatically
-      await handleSendMessage(startingMessage, [], false)
+      // Create an assistant message directly (instead of sending as user message)
+      const assistantMessage: ChatMessage = {
+        message: {
+          chat_id: "",
+          assistant_id: selectedAssistant?.id || null,
+          content: startingMessage,
+          created_at: new Date().toISOString(),
+          id: uuidv4(),
+          image_paths: [],
+          model: chatSettings?.model || "gpt-4",
+          role: "assistant",
+          sequence_number: 0,
+          updated_at: new Date().toISOString(),
+          user_id: profile?.user_id || ""
+        },
+        fileItems: []
+      }
 
-      toast.success("Campaign started! The adventure begins in your chat.")
+      // Add the assistant message to the chat
+      setChatMessages([assistantMessage])
+
+      toast.success("Campaign started! The Game Master has set the scene.")
     } catch (error) {
       console.error("Error creating chat with starting message:", error)
       toast.error(
