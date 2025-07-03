@@ -251,9 +251,11 @@ export async function processTimeChangeForCampaign(
   }
 }
 
-export default {
+const GameTimeAIMiddleware = {
   processAIResponseForCampaign,
   processTimeChangeForCampaign,
   addGameTimeInstructions,
   getCampaignAwarenessPrompt
 }
+
+export default GameTimeAIMiddleware

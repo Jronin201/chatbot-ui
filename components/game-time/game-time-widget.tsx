@@ -45,13 +45,18 @@ import { toast } from "sonner"
 import { GameTimeInitDialog } from "./game-time-init-dialog"
 import { GameTimeHistoryDialog } from "./game-time-history-dialog"
 import { GameTimeSettingsDialog } from "./game-time-settings-dialog"
+import { CampaignSelector } from "./campaign-selector"
 
 interface GameTimeWidgetProps {
   className?: string
+  workspaceId?: string
+  userId?: string
 }
 
 export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
-  className
+  className,
+  workspaceId = "default",
+  userId
 }) => {
   const {
     gameTimeData,
@@ -283,6 +288,18 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
             {gameTimeData.campaignMetadata?.campaignName || "Campaign"} -{" "}
             {gameTimeData.calendarSystem} calendar
           </CardDescription>
+
+          {/* Campaign Selector */}
+          <div className="border-t pt-2">
+            <CampaignSelector
+              workspaceId={workspaceId}
+              userId={userId}
+              onCampaignChange={campaignId => {
+                // Campaign change is handled internally by CampaignSelector
+                // The useGameTime hook will automatically refresh
+              }}
+            />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
