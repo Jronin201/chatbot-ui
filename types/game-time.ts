@@ -48,6 +48,8 @@ export interface CampaignMetadata {
   gameMaster?: string
   /** Player characters */
   characters?: string[]
+  /** Character sheet information */
+  characterInfo?: string
   /** Important notes or reminders */
   notes?: string[]
 }

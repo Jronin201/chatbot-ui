@@ -52,6 +52,7 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
   )
   // Removed gameMaster and characters for single-player setup
   const [characterName, setCharacterName] = useState("")
+  const [characterInfo, setCharacterInfo] = useState("")
   const [notes, setNotes] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -87,6 +88,7 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
         gameSystem: gameSystem.trim() || "Unknown",
         // Only one character for single-player setup
         characters: characterName.trim() ? [characterName.trim()] : undefined,
+        characterInfo: characterInfo.trim() || undefined,
         notes: notes.trim() ? [notes.trim()] : undefined
       }
 
@@ -262,6 +264,21 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                   onChange={e => setCharacterName(e.target.value)}
                   placeholder="Enter your character's name"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="character-info">Character Information</Label>
+                <Textarea
+                  id="character-info"
+                  value={characterInfo}
+                  onChange={e => setCharacterInfo(e.target.value)}
+                  placeholder="Enter character sheet information, stats, abilities, background, etc."
+                  rows={4}
+                />
+                <p className="text-muted-foreground text-sm">
+                  Store your character&apos;s stats, abilities, background, and
+                  other sheet information
+                </p>
               </div>
 
               <div className="space-y-2">
