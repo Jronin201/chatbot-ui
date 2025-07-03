@@ -1,6 +1,12 @@
 "use client"
 
-import React, { useState, useContext, useEffect } from "react"
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+  useCallback
+} from "react"
 import {
   CalendarSystem,
   CampaignMetadata,
@@ -11,6 +17,7 @@ import { useGameTime } from "@/context/game-time-context"
 import { ChatbotUIContext } from "@/context/context"
 import { GameTimeService } from "@/lib/game-time/game-time-service"
 import { GameTimeStorage, CampaignSummary } from "@/lib/game-time/storage"
+import GameTimeAIIntegration from "@/lib/game-time/ai-integration"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -142,21 +149,31 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
   })
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isBuildingCampaign, setIsBuildingCampaign] = useState(false)
 
-  // Load campaigns and current campaign on mount
-  useEffect(() => {
-    loadCampaigns()
-    if (settings) {
-      setTempSettings(settings)
-    }
-  }, [settings])
-
-  // Load current campaign data when current campaign changes
-  useEffect(() => {
-    if (currentCampaignId) {
-      loadCurrentCampaignData()
-    }
-  }, [currentCampaignId])
+  // Form validation for Start Campaign button
+  const isFormValid = useMemo(() => {
+    return (
+      campaignName.trim() &&
+      gameSystem.trim() &&
+      startDate.trim() &&
+      characterName.trim() &&
+      characterInfo.trim() &&
+      keyNPCs.trim() &&
+      notes.trim() &&
+      gameTimeService.isValidDate(startDate, calendarSystem)
+    )
+  }, [
+    campaignName,
+    gameSystem,
+    startDate,
+    characterName,
+    characterInfo,
+    keyNPCs,
+    notes,
+    calendarSystem,
+    gameTimeService
+  ])
 
   // Set default date when calendar system changes
   useEffect(() => {
@@ -166,7 +183,7 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
     }
   }, [calendarSystem, gameTimeService])
 
-  const loadCampaigns = async () => {
+  const loadCampaigns = useCallback(async () => {
     try {
       const campaignList = await GameTimeStorage.getCampaigns(workspaceId)
       setCampaigns(campaignList)
@@ -181,9 +198,9 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
       console.error("Error loading campaigns:", error)
       toast.error("Failed to load campaigns")
     }
-  }
+  }, [workspaceId])
 
-  const loadCurrentCampaignData = async () => {
+  const loadCurrentCampaignData = useCallback(async () => {
     if (!currentCampaignId) return
 
     try {
@@ -202,7 +219,7 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
       console.error("Error loading campaign data:", error)
       toast.error("Failed to load campaign data")
     }
-  }
+  }, [currentCampaignId])
 
   const resetFormFields = () => {
     setCampaignName("")
@@ -253,7 +270,25 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
 
       await initializeGameTime(startDate, calendarSystem, campaignMetadata)
 
-      toast.success("Game time tracking initialized successfully!")
+      toast.success("Campaign started successfully!")
+
+      // Generate and display the starting description
+      const startingDescription = generateStartingDescription(
+        campaignMetadata,
+        startDate
+      )
+
+      // Close dialog first
+      onClose()
+
+      // Show the starting description as a success message with longer duration
+      setTimeout(() => {
+        toast.success(startingDescription, {
+          duration: 12000,
+          style: { maxWidth: "600px" }
+        })
+      }, 500)
+
       setActiveTab("overview")
       await loadCampaigns()
     } catch (error) {
@@ -265,6 +300,251 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
       )
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const generateStartingDescription = (
+    metadata: CampaignMetadata,
+    date: string
+  ): string => {
+    const character = metadata.characters?.[0] || "the character"
+    const system = metadata.gameSystem || "this world"
+    const notes = metadata.notes?.[0] || ""
+
+    // Generate a rich starting description based on the campaign information
+    let description = `🏛️ CAMPAIGN STARTED: "${metadata.campaignName}"\n\n`
+
+    if (system.toLowerCase().includes("dune")) {
+      description += `The twin suns of Arrakis beat down mercilessly as ${character} stands at the edge of Arrakeen on ${date}. The spice-scented wind carries whispers of political intrigue and ancient secrets buried beneath the endless dunes.\n\n`
+
+      if (notes.toLowerCase().includes("spice")) {
+        description += `The recent disruptions to spice production have created opportunities for those brave enough to seize them. `
+      }
+
+      description += `Your journey begins here, in this harsh but wondrous desert world where every grain of spice is worth more than gold, and every decision could shift the balance of power across the known universe.\n\n`
+    } else {
+      description += `${character} begins their adventure in the world of ${system} on ${date}. The air is thick with possibility and danger as new challenges await.\n\n`
+
+      if (
+        notes.toLowerCase().includes("mystery") ||
+        notes.toLowerCase().includes("threat")
+      ) {
+        description += `Strange events have been reported in the area, and locals speak in hushed tones about disturbances that threaten the peace. `
+      }
+
+      description += `Your story starts here, where choices will shape the fate of all those around you.\n\n`
+    }
+
+    description += `🎲 What would you like to do first? Describe your character's initial actions to begin the adventure!`
+
+    return description
+  }
+
+  const generateRandomCampaignContent = (
+    field: string,
+    existingData: any
+  ): string => {
+    const system = gameSystem.trim() || "Generic Fantasy"
+    const charName = characterName.trim()
+    const charInfo = characterInfo.trim()
+
+    switch (field) {
+      case "campaignName":
+        if (system.toLowerCase().includes("dune")) {
+          const duneNames = [
+            "Chronicles of Arrakis",
+            "The Spice Wars",
+            "Secrets of the Desert",
+            "House Atreides Rising",
+            "The Fremen Prophecy",
+            "Sands of Destiny"
+          ]
+          return duneNames[Math.floor(Math.random() * duneNames.length)]
+        } else {
+          const genericNames = [
+            `${charName ? charName + "'s" : "The"} Chronicles`,
+            "Legends of the Realm",
+            `Adventures in ${system}`,
+            "The Great Quest",
+            "Mysteries of the Ancient World",
+            "Heroes of Legend"
+          ]
+          return genericNames[Math.floor(Math.random() * genericNames.length)]
+        }
+
+      case "notes":
+        if (system.toLowerCase().includes("dune")) {
+          return `Campaign Plot: Political tensions rise on Arrakis as ${charName || "the character"} becomes entangled in the dangerous games of the Great Houses. The spice must flow, but at what cost?
+
+Primary Goals:
+- Navigate the treacherous politics of Arrakeen
+- Uncover secrets of the ancient Fremen ways
+- Investigate disruptions to spice production
+- Build alliances while avoiding deadly enemies
+
+Secondary Objectives:
+- Master desert survival techniques
+- Discover hidden caches of melange
+- Decode mysterious Fremen prophecies
+- Establish trade relationships
+
+Key Themes: Honor vs. survival, the price of power, ecological awareness, ancient wisdom vs. modern technology
+
+Campaign Tone: Political intrigue with survival elements, mystical undertones, and high-stakes decisions that affect entire planets.`
+        } else {
+          return `Campaign Plot: ${charName || "The character"} finds themselves at the center of growing darkness threatening the land. Ancient evils stir, and heroes are desperately needed.
+
+Primary Goals:
+- Investigate mysterious disappearances in nearby settlements
+- Uncover the source of supernatural disturbances
+- Gather allies and resources for the coming conflict
+- Protect innocent people from escalating threats
+
+Secondary Objectives:
+- Explore ancient ruins for clues and treasure
+- Build relationships with local factions
+- Master new skills and abilities
+- Discover the character's true destiny
+
+Key Themes: Good vs. evil, personal growth, the power of friendship, courage in the face of overwhelming odds
+
+Campaign Tone: Classic heroic fantasy with elements of mystery, exploration, and epic confrontations between light and darkness.`
+        }
+
+      case "keyNPCs":
+        if (system.toLowerCase().includes("dune")) {
+          return `Duke Leto Atreides: Noble leader of House Atreides, honorable but politically inexperienced on Arrakis. Currently establishing control over spice operations while trying to win Fremen loyalty.
+Relationship: Respectful superior, values competence and loyalty
+Goals: Secure Arrakis for his House, protect his people, honor ancient agreements
+
+Stilgar: Naib (leader) of Sietch Tabr, respected Fremen warrior and desert survival expert. Deeply suspicious of off-worlders but honors strength and wisdom.
+Relationship: Cautious ally, testing worthiness through trials
+Goals: Protect his people, preserve Fremen ways, evaluate Atreides intentions
+
+Dr. Yueh: Imperial Physician assigned to House Atreides, skilled in medicine and possessing mysterious knowledge. Appears helpful but harbors secret conflicts.
+Relationship: Professional but distant, may have hidden agenda
+Goals: Fulfill medical duties, protect someone precious, navigate personal loyalties
+
+Gurney Halleck: Weapons master and troubadour-warrior, fiercely loyal to House Atreides. Expert in combat training and military tactics.
+Relationship: Mentor figure, tough but caring instructor
+Goals: Train and protect House members, maintain Atreides military strength`
+        } else {
+          const mentorName = [
+            "Master Eldric",
+            "Captain Sarah",
+            "Sage Mirabel",
+            "Elder Thomas"
+          ][Math.floor(Math.random() * 4)]
+          const allyName = [
+            "Finn the Bold",
+            "Luna Starweaver",
+            "Gareth Ironbeard",
+            "Sylvia Quickstep"
+          ][Math.floor(Math.random() * 4)]
+          const neutralName = [
+            "Merchant Kaldor",
+            "Innkeeper Morris",
+            "Scholar Thane",
+            "Healer Lydia"
+          ][Math.floor(Math.random() * 4)]
+
+          return `${mentorName}: Experienced mentor figure who guides and trains newcomers. Has seen many dangers and offers wisdom to those willing to listen.
+Relationship: Protective teacher, stern but caring
+Goals: Train capable heroes, share valuable knowledge, ensure survival of worthy pupils
+
+${allyName}: Potential companion and fellow adventurer, skilled in complementary abilities. Reliable in dangerous situations but has personal goals.
+Relationship: Friendly ally, building trust through shared experiences  
+Goals: Seek fame and fortune, prove personal worth, support friends in need
+
+${neutralName}: Important local contact who provides services, information, or resources. Generally helpful but motivated by practical concerns.
+Relationship: Professional but warming with time
+Goals: Maintain business interests, help community, stay out of dangerous conflicts
+
+The Shadow Figure: Mysterious individual whose true identity and motivations remain unclear. May be friend or foe, but definitely knows more than they reveal.
+Relationship: Unknown, potentially dangerous
+Goals: Unclear, likely connected to the main campaign mysteries`
+        }
+
+      case "startDate":
+        if (system.toLowerCase().includes("dune")) {
+          const duneMonths = [
+            "Ignis",
+            "Sextilis",
+            "Chanos",
+            "Shakat",
+            "Second Moon",
+            "Third Moon"
+          ]
+          const month =
+            duneMonths[Math.floor(Math.random() * duneMonths.length)]
+          const day = Math.floor(Math.random() * 28) + 1
+          const year = 10191 + Math.floor(Math.random() * 5) // Vary the year slightly
+          return `${day} ${month} ${year} A.G.`
+        } else {
+          // Generate a reasonable starting day
+          const dayNumber = Math.floor(Math.random() * 365) + 1
+          return `Day ${dayNumber}`
+        }
+
+      default:
+        return ""
+    }
+  }
+
+  const handleBuildCampaign = async () => {
+    // Check if Character Name or Character Information is missing
+    if (!characterName.trim() || !characterInfo.trim()) {
+      toast.error(
+        "Please enter your Character Name and Character Information before building the campaign."
+      )
+      return
+    }
+
+    setIsBuildingCampaign(true)
+
+    try {
+      const generatedFields: string[] = []
+
+      // Fill in missing fields with random content
+      if (!campaignName.trim()) {
+        setCampaignName(
+          generateRandomCampaignContent("campaignName", { gameSystem })
+        )
+        generatedFields.push("Campaign Name")
+      }
+
+      if (!notes.trim()) {
+        setNotes(generateRandomCampaignContent("notes", { gameSystem }))
+        generatedFields.push("Campaign Notes")
+      }
+
+      if (!keyNPCs.trim()) {
+        setKeyNPCs(generateRandomCampaignContent("keyNPCs", { gameSystem }))
+        generatedFields.push("Key NPCs")
+      }
+
+      if (!startDate.trim()) {
+        setStartDate(
+          generateRandomCampaignContent("startDate", {
+            gameSystem,
+            calendarSystem
+          })
+        )
+        generatedFields.push("Start Date")
+      }
+
+      if (generatedFields.length > 0) {
+        toast.success(
+          `Generated content for: ${generatedFields.join(", ")}. Review and modify as needed before starting the campaign!`
+        )
+      } else {
+        toast.info("All campaign fields are already filled in!")
+      }
+    } catch (error) {
+      console.error("Error building campaign:", error)
+      toast.error("Failed to generate campaign content")
+    } finally {
+      setIsBuildingCampaign(false)
     }
   }
 
@@ -402,6 +682,21 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
         return ""
     }
   }
+
+  // Load campaigns and current campaign on mount
+  useEffect(() => {
+    loadCampaigns()
+    if (settings) {
+      setTempSettings(settings)
+    }
+  }, [settings, loadCampaigns])
+
+  // Load current campaign data when current campaign changes
+  useEffect(() => {
+    if (currentCampaignId) {
+      loadCurrentCampaignData()
+    }
+  }, [currentCampaignId, loadCurrentCampaignData])
 
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
@@ -633,7 +928,7 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="start-date">Campaign Start Date</Label>
+                    <Label htmlFor="start-date">Campaign Start Date *</Label>
                     <Input
                       id="start-date"
                       value={startDate}
@@ -647,7 +942,9 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                         startDate &&
                         !gameTimeService.isValidDate(startDate, calendarSystem)
                           ? "border-destructive"
-                          : ""
+                          : !startDate.trim()
+                            ? "border-orange-300"
+                            : ""
                       }`}
                     />
                     <p className="text-muted-foreground text-sm">
@@ -683,40 +980,49 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="campaign-name">Campaign Name</Label>
+                      <Label htmlFor="campaign-name">Campaign Name *</Label>
                       <Input
                         id="campaign-name"
                         value={campaignName}
                         onChange={e => setCampaignName(e.target.value)}
                         placeholder="e.g., The Arrakis Chronicles"
                         required
+                        className={
+                          !campaignName.trim() ? "border-orange-300" : ""
+                        }
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="game-system">Game System</Label>
+                      <Label htmlFor="game-system">Game System *</Label>
                       <Input
                         id="game-system"
                         value={gameSystem}
                         onChange={e => setGameSystem(e.target.value)}
                         placeholder="e.g., Dune: Adventures in the Imperium"
+                        className={
+                          !gameSystem.trim() ? "border-orange-300" : ""
+                        }
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="character-name">Character Name</Label>
+                    <Label htmlFor="character-name">Character Name *</Label>
                     <Input
                       id="character-name"
                       value={characterName}
                       onChange={e => setCharacterName(e.target.value)}
                       placeholder="Enter your character's name"
+                      className={
+                        !characterName.trim() ? "border-orange-300" : ""
+                      }
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="character-info">
-                      Character Information
+                      Character Information *
                     </Label>
                     <Textarea
                       id="character-info"
@@ -724,6 +1030,9 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                       onChange={e => setCharacterInfo(e.target.value)}
                       placeholder="Enter character sheet information, stats, abilities, background, etc."
                       rows={4}
+                      className={
+                        !characterInfo.trim() ? "border-orange-300" : ""
+                      }
                     />
                     <p className="text-muted-foreground text-sm">
                       Store your character&apos;s stats, abilities, background,
@@ -732,13 +1041,14 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="key-npcs">Key NPCs</Label>
+                    <Label htmlFor="key-npcs">Key NPCs *</Label>
                     <Textarea
                       id="key-npcs"
                       value={keyNPCs}
                       onChange={e => setKeyNPCs(e.target.value)}
                       placeholder="Track important Non-Player Characters, their stats, personality, goals, and relationships"
                       rows={4}
+                      className={!keyNPCs.trim() ? "border-orange-300" : ""}
                     />
                     <p className="text-muted-foreground text-sm">
                       Record key NPCs, their stats, personality traits, attitude
@@ -747,13 +1057,14 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Campaign Notes</Label>
+                    <Label htmlFor="notes">Campaign Notes *</Label>
                     <Textarea
                       id="notes"
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
                       placeholder="Any important notes or reminders for this campaign"
                       rows={3}
+                      className={!notes.trim() ? "border-orange-300" : ""}
                     />
                   </div>
                 </CardContent>
@@ -775,14 +1086,41 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleBuildCampaign}
+                  disabled={isBuildingCampaign || isLoading}
+                  title="Automatically fill in missing campaign information with appropriate content"
+                >
+                  {isBuildingCampaign ? "Building..." : "Build Campaign"}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!isFormValid || isLoading || isBuildingCampaign}
+                  title={
+                    !isFormValid
+                      ? "Please fill in all required fields to start the campaign"
+                      : "Start the adventure and describe the beginning scenario"
+                  }
+                >
                   {isLoading
-                    ? "Saving..."
+                    ? "Starting..."
                     : isEditingCampaign
                       ? "Save Changes"
-                      : "Create Campaign"}
+                      : "Start Campaign"}
                 </Button>
               </div>
+
+              {!isFormValid && (
+                <div className="mt-2 text-sm text-orange-600">
+                  <p>
+                    ⚠️ Please fill in all required fields (*) to start the
+                    campaign. Use &quot;Build Campaign&quot; to auto-generate
+                    missing content.
+                  </p>
+                </div>
+              )}
             </form>
           </TabsContent>
 
