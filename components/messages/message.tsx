@@ -367,6 +367,16 @@ export const Message: FC<MessageProps> = ({
                             <div className="text-sm font-normal">
                               <span className="mr-1 text-lg font-bold">-</span>{" "}
                               {fileItem.content.substring(0, 200)}...
+                              {/* Show similarity score if available */}
+                              {(fileItem as any).similarity && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  (
+                                  {((fileItem as any).similarity * 100).toFixed(
+                                    1
+                                  )}
+                                  % match)
+                                </span>
+                              )}
                             </div>
                           </div>
                         ))}
