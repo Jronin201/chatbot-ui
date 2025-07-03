@@ -50,8 +50,8 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
   const [gameSystem, setGameSystem] = useState(
     "Dune: Adventures in the Imperium"
   )
-  const [gameMaster, setGameMaster] = useState("")
-  const [characters, setCharacters] = useState("")
+  // Removed gameMaster and characters for single-player setup
+  const [characterName, setCharacterName] = useState("")
   const [notes, setNotes] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -85,10 +85,8 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
       const campaignMetadata: CampaignMetadata = {
         campaignName: campaignName.trim() || "New Campaign",
         gameSystem: gameSystem.trim() || "Unknown",
-        gameMaster: gameMaster.trim() || undefined,
-        characters: characters.trim()
-          ? characters.split(",").map(c => c.trim())
-          : undefined,
+        // Only one character for single-player setup
+        characters: characterName.trim() ? [characterName.trim()] : undefined,
         notes: notes.trim() ? [notes.trim()] : undefined
       }
 
@@ -257,26 +255,13 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="game-master">Game Master</Label>
+                <Label htmlFor="character-name">Character Name</Label>
                 <Input
-                  id="game-master"
-                  value={gameMaster}
-                  onChange={e => setGameMaster(e.target.value)}
-                  placeholder="Your name or GM name"
+                  id="character-name"
+                  value={characterName}
+                  onChange={e => setCharacterName(e.target.value)}
+                  placeholder="Enter your character's name"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="characters">Player Characters</Label>
-                <Input
-                  id="characters"
-                  value={characters}
-                  onChange={e => setCharacters(e.target.value)}
-                  placeholder="Character names separated by commas"
-                />
-                <p className="text-muted-foreground text-sm">
-                  Enter character names separated by commas
-                </p>
               </div>
 
               <div className="space-y-2">
