@@ -293,7 +293,8 @@ export const GameTimeInitDialog: React.FC<GameTimeInitDialogProps> = ({
                   rows={4}
                 />
                 <p className="text-muted-foreground text-sm">
-                  Record key NPCs, their stats, personality traits, attitude toward your character, goals, and current situations
+                  Record key NPCs, their stats, personality traits, attitude
+                  toward your character, goals, and current situations
                 </p>
               </div>
 

@@ -13,6 +13,7 @@ import { useContext, useEffect, useRef } from "react"
 import { LLM_LIST } from "../../../lib/models/llm/llm-list"
 import { useGameTime } from "@/context/game-time-context"
 import { useGameTimeIntegration } from "@/lib/hooks/use-game-time-integration"
+import { processAIResponseForCampaign } from "@/lib/game-time/ai-middleware"
 import { toast } from "sonner"
 import {
   createTempMessages,
@@ -409,6 +410,16 @@ export const useChatHandler = () => {
         } catch (error) {
           console.error("Error processing time passage:", error)
           // Don't throw - time passage detection failures shouldn't break chat
+        }
+      }
+
+      // Game Time AI Campaign Integration: Process AI response for campaign information
+      if (generatedText && !isRegeneration) {
+        try {
+          await processAIResponseForCampaign(generatedText, messageContent)
+        } catch (error) {
+          console.error("Error processing AI response for campaign:", error)
+          // Don't throw - campaign processing failures shouldn't break chat
         }
       }
 

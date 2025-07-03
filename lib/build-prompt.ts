@@ -2,8 +2,12 @@ import { Tables } from "@/supabase/types"
 import { ChatPayload, MessageImage } from "@/types"
 import { encode } from "gpt-tokenizer"
 import { getBase64FromDataURL, getMediaTypeFromDataURL } from "@/lib/utils"
+import {
+  getCampaignAwarenessPrompt,
+  addGameTimeInstructions
+} from "@/lib/game-time/ai-middleware"
 
-const buildBasePrompt = (
+const buildBasePrompt = async (
   prompt: string,
   profileContext: string,
   workspaceInstructions: string,
@@ -17,6 +21,17 @@ const buildBasePrompt = (
 
   fullPrompt += `Today is ${new Date().toLocaleDateString()}.\n\n`
 
+  // Add Game Time context for campaign awareness
+  try {
+    const campaignPrompt = await getCampaignAwarenessPrompt()
+    if (campaignPrompt) {
+      fullPrompt += campaignPrompt
+    }
+  } catch (error) {
+    // Silently continue if Game Time context is not available
+    console.debug("Game Time context not available:", error)
+  }
+
   if (profileContext) {
     fullPrompt += `User Info:\n${profileContext}\n\n`
   }
@@ -26,6 +41,9 @@ const buildBasePrompt = (
   }
 
   fullPrompt += `User Instructions:\n${prompt}`
+
+  // Add Game Time AI instructions for campaign management
+  fullPrompt = addGameTimeInstructions(fullPrompt)
 
   return fullPrompt
 }
@@ -44,7 +62,7 @@ export async function buildFinalMessages(
     chatFileItems
   } = payload
 
-  const BUILT_PROMPT = buildBasePrompt(
+  const BUILT_PROMPT = await buildBasePrompt(
     chatSettings.prompt,
     chatSettings.includeProfileContext ? profile.profile_context || "" : "",
     chatSettings.includeWorkspaceInstructions ? workspaceInstructions : "",
@@ -52,7 +70,7 @@ export async function buildFinalMessages(
   )
 
   const CHUNK_SIZE = chatSettings.contextLength
-  const PROMPT_TOKENS = encode(chatSettings.prompt).length
+  const PROMPT_TOKENS = encode(BUILT_PROMPT).length
 
   let remainingTokens = CHUNK_SIZE - PROMPT_TOKENS
 
