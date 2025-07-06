@@ -1,15 +1,23 @@
 import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { Tables } from "@/supabase/types"
-import { IconCircleCheckFilled, IconRobotFace } from "@tabler/icons-react"
+import {
+  IconCircleCheckFilled,
+  IconRobotFace,
+  IconPlus,
+  IconSword
+} from "@tabler/icons-react"
 import Image from "next/image"
 import { FC } from "react"
 import { ModelIcon } from "../models/model-icon"
 import { DropdownMenuItem } from "../ui/dropdown-menu"
 
 interface QuickSettingOptionProps {
-  contentType: "presets" | "assistants"
+  contentType: "presets" | "assistants" | "campaigns"
   isSelected: boolean
-  item: Tables<"presets", never> | Tables<"assistants", never>
+  item:
+    | Tables<"presets", never>
+    | Tables<"assistants", never>
+    | { id: string; name: string; description?: string }
   onSelect: () => void
   image: string
 }
@@ -21,7 +29,10 @@ export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
   onSelect,
   image
 }) => {
-  const modelDetails = LLM_LIST.find(model => model.modelId === item.model)
+  const modelDetails =
+    contentType !== "campaigns"
+      ? LLM_LIST.find(model => model.modelId === (item as any).model)
+      : null
 
   return (
     <DropdownMenuItem
@@ -36,21 +47,35 @@ export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
             width={32}
             height={32}
           />
-        ) : image ? (
-          <Image
-            style={{ width: "32px", height: "32px" }}
-            className="rounded"
-            src={image}
-            alt="Assistant"
-            width={32}
-            height={32}
-          />
-        ) : (
-          <IconRobotFace
-            className="bg-primary text-secondary border-primary rounded border-DEFAULT p-1"
-            size={32}
-          />
-        )}
+        ) : contentType === "assistants" ? (
+          image ? (
+            <Image
+              style={{ width: "32px", height: "32px" }}
+              className="rounded"
+              src={image}
+              alt="Assistant"
+              width={32}
+              height={32}
+            />
+          ) : (
+            <IconRobotFace
+              className="bg-primary text-secondary border-primary rounded border-DEFAULT p-1"
+              size={32}
+            />
+          )
+        ) : contentType === "campaigns" ? (
+          item.id === "new-campaign" ? (
+            <IconPlus
+              className="bg-primary text-secondary border-primary rounded border-DEFAULT p-1"
+              size={32}
+            />
+          ) : (
+            <IconSword
+              className="bg-primary text-secondary border-primary rounded border-DEFAULT p-1"
+              size={32}
+            />
+          )
+        ) : null}
       </div>
 
       <div className="ml-4 flex grow flex-col space-y-1">

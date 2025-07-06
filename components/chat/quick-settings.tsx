@@ -7,12 +7,7 @@ import useHotkey from "@/lib/hooks/use-hotkey"
 import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { Tables } from "@/supabase/types"
 import { LLMID } from "@/types"
-import {
-  IconChevronDown,
-  IconRobotFace,
-  IconPlus,
-  IconSword
-} from "@tabler/icons-react"
+import { IconChevronDown, IconRobotFace } from "@tabler/icons-react"
 import Image from "next/image"
 import { FC, useContext, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -268,7 +263,9 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
           className="min-w-[300px] max-w-[500px] space-y-4"
           align="start"
         >
-          {presets.length === 0 && assistants.length === 0 ? (
+          {presets.length === 0 &&
+          assistants.length === 0 &&
+          campaigns.length === 0 ? (
             <div className="p-8 text-center">No items found.</div>
           ) : (
             <>
@@ -285,48 +282,38 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
               <div className="space-y-2">
                 <DropdownMenuSeparator />
 
-                {/* New Campaign Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowNewCampaignDialog(true)}
-                  className="w-full justify-start text-left"
-                >
-                  <IconPlus size={16} className="mr-2" />
-                  New Campaign
-                </Button>
+                {/* New Campaign Option */}
+                <QuickSettingOption
+                  contentType="campaigns"
+                  isSelected={false}
+                  item={{
+                    id: "new-campaign",
+                    name: "New Campaign",
+                    description: "Create a new campaign"
+                  }}
+                  onSelect={() => setShowNewCampaignDialog(true)}
+                  image=""
+                />
 
                 {/* Campaigns List */}
-                {campaigns.length > 0 && (
-                  <div className="space-y-1">
-                    <div className="text-muted-foreground px-2 py-1 text-xs font-medium">
-                      Campaigns
-                    </div>
-                    {campaigns
-                      .filter(campaign =>
-                        campaign.name
-                          .toLowerCase()
-                          .includes(search.toLowerCase())
-                      )
-                      .map(campaign => (
-                        <Button
-                          key={campaign.id}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCampaignSelect(campaign.id)}
-                          className="w-full justify-start text-left"
-                        >
-                          <IconSword size={16} className="mr-2" />
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">{campaign.name}</span>
-                            <span className="text-muted-foreground text-xs">
-                              {campaign.gameSystem}
-                            </span>
-                          </div>
-                        </Button>
-                      ))}
-                  </div>
-                )}
+                {campaigns
+                  .filter(campaign =>
+                    campaign.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map(campaign => (
+                    <QuickSettingOption
+                      key={campaign.id}
+                      contentType="campaigns"
+                      isSelected={false}
+                      item={{
+                        id: campaign.id,
+                        name: campaign.name,
+                        description: campaign.gameSystem
+                      }}
+                      onSelect={() => handleCampaignSelect(campaign.id)}
+                      image=""
+                    />
+                  ))}
               </div>
 
               {!!(selectedPreset || selectedAssistant) && (
