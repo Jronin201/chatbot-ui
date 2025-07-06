@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useGameTime } from "@/context/game-time-context"
 import { GameTimeService } from "@/lib/game-time/game-time-service"
 import { TimeChangeHandler } from "@/lib/game-time/time-change-handler"
+import GameTimeAIIntegration from "@/lib/game-time/ai-integration"
 import { toast } from "sonner"
 
 interface UseGameTimeIntegrationOptions {
@@ -188,6 +189,37 @@ export const useGameTimeIntegration = (
   }
 
   /**
+   * Enhanced processMessage that can optionally take conversation context
+   */
+  const processMessageWithContext = async (
+    messageContent: string,
+    messageId?: string,
+    conversationContext?: string[]
+  ): Promise<TimePassageResult> => {
+    // First, process with the regular single-message approach
+    const result = await processMessage(messageContent, messageId)
+
+    // If we have broader conversation context and time was updated,
+    // also process the full context for better NPC detection
+    if (
+      result.timeUpdated &&
+      conversationContext &&
+      conversationContext.length > 1
+    ) {
+      try {
+        const aiIntegration = GameTimeAIIntegration.getInstance()
+        const fullConversation = conversationContext.join("\n\n")
+        await aiIntegration.processFullConversationForNPCs(fullConversation)
+      } catch (error) {
+        console.error("Error processing full conversation context:", error)
+        // Don't fail the main operation if this fails
+      }
+    }
+
+    return result
+  }
+
+  /**
    * Manually analyze a message for time passage without updating
    */
   const analyzeMessage = async (messageContent: string) => {
@@ -288,30 +320,28 @@ export const useGameTimeIntegration = (
     return cleaned
   }
 
-  // Auto-cleanup old notifications
-  useEffect(() => {
-    const cleanup = setInterval(() => {
-      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
-      setTimePassageNotifications(prev =>
-        prev.filter(notification => notification.timestamp > fiveMinutesAgo)
-      )
-    }, 60000) // Check every minute
-
-    return () => clearInterval(cleanup)
-  }, [])
-
+  // Return all hook functions
   return {
+    // Main processing functions
     processMessage,
+    processMessageWithContext,
+
+    // Analysis functions
     analyzeMessage,
+
+    // Manual operations
     addTimeManually,
+
+    // Utility functions
     getTimePassageSuggestions,
-    timePassageNotifications,
+    cleanMessageContent,
+
+    // Notification management
     dismissNotification,
     clearAllNotifications,
-    isEnabled: enabled && !!gameTimeData && settings.autoDetectTimePassage,
-    gameTimeData,
-    settings
+
+    // State
+    timePassageNotifications,
+    lastProcessedMessageId
   }
 }
-
-export type { TimePassageResult, UseGameTimeIntegrationOptions }

@@ -81,7 +81,7 @@ export const useChatHandler = () => {
     formatDate
   } = useGameTime()
 
-  const { processMessage } = useGameTimeIntegration({
+  const { processMessageWithContext } = useGameTimeIntegration({
     enabled: true,
     showNotifications: true
   })
@@ -404,14 +404,32 @@ export const useChatHandler = () => {
         !isRegeneration
       ) {
         try {
-          // Process user message for time passage
+          // Extract recent conversation history for better NPC detection
+          const recentMessages = chatMessages
+            .slice(-10)
+            .map(msg => msg.message.content) // Get last 10 messages
+          const conversationContext = [
+            ...recentMessages,
+            messageContent, // Add current user message
+            ...(generatedText ? [generatedText] : []) // Add AI response if available
+          ]
+
+          // Process user message for time passage with conversation context
           const userMessageId = `${Date.now()}-user-${messageContent.substring(0, 50).replace(/\s+/g, "-")}`
-          await processMessage(messageContent, userMessageId)
+          await processMessageWithContext(
+            messageContent,
+            userMessageId,
+            conversationContext
+          )
 
           // Also process AI response for time passage if available
           if (generatedText) {
             const aiMessageId = `${Date.now()}-ai-${generatedText.substring(0, 50).replace(/\s+/g, "-")}`
-            await processMessage(generatedText, aiMessageId)
+            await processMessageWithContext(
+              generatedText,
+              aiMessageId,
+              conversationContext
+            )
           }
         } catch (error) {
           console.error("Error processing time passage:", error)

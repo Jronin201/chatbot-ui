@@ -472,14 +472,36 @@ export class GameTimeAIIntegration {
   ): Promise<string | null> {
     try {
       const gameTimeData = await this.gameTimeService.loadGameTime()
-      if (!gameTimeData?.campaignMetadata?.keyNPCs) return null
-
-      const currentNPCs = gameTimeData.campaignMetadata.keyNPCs
+      const currentNPCs = gameTimeData?.campaignMetadata?.keyNPCs || ""
       const npcUpdates: string[] = []
+
+      // First, detect any new NPCs from the chat context
+      const newNPCs = this.extractNewNPCsFromContext(chatContext)
 
       // Parse existing NPCs
       const npcLines = currentNPCs.split("\n").filter(line => line.trim())
+      const existingNPCNames = new Set<string>()
 
+      // Extract existing NPC names for comparison
+      for (const npcLine of npcLines) {
+        const nameMatch = npcLine.match(/^([^:\-]+)/)
+        if (nameMatch) {
+          existingNPCNames.add(nameMatch[1].trim().toLowerCase())
+        }
+      }
+
+      // Add new NPCs that aren't already in the list
+      for (const newNPC of newNPCs) {
+        const nameMatch = newNPC.match(/^([^:\-]+)/)
+        if (nameMatch) {
+          const npcName = nameMatch[1].trim().toLowerCase()
+          if (!existingNPCNames.has(npcName)) {
+            npcUpdates.push(`[New]: ${newNPC}`)
+          }
+        }
+      }
+
+      // Generate time-based updates for existing NPCs
       for (const npcLine of npcLines) {
         const timeBasedUpdate = this.generateNPCTimeUpdate(
           npcLine,
@@ -493,15 +515,20 @@ export class GameTimeAIIntegration {
 
       if (npcUpdates.length === 0) return null
 
-      // Combine original NPCs with time-based updates
-      const updatedNPCContent = [
-        currentNPCs,
-        "",
-        "[Time-based Updates]",
-        ...npcUpdates
-      ].join("\n")
+      // Combine original NPCs with updates and new NPCs
+      const sections: string[] = []
 
-      return updatedNPCContent
+      if (currentNPCs.trim()) {
+        sections.push(currentNPCs.trim())
+      }
+
+      if (npcUpdates.length > 0) {
+        sections.push("")
+        sections.push("[Recent Updates]")
+        sections.push(...npcUpdates)
+      }
+
+      return sections.join("\n")
     } catch (error) {
       console.error("Error checking NPCs for time change:", error)
       return null
@@ -922,6 +949,433 @@ export class GameTimeAIIntegration {
     } catch (error) {
       console.error("Error cleaning up existing campaign notes:", error)
       return false
+    }
+  }
+
+  /**
+   * Extract new NPCs from chat context that should be added to Key NPCs
+   */
+  private extractNewNPCsFromContext(chatContext: string): string[] {
+    if (!chatContext) return []
+
+    const cleanContext = this.cleanChatContext(chatContext)
+    const newNPCs: string[] = []
+    const sentences = cleanContext
+      .split(/[.!?]+/)
+      .filter(s => s.trim().length > 10)
+
+    // Patterns to identify NPCs in the text
+    const npcPatterns = [
+      // Pattern: "Sir Lucan Merras" or "Sir Lucan" - titles with names (most specific first)
+      /\b(Sir|Lady|Lord|Duke|Baron|Baroness|Count|Countess|Captain|General|Admiral|Commander|Dr|Professor|Master|Maester|Septon|Sister)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b/g,
+
+      // Pattern: Full names in key positions (3 parts: First Middle Last)
+      /\b([A-Z][a-z]+\s+[A-Z][a-z]+\s+[A-Z][a-z]+)\b(?=\s*[,.]|\s+(?:his|her|their|sits|stands|nods|leans|begins|says|explains|offers|turns))/g,
+
+      // Pattern: Full names (2 parts: First Last)
+      /\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b(?=\s*[,.]|\s+(?:his|her|their|sits|stands|nods|leans|begins|says|explains|offers|turns))/g,
+
+      // Pattern: Names at the head of the table or in positions of authority
+      /(?:sits|stands|leads|heads|commands|presides)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g,
+
+      // Pattern: Names with explicit roles or titles
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*,?\s*(?:the|a|an)?\s*(?:councilor|advisor|captain|leader|guard|merchant|trader|pilot|engineer|doctor|healer|priest|warrior|knight|ambassador|diplomat|spy|agent|commander|general|admiral|sergeant|lieutenant|major|colonel|duke|baron|lord|lady|sir|master|mistress)\b/gi,
+
+      // Pattern: Dialogue attribution - "text," Name said/explains/continues
+      /"[^"]*,?\s*"\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:said|says|explains|continues|adds|replies|responds|notes|observes|remarks)/g,
+
+      // Pattern: Character actions - Name does something
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:nods|leans|gestures|approaches|enters|sits|stands|turns|offers|begins|explains|pauses|rises|meets)/g,
+
+      // Pattern: Possessive constructions - "Name's X" or "Name, his/her/their"
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*),?\s+(?:his|her|their)\s+(?:expression|voice|gaze|presence|eyes|hand|words)/g,
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)'s\s+(?:expression|voice|gaze|presence|eyes|hand|words)/g,
+
+      // Pattern: "As Name..." - starting narrative with a character
+      /\bAs\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:enters|approaches|speaks|nods|leans|gestures|turns|offers|begins|explains)/g,
+
+      // Pattern: Direct address - "Name," at the beginning of dialogue
+      /"\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*,"/g
+    ]
+
+    for (const sentence of sentences) {
+      for (const pattern of npcPatterns) {
+        pattern.lastIndex = 0 // Reset regex
+        let match
+        while ((match = pattern.exec(sentence)) !== null) {
+          const potentialName = match[1] || match[2]
+          if (potentialName && this.isValidNPCName(potentialName)) {
+            // Extract context about this NPC
+            const npcInfo = this.extractNPCInfo(
+              potentialName,
+              sentence,
+              cleanContext
+            )
+            if (npcInfo) {
+              newNPCs.push(npcInfo)
+            }
+          }
+        }
+      }
+    }
+
+    return [...new Set(newNPCs)] // Remove duplicates
+  }
+
+  /**
+   * Check if a potential name is valid for an NPC
+   */
+  private isValidNPCName(name: string): boolean {
+    const trimmed = name.trim()
+
+    // Must be at least 2 characters
+    if (trimmed.length < 2) return false
+
+    // Filter out common false positives
+    const commonWords = [
+      "House",
+      "Council",
+      "Hall",
+      "Chamber",
+      "Room",
+      "Advisor",
+      "Councilor",
+      "Table",
+      "The",
+      "And",
+      "With",
+      "From",
+      "Into",
+      "Upon",
+      "Over",
+      "Under",
+      "Door",
+      "Voice",
+      "Spice",
+      "Arrakis",
+      "Imperium",
+      "Virellan",
+      "Fremen",
+      "Harkonnen",
+      "Atreides",
+      "Ship",
+      "Spacecraft",
+      "Ornithopter",
+      "Desert",
+      "Planet",
+      "System",
+      "Space",
+      "Production",
+      "Trade",
+      "Alliance",
+      "Mission",
+      "Journey",
+      "Travel",
+      "Great",
+      "Your",
+      "Their",
+      "Head",
+      "Center",
+      "Future",
+      "Power",
+      "Time",
+      "Place"
+    ]
+
+    // Check each word in the name
+    const words = trimmed.split(/\s+/)
+    for (const word of words) {
+      if (commonWords.includes(word)) return false
+    }
+
+    // Must start with capital letter
+    if (!/^[A-Z]/.test(trimmed)) return false
+
+    // Should not be all caps (likely an acronym or place)
+    if (trimmed === trimmed.toUpperCase() && trimmed.length > 3) return false
+
+    // For compound names, each part should be capitalized
+    const nameParts = trimmed.split(/\s+/)
+    for (const part of nameParts) {
+      if (part.length > 1 && !/^[A-Z][a-z]/.test(part)) {
+        return false
+      }
+    }
+
+    // Avoid single words that are likely common nouns
+    if (nameParts.length === 1 && nameParts[0].length < 4) {
+      return false
+    }
+
+    return true
+  }
+
+  /**
+   * Extract information about an NPC from the context
+   */
+  private extractNPCInfo(
+    npcName: string,
+    sentence: string,
+    fullContext: string
+  ): string | null {
+    const info: string[] = []
+
+    // Start with the clean name
+    let cleanName = npcName.trim()
+
+    // Look for titles within the name itself (e.g., "Sir Lucan Merras")
+    const titleInName = cleanName.match(
+      /^(Sir|Lady|Lord|Duke|Baron|Baroness|Count|Countess|Captain|General|Admiral|Commander|Dr|Professor|Master)\s+(.+)$/i
+    )
+    if (titleInName) {
+      const title = titleInName[1]
+      const nameWithoutTitle = titleInName[2]
+      info.push(`${title} ${nameWithoutTitle}`)
+    } else {
+      info.push(cleanName)
+    }
+
+    // Look for additional titles, roles, or descriptions in the context
+    const contextPatterns = [
+      new RegExp(
+        `${this.escapeRegex(cleanName)}[^.]*?\\b(councilor|advisor|captain|leader|guard|merchant|trader|pilot|engineer|doctor|healer|priest|warrior|knight|ambassador|diplomat|spy|agent|commander|general|admiral)\\b`,
+        "i"
+      ),
+      new RegExp(
+        `\\b(councilor|advisor|captain|leader|guard|merchant|trader|pilot|engineer|doctor|healer|priest|warrior|knight|ambassador|diplomat|spy|agent|commander|general|admiral)[^.]*?${this.escapeRegex(cleanName)}`,
+        "i"
+      ),
+      new RegExp(
+        `${this.escapeRegex(cleanName)}[^.]*?\\b(commanding|approachable|respected|influential|authority|stewardship|service|embodying|presence|resonant|steady|intent|measured|intensity)\\b`,
+        "i"
+      )
+    ]
+
+    const roles = new Set<string>()
+    for (const pattern of contextPatterns) {
+      const match = sentence.match(pattern) || fullContext.match(pattern)
+      if (match && match[1]) {
+        roles.add(match[1].toLowerCase())
+      }
+    }
+
+    // Look for descriptive context about this character
+    const sentences = fullContext.split(/[.!?]+/)
+    let bestDescription = ""
+
+    for (const contextSentence of sentences) {
+      if (contextSentence.toLowerCase().includes(cleanName.toLowerCase())) {
+        const cleanSentence = contextSentence.trim()
+
+        // Prioritize sentences that describe the character's role or attributes
+        if (cleanSentence.length > 30 && cleanSentence.length < 250) {
+          if (
+            cleanSentence.match(
+              /\b(commanding|approachable|respected|influential|authority|stewardship|service|embodying|voice|presence|expression|resonant|steady|council|head|table)\b/i
+            )
+          ) {
+            bestDescription = cleanSentence
+            break
+          } else if (
+            !bestDescription &&
+            cleanSentence.length > bestDescription.length
+          ) {
+            bestDescription = cleanSentence
+          }
+        }
+      }
+    }
+
+    // Build the final description
+    let result = info[0]
+
+    if (roles.size > 0) {
+      const roleList = Array.from(roles).join(", ")
+      result += ` - ${roleList}`
+    }
+
+    if (bestDescription && bestDescription.length > result.length + 20) {
+      // Extract key descriptive phrases
+      const descriptors = []
+      if (bestDescription.match(/commanding\s+(?:yet\s+)?approachable/i)) {
+        descriptors.push("commanding yet approachable presence")
+      }
+      if (bestDescription.match(/embodying.*?ideals/i)) {
+        descriptors.push("embodies ideals of service and stewardship")
+      }
+      if (bestDescription.match(/head\s+of\s+the\s+table|sits.*?head/i)) {
+        descriptors.push("leads the council")
+      }
+      if (bestDescription.match(/voice\s+resonant|steady/i)) {
+        descriptors.push("speaks with authority")
+      }
+
+      if (descriptors.length > 0) {
+        result += ` - ${descriptors.join(", ")}`
+      } else {
+        // Use a cleaned version of the best description
+        const cleanDesc = bestDescription
+          .replace(new RegExp(this.escapeRegex(cleanName), "gi"), "")
+          .replace(/^\s*[,.-]\s*/, "")
+          .trim()
+        if (cleanDesc.length > 20 && cleanDesc.length < 150) {
+          result += ` - ${cleanDesc}`
+        }
+      }
+    }
+
+    return result.length > cleanName.length + 5
+      ? result
+      : `${cleanName} - Important character encountered in the story`
+  }
+
+  /**
+   * Escape special regex characters in a string
+   */
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  }
+
+  /**
+   * Process a broader conversation context to detect NPCs and update campaign information
+   * This can be called when we have access to more conversation history
+   */
+  async processConversationContext(conversationHistory: string[]): Promise<{
+    npcsFound: string[]
+    notesGenerated: string[]
+  }> {
+    const npcsFound: string[] = []
+    const notesGenerated: string[] = []
+
+    try {
+      // Combine the conversation history into a single context
+      const fullContext = conversationHistory.join("\n\n")
+      const cleanContext = this.cleanChatContext(fullContext)
+
+      // Extract NPCs from the full conversation
+      const detectedNPCs = this.extractNewNPCsFromContext(cleanContext)
+
+      if (detectedNPCs.length > 0) {
+        // Get existing NPCs to avoid duplicates
+        const gameTimeData = await this.gameTimeService.loadGameTime()
+        const currentNPCs = gameTimeData?.campaignMetadata?.keyNPCs || ""
+        const existingNPCNames = new Set<string>()
+
+        const npcLines = currentNPCs.split("\n").filter(line => line.trim())
+        for (const npcLine of npcLines) {
+          const nameMatch = npcLine.match(/^([^:\-]+)/)
+          if (nameMatch) {
+            existingNPCNames.add(nameMatch[1].trim().toLowerCase())
+          }
+        }
+
+        // Filter out NPCs that already exist
+        const newNPCs = detectedNPCs.filter(npc => {
+          const nameMatch = npc.match(/^([^:\-]+)/)
+          if (nameMatch) {
+            const npcName = nameMatch[1].trim().toLowerCase()
+            return !existingNPCNames.has(npcName)
+          }
+          return false
+        })
+
+        if (newNPCs.length > 0) {
+          // Update the Key NPCs with new characters
+          const updatedNPCs = currentNPCs
+            ? `${currentNPCs}\n\n[Recently Encountered]\n${newNPCs.join("\n")}`
+            : newNPCs.join("\n")
+
+          const success = await this.updateCampaignField("keyNPCs", updatedNPCs)
+          if (success) {
+            npcsFound.push(...newNPCs)
+          }
+        }
+      }
+
+      // Generate story notes from the conversation
+      const storyElements = this.extractStoryElements(cleanContext, 0)
+      if (storyElements) {
+        notesGenerated.push(storyElements)
+      }
+
+      return { npcsFound, notesGenerated }
+    } catch (error) {
+      console.error("Error processing conversation context:", error)
+      return { npcsFound: [], notesGenerated: [] }
+    }
+  }
+
+  /**
+   * Manually process conversation history to update NPCs (can be called externally)
+   */
+  async processFullConversationForNPCs(conversationText: string): Promise<{
+    success: boolean
+    npcsFound: string[]
+    message: string
+  }> {
+    try {
+      const detectedNPCs = this.extractNewNPCsFromContext(conversationText)
+
+      if (detectedNPCs.length === 0) {
+        return {
+          success: false,
+          npcsFound: [],
+          message: "No new NPCs detected in the conversation"
+        }
+      }
+
+      // Get existing NPCs to avoid duplicates
+      const gameTimeData = await this.gameTimeService.loadGameTime()
+      const currentNPCs = gameTimeData?.campaignMetadata?.keyNPCs || ""
+      const existingNPCNames = new Set<string>()
+
+      const npcLines = currentNPCs.split("\n").filter(line => line.trim())
+      for (const npcLine of npcLines) {
+        const nameMatch = npcLine.match(/^([^:\-]+)/)
+        if (nameMatch) {
+          existingNPCNames.add(nameMatch[1].trim().toLowerCase())
+        }
+      }
+
+      // Filter out NPCs that already exist
+      const newNPCs = detectedNPCs.filter(npc => {
+        const nameMatch = npc.match(/^([^:\-]+)/)
+        if (nameMatch) {
+          const npcName = nameMatch[1].trim().toLowerCase()
+          return !existingNPCNames.has(npcName)
+        }
+        return false
+      })
+
+      if (newNPCs.length === 0) {
+        return {
+          success: false,
+          npcsFound: detectedNPCs,
+          message: "All detected NPCs already exist in the campaign"
+        }
+      }
+
+      // Update the Key NPCs with new characters
+      const updatedNPCs = currentNPCs.trim()
+        ? `${currentNPCs.trim()}\n\n[Recently Encountered]\n${newNPCs.join("\n")}`
+        : newNPCs.join("\n")
+
+      const success = await this.updateCampaignField("keyNPCs", updatedNPCs)
+
+      return {
+        success,
+        npcsFound: newNPCs,
+        message: success
+          ? `Successfully added ${newNPCs.length} new NPC(s) to the campaign`
+          : "Failed to update campaign with new NPCs"
+      }
+    } catch (error) {
+      console.error("Error processing conversation for NPCs:", error)
+      return {
+        success: false,
+        npcsFound: [],
+        message: `Error processing conversation: ${error instanceof Error ? error.message : "Unknown error"}`
+      }
     }
   }
 }
