@@ -268,6 +268,9 @@ export class GameTimeAIIntegration {
     let npcsUpdated = false
 
     try {
+      // First, clean up any existing contaminated campaign notes
+      await this.cleanupExistingCampaignNotes()
+
       // Generate meaningful campaign summary instead of technical notes
       const campaignSummary = await this.generateCampaignSummary(
         chatContext,
@@ -353,10 +356,46 @@ export class GameTimeAIIntegration {
       .replace(/Duration:[^\n]*/gi, "")
       .replace(/\[Recent Events\][^\n]*/gi, "")
       .replace(/\[Updated Notes\][^\n]*/gi, "")
+      .replace(/Primary Goals:/gi, "")
+      .replace(
+        /\*\*\s*(Story Progress|Plot Elements|Active Goals|Current Situation)\s*:\*\*$/gim,
+        ""
+      )
+
+    // Remove lines that are purely auto-detection information
+    cleaned = cleaned
+      .split("\n")
+      .filter(line => {
+        const trimmed = line.trim()
+        if (trimmed.length < 5) return false
+
+        // Remove auto-detection lines
+        if (
+          trimmed.match(
+            /^Auto-detected:|^Context:|^Time Progression:|^Duration:|^Estimated|\d+\s+day\(s\)\s+elapsed|and \d+ other time indicator|time indicator\(s\)/i
+          )
+        ) {
+          return false
+        }
+
+        // Remove lines that are just technical metadata
+        if (trimmed.match(/^\d+\s+(day|week|month|year)s?\s+ago:\s*$/i)) {
+          return false
+        }
+
+        return true
+      })
+      .join("\n")
 
     // Remove quoted fragments that are just detection descriptions
     cleaned = cleaned.replace(
       /"[^"]*(?:travel|journey|rest|activity)[^"]*"/gi,
+      ""
+    )
+
+    // Remove patterns like "X days ago: Auto-detected"
+    cleaned = cleaned.replace(
+      /\d+\s+(day|week|month|year)s?\s+ago:\s*Auto-detected[^\n]*/gi,
       ""
     )
 
@@ -647,19 +686,43 @@ export class GameTimeAIIntegration {
       return ""
     }
 
-    const currentNotes = gameTimeData.campaignMetadata.notes || []
-    const existingNotesText = currentNotes.join("\n")
+    // Clean the recent events first
+    const cleanEvents = this.cleanChatContext(recentEvents)
+    if (!cleanEvents || cleanEvents.length < 10) {
+      // If no meaningful recent events, just return cleaned existing notes
+      const currentNotes = gameTimeData.campaignMetadata.notes || []
+      const cleanExistingNotes = currentNotes
+        .map(note => this.cleanChatContext(note))
+        .filter(note => note && note.length > 10)
+        .join("\n")
+
+      return cleanExistingNotes
+    }
 
     // Extract story elements from recent events
-    const storyElements = this.extractStoryElements(recentEvents, daysElapsed)
+    const storyElements = this.extractStoryElements(cleanEvents, daysElapsed)
 
     if (!storyElements) {
-      return existingNotesText // No meaningful updates
+      // Return cleaned existing notes if no story elements found
+      const currentNotes = gameTimeData.campaignMetadata.notes || []
+      const cleanExistingNotes = currentNotes
+        .map(note => this.cleanChatContext(note))
+        .filter(note => note && note.length > 10)
+        .join("\n")
+
+      return cleanExistingNotes
     }
+
+    // Get existing clean notes
+    const currentNotes = gameTimeData.campaignMetadata.notes || []
+    const cleanExistingNotes = currentNotes
+      .map(note => this.cleanChatContext(note))
+      .filter(note => note && note.length > 10)
+      .join("\n")
 
     // Create a focused summary that builds on existing notes
     const sections = this.organizeCampaignNotes(
-      existingNotesText,
+      cleanExistingNotes,
       storyElements
     )
 
@@ -675,70 +738,191 @@ export class GameTimeAIIntegration {
   ): string[] {
     const sections: string[] = []
 
+    // Clean the existing notes first to remove auto-detection content
+    const cleanExistingNotes = this.cleanChatContext(existingNotes)
+
     // Parse existing notes to identify different sections
-    const existingLines = existingNotes.split("\n").filter(line => line.trim())
+    const existingLines = cleanExistingNotes.split("\n").filter(line => {
+      const trimmed = line.trim()
+      if (trimmed.length < 5) return false
+
+      // Filter out auto-detection lines
+      if (
+        trimmed.match(
+          /^Auto-detected:|^Context:|^Time Progression:|^Duration:|^Estimated|\d+\s+day\(s\)\s+elapsed/i
+        )
+      ) {
+        return false
+      }
+
+      // Filter out repetitive or technical lines
+      if (
+        trimmed.match(
+          /^\*\*\s*(Story Progress|Plot Elements|Active Goals|Current Situation)\s*:\*\*$/
+        )
+      ) {
+        return false
+      }
+
+      return true
+    })
+
     const storyLines: string[] = []
     const plotLines: string[] = []
     const goalLines: string[] = []
     const situationLines: string[] = []
 
-    // Categorize existing notes
+    // Categorize existing notes with better filtering
     for (const line of existingLines) {
       const lower = line.toLowerCase()
+      const trimmed = line.trim()
+
+      // Skip auto-detection content that might have slipped through
+      if (
+        trimmed.match(
+          /auto-detected|detected.*activity|estimated.*day|time progression|duration|context:/i
+        )
+      ) {
+        continue
+      }
+
+      // Categorize meaningful content
       if (
         lower.includes("plot") ||
         lower.includes("story") ||
-        lower.includes("narrative")
+        lower.includes("narrative") ||
+        lower.includes("storyline")
       ) {
-        plotLines.push(line)
+        plotLines.push(trimmed)
       } else if (
         lower.includes("goal") ||
         lower.includes("objective") ||
-        lower.includes("mission")
+        lower.includes("mission") ||
+        lower.includes("quest") ||
+        lower.includes("task")
       ) {
-        goalLines.push(line)
+        goalLines.push(trimmed)
       } else if (
         lower.includes("situation") ||
         lower.includes("current") ||
-        lower.includes("status")
+        lower.includes("status") ||
+        lower.includes("location") ||
+        lower.includes("position")
       ) {
-        situationLines.push(line)
-      } else if (line.length > 10) {
-        // General story content
-        storyLines.push(line)
+        situationLines.push(trimmed)
+      } else if (
+        trimmed.length > 15 &&
+        !trimmed.match(/^\d+\s+(day|week|month|year)/)
+      ) {
+        // General story content - but exclude time references
+        storyLines.push(trimmed)
       }
     }
 
-    // Add story progression section
+    // Add story progression section with only meaningful content
     if (storyLines.length > 0 || newEvents) {
       const storySection = ["**Story Progress:**"]
       if (storyLines.length > 0) {
-        storySection.push(...storyLines.slice(-3)) // Keep last 3 story entries
+        // Filter and clean story lines
+        const cleanStoryLines = storyLines
+          .filter(
+            line =>
+              !line.match(/auto-detected|detected.*activity|estimated.*day/i)
+          )
+          .slice(-3) // Keep last 3 story entries
+        storySection.push(...cleanStoryLines)
       }
       if (newEvents) {
         storySection.push(newEvents)
       }
-      sections.push(storySection.join("\n"))
+      if (storySection.length > 1) {
+        // Only add if there's actual content
+        sections.push(storySection.join("\n"))
+      }
     }
 
     // Add current situation
     if (situationLines.length > 0) {
-      sections.push(
-        "**Current Situation:**\n" + situationLines.slice(-2).join("\n")
-      )
+      const cleanSituationLines = situationLines
+        .filter(
+          line =>
+            !line.match(/auto-detected|detected.*activity|estimated.*day/i)
+        )
+        .slice(-2)
+      if (cleanSituationLines.length > 0) {
+        sections.push(
+          "**Current Situation:**\n" + cleanSituationLines.join("\n")
+        )
+      }
     }
 
     // Add active goals
     if (goalLines.length > 0) {
-      sections.push("**Active Goals:**\n" + goalLines.slice(-3).join("\n"))
+      const cleanGoalLines = goalLines
+        .filter(
+          line =>
+            !line.match(/auto-detected|detected.*activity|estimated.*day/i)
+        )
+        .slice(-3)
+      if (cleanGoalLines.length > 0) {
+        sections.push("**Active Goals:**\n" + cleanGoalLines.join("\n"))
+      }
     }
 
     // Add plot elements
     if (plotLines.length > 0) {
-      sections.push("**Plot Elements:**\n" + plotLines.slice(-2).join("\n"))
+      const cleanPlotLines = plotLines
+        .filter(
+          line =>
+            !line.match(/auto-detected|detected.*activity|estimated.*day/i)
+        )
+        .slice(-2)
+      if (cleanPlotLines.length > 0) {
+        sections.push("**Plot Elements:**\n" + cleanPlotLines.join("\n"))
+      }
     }
 
     return sections
+  }
+
+  /**
+   * Clean up existing campaign notes by removing auto-detection content
+   */
+  async cleanupExistingCampaignNotes(): Promise<boolean> {
+    try {
+      const gameTimeData = await this.gameTimeService.loadGameTime()
+      if (!gameTimeData?.campaignMetadata?.notes) {
+        return false
+      }
+
+      const existingNotes = gameTimeData.campaignMetadata.notes
+      const cleanedNotes: string[] = []
+
+      for (const note of existingNotes) {
+        const cleaned = this.cleanChatContext(note)
+        if (cleaned && cleaned.length > 10) {
+          // Only keep notes that have meaningful content after cleaning
+          cleanedNotes.push(cleaned)
+        }
+      }
+
+      // Update the campaign metadata with cleaned notes
+      const updatedMetadata = {
+        ...gameTimeData.campaignMetadata,
+        notes: cleanedNotes
+      }
+
+      const updatedGameTimeData = {
+        ...gameTimeData,
+        campaignMetadata: updatedMetadata
+      }
+
+      await GameTimeStorage.saveGameTime(updatedGameTimeData)
+      return true
+    } catch (error) {
+      console.error("Error cleaning up existing campaign notes:", error)
+      return false
+    }
   }
 }
 

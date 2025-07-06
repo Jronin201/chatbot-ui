@@ -273,6 +273,14 @@ export const useGameTimeIntegration = (
       .replace(/Detected\s+\w+\s+activity:\s*/gi, "")
       .replace(/Estimated\s+\d+\s+day\(s\)\s+elapsed\.?/gi, "")
       .replace(/Context:\s*/gi, "")
+      .replace(/Primary Goals:/gi, "")
+      .replace(/and \d+ other time indicator\(s\)/gi, "")
+
+    // Remove quoted fragments that contain only auto-detection descriptions
+    cleaned = cleaned.replace(
+      /"[^"]*(?:travel to|journey to|rest activity)[^"]*"/gi,
+      ""
+    )
 
     // Clean up multiple spaces and trim
     cleaned = cleaned.replace(/\s+/g, " ").trim()
