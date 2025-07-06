@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { GameTimeData } from "@/types/game-time"
 import { useCampaignData } from "@/context/campaign-data-context"
+import { useSessionState } from "@/context/session-state-context"
 import {
   createLoadingContext,
   createSearchQuery
@@ -54,7 +55,11 @@ import {
   IconDatabase,
   IconSearch,
   IconFilter,
-  IconRefresh
+  IconRefresh,
+  IconPlayerPlay,
+  IconPlayerStop,
+  IconBrain,
+  IconHistory
 } from "@tabler/icons-react"
 
 interface CampaignDataViewProps {
@@ -73,6 +78,19 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
     currentContext,
     setCurrentContext
   } = useCampaignData()
+
+  const {
+    sessionState,
+    startSession,
+    endSession,
+    isSessionActive,
+    generateContext,
+    addCharacterToSession,
+    setCurrentLocation,
+    trackAction,
+    getRecentEvents,
+    getAIContext
+  } = useSessionState()
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("")
@@ -290,15 +308,131 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
         </CardContent>
       </Card>
 
+      {/* Session State Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <IconBrain className="size-4" />
+            Session Management & AI Context
+          </CardTitle>
+          <CardDescription>
+            Manage current session state and generate AI context packets
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Badge variant={isSessionActive ? "default" : "secondary"}>
+                {isSessionActive ? "Session Active" : "Session Inactive"}
+              </Badge>
+              {isSessionActive && (
+                <span className="text-muted-foreground text-sm">
+                  Session #{sessionState.sessionInfo.sessionNumber}
+                </span>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              {!isSessionActive ? (
+                <Button
+                  onClick={() =>
+                    startSession(
+                      gameTimeData?.currentDate || new Date().toISOString()
+                    )
+                  }
+                  size="sm"
+                  variant="outline"
+                >
+                  <IconPlayerPlay className="mr-2 size-4" />
+                  Start Session
+                </Button>
+              ) : (
+                <Button onClick={endSession} size="sm" variant="outline">
+                  <IconPlayerStop className="mr-2 size-4" />
+                  End Session
+                </Button>
+              )}
+
+              <Button
+                onClick={async () => {
+                  const context = await getAIContext()
+                  navigator.clipboard.writeText(context)
+                  // Could add toast notification here
+                }}
+                size="sm"
+                variant="outline"
+              >
+                <IconBrain className="mr-2 size-4" />
+                Copy AI Context
+              </Button>
+            </div>
+          </div>
+
+          {isSessionActive && (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="text-sm">
+                <Label className="text-muted-foreground text-xs">
+                  Active Characters
+                </Label>
+                <div className="mt-1">
+                  {sessionState.activeEntities.characters.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {sessionState.activeEntities.characters.map(char => (
+                        <Badge
+                          key={char.id}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {char.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">None</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-sm">
+                <Label className="text-muted-foreground text-xs">
+                  Current Location
+                </Label>
+                <div className="mt-1">
+                  {sessionState.currentContext.location ? (
+                    <Badge variant="secondary" className="text-xs">
+                      {sessionState.currentContext.location.name}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">Not set</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-sm">
+                <Label className="text-muted-foreground text-xs">
+                  Recent Events
+                </Label>
+                <div className="mt-1">
+                  <span className="text-muted-foreground">
+                    {getRecentEvents(5).length} events
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="characters">Characters</TabsTrigger>
           <TabsTrigger value="npcs">NPCs</TabsTrigger>
           <TabsTrigger value="world">World</TabsTrigger>
           <TabsTrigger value="progression">Progression</TabsTrigger>
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="ai-context">AI Context</TabsTrigger>
           <TabsTrigger value="search">Search Results</TabsTrigger>
         </TabsList>
 
@@ -608,6 +742,127 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
               </p>
             </div>
           )}
+        </TabsContent>
+
+        {/* AI Context Tab */}
+        <TabsContent value="ai-context" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <IconBrain className="size-4" />
+                AI Context Generation
+              </CardTitle>
+              <CardDescription>
+                Generate contextual information packets for AI interactions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("session-start")
+                      console.log("Session Start Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconPlayerPlay className="mr-2 size-4" />
+                    Generate Session Start Context
+                  </Button>
+
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("dialogue")
+                      console.log("Dialogue Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconUsers className="mr-2 size-4" />
+                    Generate Dialogue Context
+                  </Button>
+
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("exploration")
+                      console.log("Exploration Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconMap className="mr-2 size-4" />
+                    Generate Exploration Context
+                  </Button>
+
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("combat")
+                      console.log("Combat Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconFlag className="mr-2 size-4" />
+                    Generate Combat Context
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Recent Session Events</Label>
+                  <div className="rounded border p-3">
+                    {isSessionActive ? (
+                      <div className="space-y-2">
+                        {getRecentEvents(5).map(event => (
+                          <div
+                            key={event.id}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span>{event.description}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {event.type}
+                            </Badge>
+                          </div>
+                        ))}
+                        {getRecentEvents(5).length === 0 && (
+                          <p className="text-muted-foreground text-sm">
+                            No recent events
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        Start a session to track events
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Current AI Context Summary</Label>
+                  <div className="bg-muted/50 rounded border p-3">
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <strong>Active Characters:</strong>{" "}
+                        {sessionState.activeEntities.characters
+                          .map(c => c.name)
+                          .join(", ") || "None"}
+                      </p>
+                      <p>
+                        <strong>Current Location:</strong>{" "}
+                        {sessionState.currentContext.location?.name ||
+                          "Not set"}
+                      </p>
+                      <p>
+                        <strong>Session Active:</strong>{" "}
+                        {isSessionActive ? "Yes" : "No"}
+                      </p>
+                      <p>
+                        <strong>Recent Events:</strong>{" "}
+                        {getRecentEvents(3).length} events
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Add other tabs as needed - NPCs, World, etc. */}

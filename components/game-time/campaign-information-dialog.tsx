@@ -9,7 +9,8 @@ import {
   GameTimeData
 } from "@/types/game-time"
 import { useGameTime } from "@/context/game-time-context"
-import { useCampaignData } from "@/context/campaign-data-context"
+import { CampaignDataProvider } from "@/context/campaign-data-context"
+import { SessionStateProvider } from "@/context/session-state-context"
 import { CampaignDataView } from "./campaign-data-view"
 import { ChatbotUIContext } from "@/context/context"
 import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
@@ -839,7 +840,11 @@ export const CampaignInformationDialog: React.FC<
 
           {/* Campaign Data Tab - Enhanced with Search and Filtering */}
           <TabsContent value="campaign-data" className="space-y-4">
-            <CampaignDataView gameTimeData={gameTimeData} />
+            <CampaignDataProvider>
+              <SessionStateProvider>
+                <CampaignDataView gameTimeData={gameTimeData} />
+              </SessionStateProvider>
+            </CampaignDataProvider>
           </TabsContent>
 
           {/* Management Tab - Combines Create/Edit, Adjust Time, and History */}
