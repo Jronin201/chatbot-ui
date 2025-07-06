@@ -10,6 +10,10 @@ import {
 } from "@/types/game-time"
 import { useGameTime } from "@/context/game-time-context"
 import { ChatbotUIContext } from "@/context/context"
+import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
+import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
+import { getAssistantToolsByAssistantId } from "@/db/assistant-tools"
+import { getCollectionFilesByCollectionId } from "@/db/collection-files"
 import { GameTimeService } from "@/lib/game-time/game-time-service"
 import { GameTimeStorage, CampaignSummary } from "@/lib/game-time/storage"
 import { Button } from "@/components/ui/button"
@@ -77,11 +81,12 @@ import { toast } from "sonner"
 interface CampaignInformationDialogProps {
   isOpen: boolean
   onClose: () => void
+  campaignId?: string | null
 }
 
 export const CampaignInformationDialog: React.FC<
   CampaignInformationDialogProps
-> = ({ isOpen, onClose }) => {
+> = ({ isOpen, onClose, campaignId }) => {
   const {
     gameTimeData,
     initializeGameTime,
@@ -94,7 +99,14 @@ export const CampaignInformationDialog: React.FC<
     formatDate,
     loadGameTime
   } = useGameTime()
-  const { selectedWorkspace } = useContext(ChatbotUIContext)
+  const {
+    selectedWorkspace,
+    assistants,
+    setSelectedAssistant,
+    setChatFiles,
+    setSelectedTools,
+    setShowFilesDisplay
+  } = useContext(ChatbotUIContext)
   const gameTimeService = GameTimeService.getInstance()
 
   const workspaceId = selectedWorkspace?.id || "default"
@@ -118,6 +130,7 @@ export const CampaignInformationDialog: React.FC<
   const [characterInfo, setCharacterInfo] = useState("")
   const [keyNPCs, setKeyNPCs] = useState("")
   const [notes, setNotes] = useState("")
+  const [gameMasterAssistantId, setGameMasterAssistantId] = useState("")
 
   // Time adjustment state
   const [daysToAdd, setDaysToAdd] = useState("")
@@ -145,26 +158,35 @@ export const CampaignInformationDialog: React.FC<
   useEffect(() => {
     if (isOpen) {
       loadCampaigns()
-      setCurrentCampaignId(GameTimeStorage.getCurrentCampaignId())
-      setIsEditMode(false) // Reset edit mode when dialog opens
-      if (gameTimeData) {
-        // Pre-populate form with existing data
-        setCampaignName(gameTimeData.campaignMetadata?.campaignName || "")
-        setGameSystem(gameTimeData.campaignMetadata?.gameSystem || "")
-        setCharacterInfo(gameTimeData.campaignMetadata?.characterInfo || "")
-        setKeyNPCs(gameTimeData.campaignMetadata?.keyNPCs || "")
-        setNotes(gameTimeData.campaignMetadata?.notes?.join("\\n") || "")
-        setCalendarSystem(gameTimeData.calendarSystem)
-        setStartDate(gameTimeData.startDate)
-        setNewDate(gameTimeData.currentDate)
-        setActiveTab("overview")
+
+      // If campaignId is provided, load that specific campaign
+      if (campaignId) {
+        loadSpecificCampaign(campaignId)
       } else {
-        // Reset form for new campaign
-        setActiveTab("create")
+        setCurrentCampaignId(GameTimeStorage.getCurrentCampaignId())
+        setIsEditMode(false) // Reset edit mode when dialog opens
+        if (gameTimeData) {
+          // Pre-populate form with existing data
+          setCampaignName(gameTimeData.campaignMetadata?.campaignName || "")
+          setGameSystem(gameTimeData.campaignMetadata?.gameSystem || "")
+          setCharacterInfo(gameTimeData.campaignMetadata?.characterInfo || "")
+          setKeyNPCs(gameTimeData.campaignMetadata?.keyNPCs || "")
+          setNotes(gameTimeData.campaignMetadata?.notes?.join("\\n") || "")
+          setGameMasterAssistantId(
+            gameTimeData.campaignMetadata?.gameMasterAssistantId || ""
+          )
+          setCalendarSystem(gameTimeData.calendarSystem)
+          setStartDate(gameTimeData.startDate)
+          setNewDate(gameTimeData.currentDate)
+          setActiveTab("overview")
+        } else {
+          // Reset form for new campaign
+          setActiveTab("create")
+        }
       }
       setTempSettings({ ...settings })
     }
-  }, [isOpen, gameTimeData, settings])
+  }, [isOpen, gameTimeData, settings, campaignId])
 
   // Set default date when calendar system changes
   useEffect(() => {
@@ -181,6 +203,36 @@ export const CampaignInformationDialog: React.FC<
     } catch (error) {
       console.error("Error loading campaigns:", error)
       toast.error("Failed to load campaigns")
+    }
+  }
+
+  const loadSpecificCampaign = async (specificCampaignId: string) => {
+    try {
+      const campaign = await GameTimeStorage.loadCampaign(specificCampaignId)
+      if (campaign) {
+        setCurrentCampaignId(specificCampaignId)
+        setIsEditMode(true)
+
+        // Pre-populate form with campaign data
+        setCampaignName(campaign.campaignMetadata?.campaignName || "")
+        setGameSystem(campaign.campaignMetadata?.gameSystem || "")
+        setCharacterName(campaign.campaignMetadata?.characters?.[0] || "")
+        setCharacterInfo(campaign.campaignMetadata?.characterInfo || "")
+        setKeyNPCs(campaign.campaignMetadata?.keyNPCs || "")
+        setNotes(campaign.campaignMetadata?.notes?.join("\\n") || "")
+        setGameMasterAssistantId(
+          campaign.campaignMetadata?.gameMasterAssistantId || ""
+        )
+        setCalendarSystem(campaign.calendarSystem)
+        setStartDate(campaign.startDate)
+        setNewDate(campaign.currentDate)
+        setActiveTab("create") // Show the edit form
+      } else {
+        toast.error("Campaign not found")
+      }
+    } catch (error) {
+      console.error("Error loading campaign:", error)
+      toast.error("Failed to load campaign")
     }
   }
 
@@ -220,7 +272,8 @@ export const CampaignInformationDialog: React.FC<
         characters: characterName.trim() ? [characterName.trim()] : undefined,
         characterInfo: characterInfo.trim() || undefined,
         keyNPCs: keyNPCs.trim() || undefined,
-        notes: notes.trim() ? [notes.trim()] : undefined
+        notes: notes.trim() ? [notes.trim()] : undefined,
+        gameMasterAssistantId: gameMasterAssistantId || undefined
       }
 
       // Generate a campaign ID for this new campaign
@@ -285,7 +338,8 @@ export const CampaignInformationDialog: React.FC<
         characters: characterName.trim() ? [characterName.trim()] : undefined,
         characterInfo: characterInfo.trim() || undefined,
         keyNPCs: keyNPCs.trim() || undefined,
-        notes: notes.trim() ? [notes.trim()] : undefined
+        notes: notes.trim() ? [notes.trim()] : undefined,
+        gameMasterAssistantId: gameMasterAssistantId || undefined
       }
 
       // Update the game time data
@@ -460,6 +514,67 @@ export const CampaignInformationDialog: React.FC<
       onClose()
     } catch (error) {
       toast.error("Failed to delete game time data")
+    }
+  }
+
+  const handleContinueCampaign = async () => {
+    if (!gameMasterAssistantId) {
+      toast.error("Please select a Game Master Assistant")
+      return
+    }
+
+    try {
+      // Find the selected assistant
+      const selectedGMAssistant = assistants.find(
+        assistant => assistant.id === gameMasterAssistantId
+      )
+
+      if (!selectedGMAssistant) {
+        toast.error("Selected Game Master Assistant not found")
+        return
+      }
+
+      // Load assistant files and tools just like in quick-settings
+      let allFiles = []
+      const assistantFiles = (
+        await getAssistantFilesByAssistantId(selectedGMAssistant.id)
+      ).files
+      allFiles = [...assistantFiles]
+      const assistantCollections = (
+        await getAssistantCollectionsByAssistantId(selectedGMAssistant.id)
+      ).collections
+      for (const collection of assistantCollections) {
+        const collectionFiles = (
+          await getCollectionFilesByCollectionId(collection.id)
+        ).files
+        allFiles = [...allFiles, ...collectionFiles]
+      }
+      const assistantTools = (
+        await getAssistantToolsByAssistantId(selectedGMAssistant.id)
+      ).tools
+      setSelectedTools(assistantTools)
+      setChatFiles(
+        allFiles.map(file => ({
+          id: file.id,
+          name: file.name,
+          type: file.type,
+          file: null
+        }))
+      )
+      if (allFiles.length > 0) setShowFilesDisplay(true)
+
+      // Set the selected assistant in the main context
+      setSelectedAssistant(selectedGMAssistant)
+
+      // Close the dialog
+      onClose()
+
+      toast.success(
+        `Campaign continued with ${selectedGMAssistant.name} as Game Master`
+      )
+    } catch (error) {
+      console.error("Error continuing campaign:", error)
+      toast.error("Failed to continue campaign")
     }
   }
 
@@ -804,6 +919,25 @@ export const CampaignInformationDialog: React.FC<
               </div>
 
               <div>
+                <Label htmlFor="game-master">Game Master Assistant</Label>
+                <Select
+                  value={gameMasterAssistantId}
+                  onValueChange={setGameMasterAssistantId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Game Master Assistant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assistants.map(assistant => (
+                      <SelectItem key={assistant.id} value={assistant.id}>
+                        {assistant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label htmlFor="character-name">Character Name</Label>
                 <Input
                   id="character-name"
@@ -820,7 +954,7 @@ export const CampaignInformationDialog: React.FC<
                   value={characterInfo}
                   onChange={e => setCharacterInfo(e.target.value)}
                   placeholder="Character stats, abilities, background, etc."
-                  rows={3}
+                  rows={6}
                 />
               </div>
 
@@ -831,7 +965,7 @@ export const CampaignInformationDialog: React.FC<
                   value={keyNPCs}
                   onChange={e => setKeyNPCs(e.target.value)}
                   placeholder="Important NPCs, their relationships, goals, etc."
-                  rows={3}
+                  rows={6}
                 />
               </div>
 
@@ -842,7 +976,7 @@ export const CampaignInformationDialog: React.FC<
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   placeholder="Important notes or reminders for this campaign"
-                  rows={3}
+                  rows={6}
                 />
               </div>
 
@@ -854,15 +988,24 @@ export const CampaignInformationDialog: React.FC<
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading
-                    ? isEditMode
-                      ? "Updating..."
-                      : "Creating..."
-                    : isEditMode
-                      ? "Update Campaign"
-                      : "Initialize Game Time"}
-                </Button>
+                {isEditMode ? (
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Updating..." : "Update Campaign"}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleContinueCampaign}
+                      disabled={isLoading}
+                    >
+                      Continue Campaign
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? "Creating..." : "Initialize Game Time"}
+                  </Button>
+                )}
               </div>
             </form>
           </TabsContent>

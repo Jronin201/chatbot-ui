@@ -85,6 +85,8 @@ export interface CampaignMetadata {
   gameSystem: string
   /** Game Master name */
   gameMaster?: string
+  /** Game Master Assistant ID */
+  gameMasterAssistantId?: string
   /** Player characters */
   characters?: string[]
   /** Character sheet information */

@@ -55,6 +55,9 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(false)
   const [showNewCampaignDialog, setShowNewCampaignDialog] = useState(false)
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
+    null
+  )
 
   // Campaign management
   const workspaceId = selectedWorkspace?.id || "default"
@@ -143,11 +146,9 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   }
 
   const handleCampaignSelect = async (campaignId: string) => {
-    const success = await switchToCampaign(campaignId)
-    if (success) {
-      setIsOpen(false)
-      // Campaign switch successful - the game time context will update automatically
-    }
+    setSelectedCampaignId(campaignId)
+    setShowNewCampaignDialog(true)
+    setIsOpen(false)
   }
 
   const checkIfModified = () => {
@@ -371,8 +372,10 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       {/* New Campaign Dialog */}
       <CampaignInformationDialog
         isOpen={showNewCampaignDialog}
+        campaignId={selectedCampaignId}
         onClose={() => {
           setShowNewCampaignDialog(false)
+          setSelectedCampaignId(null)
           loadCampaigns() // Refresh campaigns list after dialog closes
         }}
       />
