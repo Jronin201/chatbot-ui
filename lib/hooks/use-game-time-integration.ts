@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useGameTime } from "@/context/game-time-context"
 import { GameTimeService } from "@/lib/game-time/game-time-service"
+import { TimeChangeHandler } from "@/lib/game-time/time-change-handler"
 import { toast } from "sonner"
 
 interface UseGameTimeIntegrationOptions {
@@ -32,8 +33,10 @@ export const useGameTimeIntegration = (
     showNotifications = true
   } = options
 
-  const { gameTimeData, settings, formatDate, updateGameTime } = useGameTime()
+  const { gameTimeData, settings, formatDate, updateGameTime, loadGameTime } =
+    useGameTime()
   const gameTimeService = GameTimeService.getInstance()
+  const timeChangeHandler = TimeChangeHandler.getInstance()
 
   // Simple hash function for message content
   const hashMessage = (message: string): string => {
@@ -106,6 +109,40 @@ export const useGameTimeIntegration = (
           confidence: result.timePassageInfo.confidence,
           previousDate: gameTimeData.currentDate,
           newDate: result.gameTimeData?.currentDate
+        }
+
+        // Trigger AI updates for Key NPCs and Campaign Notes
+        try {
+          const timePassageEvent = {
+            previousDate: gameTimeData.currentDate,
+            newDate:
+              result.gameTimeData?.currentDate || gameTimeData.currentDate,
+            daysElapsed: result.timePassageInfo.daysElapsed,
+            description: result.timePassageInfo.description,
+            timestamp: new Date().toISOString()
+          }
+
+          // Process time change with AI integration
+          const aiUpdateResult = await timeChangeHandler.handleTimeChange(
+            timePassageEvent,
+            messageContent
+          )
+
+          if (aiUpdateResult.success) {
+            // Refresh game time data to get updated campaign info
+            await loadGameTime()
+
+            // Show success notification for AI updates
+            if (showNotifications) {
+              toast.success(`Campaign information updated for time passage`, {
+                description: aiUpdateResult.updates.join(", "),
+                duration: 3000
+              })
+            }
+          }
+        } catch (error) {
+          console.error("Error processing AI updates for time passage:", error)
+          // Don't fail the entire operation if AI updates fail
         }
 
         // Show notification if enabled
