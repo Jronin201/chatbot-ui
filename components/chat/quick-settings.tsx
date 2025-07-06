@@ -7,7 +7,12 @@ import useHotkey from "@/lib/hooks/use-hotkey"
 import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { Tables } from "@/supabase/types"
 import { LLMID } from "@/types"
-import { IconChevronDown, IconRobotFace, IconClock } from "@tabler/icons-react"
+import {
+  IconChevronDown,
+  IconRobotFace,
+  IconPlus,
+  IconSword
+} from "@tabler/icons-react"
 import Image from "next/image"
 import { FC, useContext, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -22,7 +27,8 @@ import {
 } from "../ui/dropdown-menu"
 import { Input } from "../ui/input"
 import { QuickSettingOption } from "./quick-setting-option"
-import { GameTimeCompactDisplay } from "../game-time/game-time-compact-display"
+import { CampaignInformationDialog } from "../game-time/campaign-information-dialog"
+import { useCampaigns } from "@/lib/game-time/use-campaigns"
 import { set } from "date-fns"
 
 interface QuickSettingsProps {}
@@ -53,6 +59,12 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showNewCampaignDialog, setShowNewCampaignDialog] = useState(false)
+
+  // Campaign management
+  const workspaceId = selectedWorkspace?.id || "default"
+  const { campaigns, switchToCampaign, loadCampaigns } =
+    useCampaigns(workspaceId)
 
   useEffect(() => {
     if (isOpen) {
@@ -135,6 +147,14 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
     })
   }
 
+  const handleCampaignSelect = async (campaignId: string) => {
+    const success = await switchToCampaign(campaignId)
+    if (success) {
+      setIsOpen(false)
+      // Campaign switch successful - the game time context will update automatically
+    }
+  }
+
   const checkIfModified = () => {
     if (!chatSettings) return false
 
@@ -186,135 +206,189 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   )
 
   return (
-    <DropdownMenu
-      open={isOpen}
-      onOpenChange={isOpen => {
-        setIsOpen(isOpen)
-        setSearch("")
-      }}
-    >
-      <DropdownMenuTrigger asChild className="max-w-[400px]" disabled={loading}>
-        <Button variant="ghost" className="flex space-x-3 text-lg">
-          {selectedPreset && (
-            <ModelIcon
-              provider={modelDetails?.provider || "custom"}
-              width={32}
-              height={32}
-            />
-          )}
-
-          {selectedAssistant &&
-            (selectedAssistantImage ? (
-              <Image
-                className="rounded"
-                src={selectedAssistantImage}
-                alt="Assistant"
-                width={28}
-                height={28}
-              />
-            ) : (
-              <IconRobotFace
-                className="bg-primary text-secondary border-primary rounded border-DEFAULT p-1"
-                size={28}
-              />
-            ))}
-
-          {loading ? (
-            <div className="animate-pulse">Loading assistant...</div>
-          ) : (
-            <>
-              <div className="overflow-hidden text-ellipsis">
-                {isModified &&
-                  (selectedPreset || selectedAssistant) &&
-                  "Modified "}
-
-                {selectedPreset?.name ||
-                  selectedAssistant?.name ||
-                  t("Quick Settings")}
-              </div>
-
-              <IconChevronDown className="ml-1" />
-            </>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        className="min-w-[300px] max-w-[500px] space-y-4"
-        align="start"
+    <>
+      <DropdownMenu
+        open={isOpen}
+        onOpenChange={isOpen => {
+          setIsOpen(isOpen)
+          setSearch("")
+        }}
       >
-        {presets.length === 0 && assistants.length === 0 ? (
-          <div className="p-8 text-center">No items found.</div>
-        ) : (
-          <>
-            <Input
-              ref={inputRef}
-              className="w-full"
-              placeholder="Search..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.stopPropagation()}
-            />
-
-            {/* Game Time Section */}
-            <div className="rounded-lg border p-3">
-              <div className="mb-2 flex items-center space-x-2">
-                <IconClock size={16} />
-                <span className="font-medium">Game Time</span>
-              </div>
-              <GameTimeCompactDisplay />
-            </div>
-
-            {!!(selectedPreset || selectedAssistant) && (
-              <QuickSettingOption
-                contentType={selectedPreset ? "presets" : "assistants"}
-                isSelected={true}
-                item={
-                  selectedPreset ||
-                  (selectedAssistant as
-                    | Tables<"presets", never>
-                    | Tables<"assistants", never>)
-                }
-                onSelect={() => {
-                  handleSelectQuickSetting(null, "remove")
-                }}
-                image={selectedPreset ? "" : selectedAssistantImage}
+        <DropdownMenuTrigger
+          asChild
+          className="max-w-[400px]"
+          disabled={loading}
+        >
+          <Button variant="ghost" className="flex space-x-3 text-lg">
+            {selectedPreset && (
+              <ModelIcon
+                provider={modelDetails?.provider || "custom"}
+                width={32}
+                height={32}
               />
             )}
 
-            {items
-              .filter(
-                item =>
-                  item.name.toLowerCase().includes(search.toLowerCase()) &&
-                  item.id !== selectedPreset?.id &&
-                  item.id !== selectedAssistant?.id
-              )
-              .map(({ contentType, ...item }) => (
-                <QuickSettingOption
-                  key={item.id}
-                  contentType={contentType as "presets" | "assistants"}
-                  isSelected={false}
-                  item={item}
-                  onSelect={() =>
-                    handleSelectQuickSetting(
-                      item,
-                      contentType as "presets" | "assistants"
-                    )
-                  }
-                  image={
-                    contentType === "assistants"
-                      ? assistantImages.find(
-                          image =>
-                            image.path ===
-                            (item as Tables<"assistants", never>).image_path
-                        )?.base64 || ""
-                      : ""
-                  }
+            {selectedAssistant &&
+              (selectedAssistantImage ? (
+                <Image
+                  className="rounded"
+                  src={selectedAssistantImage}
+                  alt="Assistant"
+                  width={28}
+                  height={28}
+                />
+              ) : (
+                <IconRobotFace
+                  className="bg-primary text-secondary border-primary rounded border-DEFAULT p-1"
+                  size={28}
                 />
               ))}
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+
+            {loading ? (
+              <div className="animate-pulse">Loading assistant...</div>
+            ) : (
+              <>
+                <div className="overflow-hidden text-ellipsis">
+                  {isModified &&
+                    (selectedPreset || selectedAssistant) &&
+                    "Modified "}
+
+                  {selectedPreset?.name ||
+                    selectedAssistant?.name ||
+                    t("Quick Settings")}
+                </div>
+
+                <IconChevronDown className="ml-1" />
+              </>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          className="min-w-[300px] max-w-[500px] space-y-4"
+          align="start"
+        >
+          {presets.length === 0 && assistants.length === 0 ? (
+            <div className="p-8 text-center">No items found.</div>
+          ) : (
+            <>
+              <Input
+                ref={inputRef}
+                className="w-full"
+                placeholder="Search..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => e.stopPropagation()}
+              />
+
+              {/* Campaign Section */}
+              <div className="space-y-2">
+                <DropdownMenuSeparator />
+
+                {/* New Campaign Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowNewCampaignDialog(true)}
+                  className="w-full justify-start text-left"
+                >
+                  <IconPlus size={16} className="mr-2" />
+                  New Campaign
+                </Button>
+
+                {/* Campaigns List */}
+                {campaigns.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="text-muted-foreground px-2 py-1 text-xs font-medium">
+                      Campaigns
+                    </div>
+                    {campaigns
+                      .filter(campaign =>
+                        campaign.name
+                          .toLowerCase()
+                          .includes(search.toLowerCase())
+                      )
+                      .map(campaign => (
+                        <Button
+                          key={campaign.id}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCampaignSelect(campaign.id)}
+                          className="w-full justify-start text-left"
+                        >
+                          <IconSword size={16} className="mr-2" />
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">{campaign.name}</span>
+                            <span className="text-muted-foreground text-xs">
+                              {campaign.gameSystem}
+                            </span>
+                          </div>
+                        </Button>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {!!(selectedPreset || selectedAssistant) && (
+                <QuickSettingOption
+                  contentType={selectedPreset ? "presets" : "assistants"}
+                  isSelected={true}
+                  item={
+                    selectedPreset ||
+                    (selectedAssistant as
+                      | Tables<"presets", never>
+                      | Tables<"assistants", never>)
+                  }
+                  onSelect={() => {
+                    handleSelectQuickSetting(null, "remove")
+                  }}
+                  image={selectedPreset ? "" : selectedAssistantImage}
+                />
+              )}
+
+              {items
+                .filter(
+                  item =>
+                    item.name.toLowerCase().includes(search.toLowerCase()) &&
+                    item.id !== selectedPreset?.id &&
+                    item.id !== selectedAssistant?.id
+                )
+                .map(({ contentType, ...item }) => (
+                  <QuickSettingOption
+                    key={item.id}
+                    contentType={contentType as "presets" | "assistants"}
+                    isSelected={false}
+                    item={item}
+                    onSelect={() =>
+                      handleSelectQuickSetting(
+                        item,
+                        contentType as "presets" | "assistants"
+                      )
+                    }
+                    image={
+                      contentType === "assistants"
+                        ? assistantImages.find(
+                            image =>
+                              image.path ===
+                              (item as Tables<"assistants", never>).image_path
+                          )?.base64 || ""
+                        : ""
+                    }
+                  />
+                ))}
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* New Campaign Dialog */}
+      <CampaignInformationDialog
+        isOpen={showNewCampaignDialog}
+        onClose={() => {
+          setShowNewCampaignDialog(false)
+          loadCampaigns() // Refresh campaigns list after dialog closes
+        }}
+      />
+    </>
   )
 }
