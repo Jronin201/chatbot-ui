@@ -1,3 +1,5 @@
+import { EnhancedCampaignData } from "./enhanced-campaign-data"
+
 export interface GameTimeData {
   /** Current in-game date */
   currentDate: string
@@ -15,6 +17,8 @@ export interface GameTimeData {
   campaignMetadata?: CampaignMetadata
   /** Campaign ID for database persistence */
   campaignId?: string
+  /** Enhanced modular campaign data */
+  enhancedData?: EnhancedCampaignData
 }
 
 export interface CampaignRecord {

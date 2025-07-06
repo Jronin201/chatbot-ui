@@ -67,7 +67,14 @@ import {
   IconTrash,
   IconSword,
   IconChevronDown,
-  IconX
+  IconX,
+  IconUsers,
+  IconUser,
+  IconFlag,
+  IconMap,
+  IconBook,
+  IconNotes,
+  IconDatabase
 } from "@tabler/icons-react"
 import {
   DropdownMenu,
@@ -594,11 +601,10 @@ export const CampaignInformationDialog: React.FC<
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="create">Create/Edit</TabsTrigger>
-            <TabsTrigger value="adjust">Adjust Time</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+            <TabsTrigger value="campaign-data">Campaign Data</TabsTrigger>
+            <TabsTrigger value="management">Management</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -829,326 +835,828 @@ export const CampaignInformationDialog: React.FC<
             </Card>
           </TabsContent>
 
-          {/* Create/Edit Tab */}
-          <TabsContent value="create" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                {isEditMode ? "Edit Campaign" : "Create New Campaign"}
-              </h3>
-              {isEditMode && (
-                <Button variant="outline" size="sm" onClick={handleCancelEdit}>
-                  <IconX className="mr-2 size-4" />
-                  Cancel Edit
-                </Button>
-              )}
-            </div>
-
-            <form
-              onSubmit={
-                isEditMode ? handleUpdateCampaign : handleCreateCampaign
-              }
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="campaign-name">Campaign Name *</Label>
-                  <Input
-                    id="campaign-name"
-                    value={campaignName}
-                    onChange={e => setCampaignName(e.target.value)}
-                    placeholder="Enter campaign name"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="game-system">Game System</Label>
-                  <Input
-                    id="game-system"
-                    value={gameSystem}
-                    onChange={e => setGameSystem(e.target.value)}
-                    placeholder="e.g., D&D 5e, Pathfinder, Dune"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="calendar-system">Calendar System</Label>
-                <Select
-                  value={calendarSystem}
-                  onValueChange={(value: CalendarSystem) =>
-                    setCalendarSystem(value)
-                  }
-                  disabled={isEditMode}
-                >
-                  <SelectTrigger className={isEditMode ? "bg-muted" : ""}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dune">Dune Calendar</SelectItem>
-                    <SelectItem value="standard">Standard Calendar</SelectItem>
-                    <SelectItem value="custom">Custom Calendar</SelectItem>
-                  </SelectContent>
-                </Select>
-                {isEditMode && (
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Calendar system cannot be changed after campaign creation
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="start-date">Start Date *</Label>
-                <Input
-                  id="start-date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  placeholder={
-                    calendarSystem === "dune"
-                      ? "e.g., 1 Ignis 10191 A.G."
-                      : "e.g., Day 1"
-                  }
-                  required={!isEditMode}
-                  disabled={isEditMode}
-                  className={isEditMode ? "bg-muted" : ""}
-                />
-                {isEditMode && (
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Start date cannot be changed after campaign creation
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="game-master">Game Master Assistant</Label>
-                <Select
-                  value={gameMasterAssistantId}
-                  onValueChange={setGameMasterAssistantId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Game Master Assistant" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assistants.map(assistant => (
-                      <SelectItem key={assistant.id} value={assistant.id}>
-                        {assistant.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="character-name">Character Name</Label>
-                <Input
-                  id="character-name"
-                  value={characterName}
-                  onChange={e => setCharacterName(e.target.value)}
-                  placeholder="Your character's name"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="character-info">Character Information</Label>
-                <Textarea
-                  id="character-info"
-                  value={characterInfo}
-                  onChange={e => setCharacterInfo(e.target.value)}
-                  placeholder="Character stats, abilities, background, etc."
-                  rows={6}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="key-npcs">Key NPCs</Label>
-                <Textarea
-                  id="key-npcs"
-                  value={keyNPCs}
-                  onChange={e => setKeyNPCs(e.target.value)}
-                  placeholder="Important NPCs, their relationships, goals, etc."
-                  rows={6}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="notes">Campaign Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder="Important notes or reminders for this campaign"
-                  rows={6}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={isEditMode ? handleCancelEdit : onClose}
-                >
-                  Cancel
-                </Button>
-                {isEditMode ? (
-                  <div className="flex gap-2">
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? "Updating..." : "Update Campaign"}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleContinueCampaign}
-                      disabled={isLoading}
-                    >
-                      Continue Campaign
-                    </Button>
-                  </div>
-                ) : (
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Creating..." : "Initialize Game Time"}
-                  </Button>
-                )}
-              </div>
-            </form>
-          </TabsContent>
-
-          {/* Adjust Time Tab */}
-          <TabsContent value="adjust" className="space-y-4">
+          {/* Campaign Data Tab - New Modular Data Display */}
+          <TabsContent value="campaign-data" className="space-y-4">
             {gameTimeData ? (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add Time</CardTitle>
-                    <CardDescription>
-                      Advance the game time by a number of days
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleAddTime} className="space-y-4">
-                      <div>
-                        <Label htmlFor="days-to-add">Days to Add</Label>
-                        <Input
-                          id="days-to-add"
-                          type="number"
-                          step="0.1"
-                          value={daysToAdd}
-                          onChange={e => setDaysToAdd(e.target.value)}
-                          placeholder="Enter number of days"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="time-description">Description</Label>
-                        <Input
-                          id="time-description"
-                          value={timeDescription}
-                          onChange={e => setTimeDescription(e.target.value)}
-                          placeholder="What happened during this time?"
-                        />
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={!daysToAdd || !timeDescription}
-                      >
-                        <IconPlus className="mr-2 size-4" />
-                        Add Time
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
+              <div className="space-y-4">
+                {/* Sub-tabs for different data modules */}
+                <Tabs defaultValue="characters" className="w-full">
+                  <TabsList className="grid w-full grid-cols-6">
+                    <TabsTrigger value="characters">Characters</TabsTrigger>
+                    <TabsTrigger value="npcs">NPCs</TabsTrigger>
+                    <TabsTrigger value="world">World</TabsTrigger>
+                    <TabsTrigger value="progression">Progression</TabsTrigger>
+                    <TabsTrigger value="sessions">Sessions</TabsTrigger>
+                    <TabsTrigger value="mechanics">Mechanics</TabsTrigger>
+                  </TabsList>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Set Specific Date</CardTitle>
-                    <CardDescription>
-                      Jump to a specific date in the game
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleSetDate} className="space-y-4">
-                      <div>
-                        <Label htmlFor="new-date">New Date</Label>
-                        <Input
-                          id="new-date"
-                          value={newDate}
-                          onChange={e => setNewDate(e.target.value)}
-                          placeholder={
-                            gameTimeData.calendarSystem === "dune"
-                              ? "e.g., 15 Ignis 10191 A.G."
-                              : "e.g., Day 15"
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="date-description">Description</Label>
-                        <Input
-                          id="date-description"
-                          value={dateDescription}
-                          onChange={e => setDateDescription(e.target.value)}
-                          placeholder="Reason for date change"
-                        />
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={!newDate || !dateDescription}
-                      >
-                        <IconEdit className="mr-2 size-4" />
-                        Set Date
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
+                  {/* Characters Module */}
+                  <TabsContent value="characters" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Player Characters</CardTitle>
+                        <CardDescription>
+                          Detailed character profiles, progression, and
+                          relationships
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {gameTimeData.enhancedData?.characterProfiles
+                            ?.length ? (
+                            <div className="grid gap-4">
+                              {gameTimeData.enhancedData.characterProfiles.map(
+                                character => (
+                                  <Card key={character.id} className="p-4">
+                                    <div className="flex items-start justify-between">
+                                      <div className="space-y-2">
+                                        <h4 className="font-medium">
+                                          {character.name}
+                                        </h4>
+                                        <p className="text-muted-foreground text-sm">
+                                          {character.role} • Level{" "}
+                                          {character.level}
+                                        </p>
+                                        <p className="text-sm">
+                                          {character.background}
+                                        </p>
+                                      </div>
+                                      <Badge variant="secondary">
+                                        {character.currentLocation}
+                                      </Badge>
+                                    </div>
+                                  </Card>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center">
+                              <IconUsers className="text-muted-foreground mx-auto size-12" />
+                              <h3 className="mt-2 text-sm font-medium">
+                                No Character Profiles
+                              </h3>
+                              <p className="text-muted-foreground mt-1 text-sm">
+                                Character profiles will appear here as they are
+                                created
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* NPCs Module */}
+                  <TabsContent value="npcs" className="space-y-4">
+                    <div className="grid gap-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Key NPCs</CardTitle>
+                          <CardDescription>
+                            Important non-player characters with detailed
+                            information
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {gameTimeData.enhancedData?.npcDatabase?.keyNPCs
+                            ?.length ? (
+                            <div className="space-y-4">
+                              {gameTimeData.enhancedData.npcDatabase.keyNPCs.map(
+                                npc => (
+                                  <Card key={npc.id} className="p-4">
+                                    <div className="flex items-start justify-between">
+                                      <div className="space-y-2">
+                                        <h4 className="font-medium">
+                                          {npc.name}
+                                        </h4>
+                                        <p className="text-muted-foreground text-sm">
+                                          {npc.title}
+                                        </p>
+                                        <p className="text-sm">
+                                          {npc.description}
+                                        </p>
+                                        <div className="flex gap-2">
+                                          <Badge variant="outline">
+                                            {npc.currentLocation}
+                                          </Badge>
+                                          <Badge
+                                            variant={
+                                              npc.alive
+                                                ? "secondary"
+                                                : "destructive"
+                                            }
+                                          >
+                                            {npc.alive ? "Alive" : "Dead"}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                      <Badge variant="secondary">
+                                        {npc.importanceLevel}
+                                      </Badge>
+                                    </div>
+                                  </Card>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center">
+                              <IconUser className="text-muted-foreground mx-auto size-12" />
+                              <h3 className="mt-2 text-sm font-medium">
+                                No Key NPCs
+                              </h3>
+                              <p className="text-muted-foreground mt-1 text-sm">
+                                Key NPCs will appear here as they are identified
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Factions</CardTitle>
+                          <CardDescription>
+                            Organizations and groups in the campaign
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {gameTimeData.enhancedData?.npcDatabase?.factions
+                            ?.length ? (
+                            <div className="space-y-4">
+                              {gameTimeData.enhancedData.npcDatabase.factions.map(
+                                faction => (
+                                  <Card key={faction.id} className="p-4">
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium">
+                                        {faction.name}
+                                      </h4>
+                                      <p className="text-muted-foreground text-sm">
+                                        {faction.type}
+                                      </p>
+                                      <p className="text-sm">
+                                        {faction.description}
+                                      </p>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline">
+                                          Influence: {faction.influence}
+                                        </Badge>
+                                        <Badge variant="secondary">
+                                          {faction.currentStatus}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </Card>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center">
+                              <IconFlag className="text-muted-foreground mx-auto size-12" />
+                              <h3 className="mt-2 text-sm font-medium">
+                                No Factions
+                              </h3>
+                              <p className="text-muted-foreground mt-1 text-sm">
+                                Factions will appear here as they are identified
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+
+                  {/* World State Module */}
+                  <TabsContent value="world" className="space-y-4">
+                    <div className="grid gap-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Locations</CardTitle>
+                          <CardDescription>
+                            Important places in the campaign world
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {gameTimeData.enhancedData?.worldState?.locations
+                            ?.length ? (
+                            <div className="space-y-4">
+                              {gameTimeData.enhancedData.worldState.locations.map(
+                                location => (
+                                  <Card key={location.id} className="p-4">
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium">
+                                        {location.name}
+                                      </h4>
+                                      <p className="text-muted-foreground text-sm">
+                                        {location.type}
+                                      </p>
+                                      <p className="text-sm">
+                                        {location.description}
+                                      </p>
+                                      <div className="flex gap-2">
+                                        <Badge variant="outline">
+                                          {location.currentCondition}
+                                        </Badge>
+                                        <Badge variant="secondary">
+                                          Pop:{" "}
+                                          {location.population.toLocaleString()}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </Card>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center">
+                              <IconMap className="text-muted-foreground mx-auto size-12" />
+                              <h3 className="mt-2 text-sm font-medium">
+                                No Locations
+                              </h3>
+                              <p className="text-muted-foreground mt-1 text-sm">
+                                Locations will appear here as they are visited
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+
+                  {/* Campaign Progression Module */}
+                  <TabsContent value="progression" className="space-y-4">
+                    <div className="grid gap-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Main Plotline</CardTitle>
+                          <CardDescription>
+                            Primary story arc and progression
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {gameTimeData.enhancedData?.campaignProgression
+                            ?.mainPlotline ? (
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <h4 className="font-medium">
+                                  {
+                                    gameTimeData.enhancedData
+                                      .campaignProgression.mainPlotline.name
+                                  }
+                                </h4>
+                                <p className="text-muted-foreground text-sm">
+                                  {
+                                    gameTimeData.enhancedData
+                                      .campaignProgression.mainPlotline
+                                      .description
+                                  }
+                                </p>
+                                <div className="flex gap-2">
+                                  <Badge variant="outline">
+                                    {
+                                      gameTimeData.enhancedData
+                                        .campaignProgression.mainPlotline.status
+                                    }
+                                  </Badge>
+                                  <Badge variant="secondary">
+                                    Act{" "}
+                                    {
+                                      gameTimeData.enhancedData
+                                        .campaignProgression.mainPlotline
+                                        .currentAct
+                                    }
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center">
+                              <IconBook className="text-muted-foreground mx-auto size-12" />
+                              <h3 className="mt-2 text-sm font-medium">
+                                No Main Plotline
+                              </h3>
+                              <p className="text-muted-foreground mt-1 text-sm">
+                                Main story arc will appear here as it develops
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Timeline</CardTitle>
+                          <CardDescription>
+                            Key events in chronological order
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {gameTimeData.enhancedData?.campaignProgression
+                            ?.timeline?.length ? (
+                            <div className="space-y-4">
+                              {gameTimeData.enhancedData.campaignProgression.timeline.map(
+                                event => (
+                                  <Card key={event.id} className="p-4">
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="font-medium">
+                                          {event.name}
+                                        </h4>
+                                        <Badge variant="outline">
+                                          {event.date}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-muted-foreground text-sm">
+                                        {event.type}
+                                      </p>
+                                      <p className="text-sm">
+                                        {event.description}
+                                      </p>
+                                    </div>
+                                  </Card>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center">
+                              <IconClock className="text-muted-foreground mx-auto size-12" />
+                              <h3 className="mt-2 text-sm font-medium">
+                                No Timeline Events
+                              </h3>
+                              <p className="text-muted-foreground mt-1 text-sm">
+                                Timeline events will appear here as they occur
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+
+                  {/* Session Logs Module */}
+                  <TabsContent value="sessions" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Session History</CardTitle>
+                        <CardDescription>
+                          Detailed logs of past game sessions
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {gameTimeData.enhancedData?.sessionLogs?.length ? (
+                          <div className="space-y-4">
+                            {gameTimeData.enhancedData.sessionLogs.map(
+                              session => (
+                                <Card key={session.id} className="p-4">
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="font-medium">
+                                        Session {session.sessionNumber}
+                                      </h4>
+                                      <Badge variant="outline">
+                                        {session.date}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-muted-foreground text-sm">
+                                      Duration: {session.duration} minutes
+                                    </p>
+                                    <p className="text-sm">{session.summary}</p>
+                                  </div>
+                                </Card>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="py-8 text-center">
+                            <IconNotes className="text-muted-foreground mx-auto size-12" />
+                            <h3 className="mt-2 text-sm font-medium">
+                              No Session Logs
+                            </h3>
+                            <p className="text-muted-foreground mt-1 text-sm">
+                              Session logs will appear here as sessions are
+                              recorded
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Mechanics Module */}
+                  <TabsContent value="mechanics" className="space-y-4">
+                    <div className="grid gap-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>House Rules</CardTitle>
+                          <CardDescription>
+                            Custom rules and modifications for this campaign
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {gameTimeData.enhancedData?.mechanicsAndRules
+                            ?.houseRules?.length ? (
+                            <div className="space-y-4">
+                              {gameTimeData.enhancedData.mechanicsAndRules.houseRules.map(
+                                rule => (
+                                  <Card key={rule.id} className="p-4">
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="font-medium">
+                                          {rule.name}
+                                        </h4>
+                                        <Badge
+                                          variant={
+                                            rule.status === "active"
+                                              ? "default"
+                                              : "secondary"
+                                          }
+                                        >
+                                          {rule.status}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-muted-foreground text-sm">
+                                        {rule.category}
+                                      </p>
+                                      <p className="text-sm">
+                                        {rule.description}
+                                      </p>
+                                    </div>
+                                  </Card>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center">
+                              <IconSettings className="text-muted-foreground mx-auto size-12" />
+                              <h3 className="mt-2 text-sm font-medium">
+                                No House Rules
+                              </h3>
+                              <p className="text-muted-foreground mt-1 text-sm">
+                                House rules will appear here as they are defined
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             ) : (
-              <div className="py-6 text-center">
-                <p className="text-muted-foreground">
-                  No campaign active. Please create or select a campaign first.
+              <div className="py-8 text-center">
+                <IconDatabase className="text-muted-foreground mx-auto size-12" />
+                <h3 className="mt-2 text-sm font-medium">No Campaign Data</h3>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Create or load a campaign to view detailed data
                 </p>
               </div>
             )}
           </TabsContent>
 
-          {/* History Tab */}
-          <TabsContent value="history" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Time Passage History</CardTitle>
-                <CardDescription>
-                  A record of all time changes in this campaign
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {timePassageHistory.length > 0 ? (
-                  <div className="max-h-96 space-y-2 overflow-y-auto">
-                    {timePassageHistory.map((event, index) => (
-                      <div
-                        key={index}
-                        className="border-l-2 border-blue-200 py-2 pl-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">
-                            {event.description}
-                          </span>
-                          <Badge variant="outline">
-                            {event.daysElapsed} days
-                          </Badge>
-                        </div>
-                        <div className="text-muted-foreground text-sm">
-                          {event.previousDate} → {event.newDate}
-                        </div>
-                        <div className="text-muted-foreground text-xs">
-                          {new Date(event.timestamp).toLocaleString()}
-                        </div>
+          {/* Management Tab - Combines Create/Edit, Adjust Time, and History */}
+          <TabsContent value="management" className="space-y-4">
+            <Tabs defaultValue="create" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="create">Create/Edit</TabsTrigger>
+                <TabsTrigger value="adjust">Adjust Time</TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
+              </TabsList>
+
+              {/* Create/Edit Sub-tab */}
+              <TabsContent value="create" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">
+                    {isEditMode ? "Edit Campaign" : "Create New Campaign"}
+                  </h3>
+                  {isEditMode && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                    >
+                      <IconX className="mr-2 size-4" />
+                      Cancel Edit
+                    </Button>
+                  )}
+                </div>
+
+                <form
+                  onSubmit={
+                    isEditMode ? handleUpdateCampaign : handleCreateCampaign
+                  }
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="campaign-name">Campaign Name *</Label>
+                      <Input
+                        id="campaign-name"
+                        value={campaignName}
+                        onChange={e => setCampaignName(e.target.value)}
+                        placeholder="Enter campaign name"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="game-system">Game System</Label>
+                      <Input
+                        id="game-system"
+                        value={gameSystem}
+                        onChange={e => setGameSystem(e.target.value)}
+                        placeholder="e.g., D&D 5e, Pathfinder, Dune"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="calendar-system">Calendar System</Label>
+                    <Select
+                      value={calendarSystem}
+                      onValueChange={(value: CalendarSystem) =>
+                        setCalendarSystem(value)
+                      }
+                      disabled={isEditMode}
+                    >
+                      <SelectTrigger className={isEditMode ? "bg-muted" : ""}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dune">Dune Calendar</SelectItem>
+                        <SelectItem value="standard">
+                          Standard Calendar
+                        </SelectItem>
+                        <SelectItem value="custom">Custom Calendar</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {isEditMode && (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Calendar system cannot be changed after campaign
+                        creation
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="start-date">Start Date *</Label>
+                    <Input
+                      id="start-date"
+                      value={startDate}
+                      onChange={e => setStartDate(e.target.value)}
+                      placeholder={
+                        calendarSystem === "dune"
+                          ? "e.g., 1 Ignis 10191 A.G."
+                          : "e.g., Day 1"
+                      }
+                      required={!isEditMode}
+                      disabled={isEditMode}
+                      className={isEditMode ? "bg-muted" : ""}
+                    />
+                    {isEditMode && (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Start date cannot be changed after campaign creation
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="game-master">Game Master Assistant</Label>
+                    <Select
+                      value={gameMasterAssistantId}
+                      onValueChange={setGameMasterAssistantId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Game Master Assistant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {assistants.map(assistant => (
+                          <SelectItem key={assistant.id} value={assistant.id}>
+                            {assistant.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="character-name">Character Name</Label>
+                    <Input
+                      id="character-name"
+                      value={characterName}
+                      onChange={e => setCharacterName(e.target.value)}
+                      placeholder="Your character's name"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="character-info">
+                      Character Information
+                    </Label>
+                    <Textarea
+                      id="character-info"
+                      value={characterInfo}
+                      onChange={e => setCharacterInfo(e.target.value)}
+                      placeholder="Character stats, abilities, background, etc."
+                      rows={6}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="key-npcs">Key NPCs</Label>
+                    <Textarea
+                      id="key-npcs"
+                      value={keyNPCs}
+                      onChange={e => setKeyNPCs(e.target.value)}
+                      placeholder="Important NPCs, their relationships, goals, etc."
+                      rows={6}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="notes">Campaign Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      placeholder="Important notes or reminders for this campaign"
+                      rows={6}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={isEditMode ? handleCancelEdit : onClose}
+                    >
+                      Cancel
+                    </Button>
+                    {isEditMode ? (
+                      <div className="flex gap-2">
+                        <Button type="submit" disabled={isLoading}>
+                          {isLoading ? "Updating..." : "Update Campaign"}
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={handleContinueCampaign}
+                          disabled={isLoading}
+                        >
+                          Continue Campaign
+                        </Button>
                       </div>
-                    ))}
+                    ) : (
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Creating..." : "Initialize Game Time"}
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </TabsContent>
+
+              {/* Adjust Time Sub-tab */}
+              <TabsContent value="adjust" className="space-y-4">
+                {gameTimeData ? (
+                  <div className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Add Time</CardTitle>
+                        <CardDescription>
+                          Advance the game time by a number of days
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={handleAddTime} className="space-y-4">
+                          <div>
+                            <Label htmlFor="days-to-add">Days to Add</Label>
+                            <Input
+                              id="days-to-add"
+                              type="number"
+                              step="0.1"
+                              value={daysToAdd}
+                              onChange={e => setDaysToAdd(e.target.value)}
+                              placeholder="Enter number of days"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="time-description">
+                              Description
+                            </Label>
+                            <Input
+                              id="time-description"
+                              value={timeDescription}
+                              onChange={e => setTimeDescription(e.target.value)}
+                              placeholder="What happened during this time?"
+                            />
+                          </div>
+                          <Button
+                            type="submit"
+                            disabled={!daysToAdd || !timeDescription}
+                          >
+                            <IconPlus className="mr-2 size-4" />
+                            Add Time
+                          </Button>
+                        </form>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Set Specific Date</CardTitle>
+                        <CardDescription>
+                          Jump to a specific date in the game
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={handleSetDate} className="space-y-4">
+                          <div>
+                            <Label htmlFor="new-date">New Date</Label>
+                            <Input
+                              id="new-date"
+                              value={newDate}
+                              onChange={e => setNewDate(e.target.value)}
+                              placeholder={
+                                gameTimeData.calendarSystem === "dune"
+                                  ? "e.g., 15 Ignis 10191 A.G."
+                                  : "e.g., Day 15"
+                              }
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="date-description">
+                              Description
+                            </Label>
+                            <Input
+                              id="date-description"
+                              value={dateDescription}
+                              onChange={e => setDateDescription(e.target.value)}
+                              placeholder="Reason for date change"
+                            />
+                          </div>
+                          <Button
+                            type="submit"
+                            disabled={!newDate || !dateDescription}
+                          >
+                            <IconEdit className="mr-2 size-4" />
+                            Set Date
+                          </Button>
+                        </form>
+                      </CardContent>
+                    </Card>
                   </div>
                 ) : (
                   <div className="py-6 text-center">
-                    <IconHistory className="text-muted-foreground mx-auto size-12" />
-                    <p className="text-muted-foreground mt-2 text-sm">
-                      No time passage events recorded yet
+                    <p className="text-muted-foreground">
+                      No campaign active. Please create or select a campaign
+                      first.
                     </p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </TabsContent>
+
+              {/* History Sub-tab */}
+              <TabsContent value="history" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Time Passage History</CardTitle>
+                    <CardDescription>
+                      A record of all time changes in this campaign
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {timePassageHistory.length > 0 ? (
+                      <div className="max-h-96 space-y-2 overflow-y-auto">
+                        {timePassageHistory.map((event, index) => (
+                          <div
+                            key={index}
+                            className="border-l-2 border-blue-200 py-2 pl-4"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">
+                                {event.description}
+                              </span>
+                              <Badge variant="outline">
+                                {event.daysElapsed} days
+                              </Badge>
+                            </div>
+                            <div className="text-muted-foreground text-sm">
+                              {event.previousDate} → {event.newDate}
+                            </div>
+                            <div className="text-muted-foreground text-xs">
+                              {new Date(event.timestamp).toLocaleString()}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-6 text-center">
+                        <IconHistory className="text-muted-foreground mx-auto size-12" />
+                        <p className="text-muted-foreground mt-2 text-sm">
+                          No time passage events recorded yet
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           {/* Settings Tab */}
