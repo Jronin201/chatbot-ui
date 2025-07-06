@@ -122,10 +122,13 @@ export const useGameTimeIntegration = (
             timestamp: new Date().toISOString()
           }
 
+          // Clean the message content to remove auto-detection metadata
+          const cleanedContext = cleanMessageContent(messageContent)
+
           // Process time change with AI integration
           const aiUpdateResult = await timeChangeHandler.handleTimeChange(
             timePassageEvent,
-            messageContent
+            cleanedContext
           )
 
           if (aiUpdateResult.success) {
@@ -256,6 +259,25 @@ export const useGameTimeIntegration = (
       console.error("Error getting time passage suggestions:", error)
       return null
     }
+  }
+
+  /**
+   * Clean message content by removing auto-detection metadata
+   */
+  const cleanMessageContent = (message: string): string => {
+    if (!message) return ""
+
+    // Remove auto-detection prefixes and technical information
+    let cleaned = message
+      .replace(/Auto-detected:\s*/gi, "")
+      .replace(/Detected\s+\w+\s+activity:\s*/gi, "")
+      .replace(/Estimated\s+\d+\s+day\(s\)\s+elapsed\.?/gi, "")
+      .replace(/Context:\s*/gi, "")
+
+    // Clean up multiple spaces and trim
+    cleaned = cleaned.replace(/\s+/g, " ").trim()
+
+    return cleaned
   }
 
   // Auto-cleanup old notifications

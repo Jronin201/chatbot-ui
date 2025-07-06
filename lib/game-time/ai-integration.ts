@@ -191,26 +191,44 @@ export class GameTimeAIIntegration {
         return false
       }
 
+      // Skip update if the new notes are empty or just technical metadata
+      if (!newNotes || newNotes.trim().length < 10) {
+        return false
+      }
+
       const existingNotes = gameTimeData.campaignMetadata.notes || []
       const existingNotesText = existingNotes.join("\n")
 
-      // Combine existing notes with new notes and chat context
-      let combinedContent = existingNotesText
-      if (chatContext) {
-        combinedContent += `\n\n[Recent Events]\n${chatContext}`
-      }
-      combinedContent += `\n\n[Updated Notes]\n${newNotes}`
+      // Instead of appending technical information, create a clean narrative update
+      let updatedContent = existingNotesText
 
-      // Condense the combined content
+      // Only add meaningful story content
+      if (
+        newNotes &&
+        !newNotes.match(/^(Time Progression|Context|Duration|Auto-detected)/i)
+      ) {
+        // Add the new notes as a story progression entry
+        if (updatedContent.trim()) {
+          updatedContent += "\n\n" + newNotes
+        } else {
+          updatedContent = newNotes
+        }
+      }
+
+      // Condense the content to keep it manageable
       const condensedContent = this.condenseText(
-        combinedContent,
+        updatedContent,
         FIELD_TOKEN_LIMITS.notes
       )
 
-      // Convert back to array format
+      // Convert back to array format, filtering out empty lines
       const updatedNotes = condensedContent
         .split("\n")
         .filter(line => line.trim())
+        .filter(
+          line =>
+            !line.match(/^(Time Progression|Context|Duration|Auto-detected)/i)
+        )
 
       // Update the campaign metadata
       const updatedMetadata: CampaignMetadata = {
@@ -250,21 +268,29 @@ export class GameTimeAIIntegration {
     let npcsUpdated = false
 
     try {
-      // Generate time-based campaign notes update
-      const timeBasedNotes = this.generateTimeBasedNotes(
-        previousDate,
-        newDate,
-        daysElapsed,
-        chatContext
+      // Generate meaningful campaign summary instead of technical notes
+      const campaignSummary = await this.generateCampaignSummary(
+        chatContext,
+        daysElapsed
       )
 
-      if (timeBasedNotes) {
-        notesUpdated = await this.updateCampaignNotes(
-          timeBasedNotes,
-          chatContext
-        )
-        if (notesUpdated) {
-          updates.push("Campaign notes updated with time progression")
+      if (campaignSummary) {
+        // Update campaign notes with the comprehensive summary
+        const gameTimeData = await this.gameTimeService.loadGameTime()
+        if (gameTimeData?.campaignMetadata) {
+          const updatedMetadata = {
+            ...gameTimeData.campaignMetadata,
+            notes: campaignSummary.split("\n").filter(line => line.trim())
+          }
+
+          const updatedGameTimeData = {
+            ...gameTimeData,
+            campaignMetadata: updatedMetadata
+          }
+
+          await GameTimeStorage.saveGameTime(updatedGameTimeData)
+          notesUpdated = true
+          updates.push("Campaign notes updated with story progression")
         }
       }
 
@@ -297,39 +323,105 @@ export class GameTimeAIIntegration {
     daysElapsed: number,
     chatContext: string
   ): string {
-    const timeFrames = [
-      { threshold: 1, label: "day" },
-      { threshold: 7, label: "week" },
-      { threshold: 30, label: "month" },
-      { threshold: 365, label: "year" }
-    ]
+    // Filter out technical auto-detection information from chat context
+    const cleanContext = this.cleanChatContext(chatContext)
 
-    const timeFrame =
-      timeFrames.find(tf => daysElapsed <= tf.threshold) ||
-      timeFrames[timeFrames.length - 1]
-
-    const notes = [
-      `Time Progression: ${previousDate} → ${newDate} (${daysElapsed} days)`,
-      `Context: ${chatContext}`,
-      `Duration: ${Math.floor(daysElapsed / (timeFrame.threshold === 1 ? 1 : timeFrame.threshold === 7 ? 7 : timeFrame.threshold === 30 ? 30 : 365))} ${timeFrame.label}${Math.floor(daysElapsed / (timeFrame.threshold === 1 ? 1 : timeFrame.threshold === 7 ? 7 : timeFrame.threshold === 30 ? 30 : 365)) > 1 ? "s" : ""}`
-    ]
-
-    // Add time-specific considerations
-    if (daysElapsed >= 7) {
-      notes.push("Consider: Weekly activities, market changes, NPC actions")
-    }
-    if (daysElapsed >= 30) {
-      notes.push(
-        "Consider: Monthly events, seasonal changes, long-term consequences"
-      )
-    }
-    if (daysElapsed >= 365) {
-      notes.push(
-        "Consider: Annual events, major world changes, character aging"
-      )
+    if (!cleanContext || cleanContext.length < 10) {
+      // If no meaningful context, return empty string to avoid cluttering notes
+      return ""
     }
 
-    return notes.join("\n")
+    // Create story-focused notes based on the cleaned context
+    const storyNotes = this.extractStoryElements(cleanContext, daysElapsed)
+
+    return storyNotes
+  }
+
+  /**
+   * Clean chat context by removing technical auto-detection metadata
+   */
+  private cleanChatContext(chatContext: string): string {
+    if (!chatContext) return ""
+
+    // Remove auto-detection prefixes and technical information
+    let cleaned = chatContext
+      .replace(/Auto-detected:\s*/gi, "")
+      .replace(/Detected\s+\w+\s+activity:\s*/gi, "")
+      .replace(/Estimated\s+\d+\s+day\(s\)\s+elapsed\.?/gi, "")
+      .replace(/Context:\s*/gi, "")
+      .replace(/Time Progression:[^\n]*/gi, "")
+      .replace(/Duration:[^\n]*/gi, "")
+      .replace(/\[Recent Events\][^\n]*/gi, "")
+      .replace(/\[Updated Notes\][^\n]*/gi, "")
+
+    // Remove quoted fragments that are just detection descriptions
+    cleaned = cleaned.replace(
+      /"[^"]*(?:travel|journey|rest|activity)[^"]*"/gi,
+      ""
+    )
+
+    // Clean up multiple newlines and spaces
+    cleaned = cleaned
+      .replace(/\n\s*\n/g, "\n")
+      .replace(/\s+/g, " ")
+      .trim()
+
+    return cleaned
+  }
+
+  /**
+   * Extract meaningful story elements from the cleaned context
+   */
+  private extractStoryElements(context: string, daysElapsed: number): string {
+    if (!context) return ""
+
+    // Look for story elements in the context
+    const sentences = context.split(/[.!?]+/).filter(s => s.trim().length > 5)
+    const storyElements: string[] = []
+
+    // Prioritize sentences that contain story elements
+    for (const sentence of sentences) {
+      const trimmed = sentence.trim()
+      if (trimmed.length < 5) continue
+
+      // Skip purely technical sentences
+      if (trimmed.match(/^\d+\s+day|duration|progression|elapsed/i)) continue
+
+      // Include sentences that seem to contain story content
+      if (
+        trimmed.match(
+          /\b(character|npc|location|event|quest|mission|goal|situation|plot|story)\b/i
+        ) ||
+        trimmed.match(
+          /\b(traveled|journeyed|arrived|departed|met|encountered|discovered|found|completed)\b/i
+        ) ||
+        trimmed.length > 20
+      ) {
+        storyElements.push(trimmed)
+      }
+    }
+
+    if (storyElements.length === 0) return ""
+
+    // Create a concise summary focusing on story progression
+    const timeContext = this.getTimeContext(daysElapsed)
+    const summary = storyElements.slice(0, 2).join(". ") + "."
+
+    return `${timeContext}: ${summary}`
+  }
+
+  /**
+   * Get appropriate time context description
+   */
+  private getTimeContext(daysElapsed: number): string {
+    if (daysElapsed < 1) return "Recently"
+    if (daysElapsed === 1) return "Yesterday"
+    if (daysElapsed < 7) return `${daysElapsed} days ago`
+    if (daysElapsed < 30)
+      return `${Math.floor(daysElapsed / 7)} week${Math.floor(daysElapsed / 7) > 1 ? "s" : ""} ago`
+    if (daysElapsed < 365)
+      return `${Math.floor(daysElapsed / 30)} month${Math.floor(daysElapsed / 30) > 1 ? "s" : ""} ago`
+    return `${Math.floor(daysElapsed / 365)} year${Math.floor(daysElapsed / 365) > 1 ? "s" : ""} ago`
   }
 
   /**
@@ -541,6 +633,112 @@ export class GameTimeAIIntegration {
   async getCampaignContextTokenCount(): Promise<number> {
     const context = await this.getCampaignContextForAI()
     return encode(context).length
+  }
+
+  /**
+   * Generate a comprehensive campaign summary focusing on story elements
+   */
+  async generateCampaignSummary(
+    recentEvents: string,
+    daysElapsed: number
+  ): Promise<string> {
+    const gameTimeData = await this.gameTimeService.loadGameTime()
+    if (!gameTimeData?.campaignMetadata) {
+      return ""
+    }
+
+    const currentNotes = gameTimeData.campaignMetadata.notes || []
+    const existingNotesText = currentNotes.join("\n")
+
+    // Extract story elements from recent events
+    const storyElements = this.extractStoryElements(recentEvents, daysElapsed)
+
+    if (!storyElements) {
+      return existingNotesText // No meaningful updates
+    }
+
+    // Create a focused summary that builds on existing notes
+    const sections = this.organizeCampaignNotes(
+      existingNotesText,
+      storyElements
+    )
+
+    return sections.join("\n\n")
+  }
+
+  /**
+   * Organize campaign notes into logical sections
+   */
+  private organizeCampaignNotes(
+    existingNotes: string,
+    newEvents: string
+  ): string[] {
+    const sections: string[] = []
+
+    // Parse existing notes to identify different sections
+    const existingLines = existingNotes.split("\n").filter(line => line.trim())
+    const storyLines: string[] = []
+    const plotLines: string[] = []
+    const goalLines: string[] = []
+    const situationLines: string[] = []
+
+    // Categorize existing notes
+    for (const line of existingLines) {
+      const lower = line.toLowerCase()
+      if (
+        lower.includes("plot") ||
+        lower.includes("story") ||
+        lower.includes("narrative")
+      ) {
+        plotLines.push(line)
+      } else if (
+        lower.includes("goal") ||
+        lower.includes("objective") ||
+        lower.includes("mission")
+      ) {
+        goalLines.push(line)
+      } else if (
+        lower.includes("situation") ||
+        lower.includes("current") ||
+        lower.includes("status")
+      ) {
+        situationLines.push(line)
+      } else if (line.length > 10) {
+        // General story content
+        storyLines.push(line)
+      }
+    }
+
+    // Add story progression section
+    if (storyLines.length > 0 || newEvents) {
+      const storySection = ["**Story Progress:**"]
+      if (storyLines.length > 0) {
+        storySection.push(...storyLines.slice(-3)) // Keep last 3 story entries
+      }
+      if (newEvents) {
+        storySection.push(newEvents)
+      }
+      sections.push(storySection.join("\n"))
+    }
+
+    // Add current situation
+    if (situationLines.length > 0) {
+      sections.push(
+        "**Current Situation:**\n" + situationLines.slice(-2).join("\n")
+      )
+    }
+
+    // Add active goals
+    if (goalLines.length > 0) {
+      sections.push("**Active Goals:**\n" + goalLines.slice(-3).join("\n"))
+    }
+
+    // Add plot elements
+    if (plotLines.length > 0) {
+      sections.push("**Plot Elements:**\n" + plotLines.slice(-2).join("\n"))
+    }
+
+    return sections
   }
 }
 
