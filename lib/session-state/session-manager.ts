@@ -26,6 +26,13 @@ import {
   PlotLine,
   TimelineEvent
 } from "@/types/enhanced-campaign-data"
+import {
+  RelevanceEngine,
+  createRelevanceEngine,
+  FilteringOptions,
+  getHighPriorityEntities,
+  filterBackgroundEntities
+} from "@/lib/relevance/relevance-engine"
 
 export class SessionStateManager implements MemoryManager {
   private sessionState: SessionState
@@ -33,12 +40,14 @@ export class SessionStateManager implements MemoryManager {
   private eventHistory: SessionEvent[] = []
   private memoryStore: MemoryItem[] = []
   private contextCache: Map<string, ContextPacket> = new Map()
+  private relevanceEngine: RelevanceEngine
 
   constructor(initialState?: Partial<SessionState>) {
     this.sessionState = {
       ...createDefaultSessionState(),
       ...initialState
     }
+    this.relevanceEngine = createRelevanceEngine()
   }
 
   // =====================================================
@@ -227,34 +236,71 @@ export class SessionStateManager implements MemoryManager {
       }
     }
 
-    // Filter entities based on relevance to current context
-    const relevantCharacters = filterByRelevance(
-      this.campaignData.characterProfiles || [],
-      this.sessionState,
-      2,
-      10
-    )
+    // Use relevance engine for sophisticated filtering
+    const filteringOptions: FilteringOptions = {
+      minScore: this.sessionState.aiContext.relevanceThreshold,
+      maxItems: 20,
+      includeBackground: false,
+      prioritizeBy: "score",
+      contextType,
+      focusEntity: focus
+    }
 
-    const relevantNPCs = filterByRelevance(
-      this.campaignData.npcDatabase?.keyNPCs || [],
-      this.sessionState,
-      2,
-      10
-    )
+    // Filter characters with high relevance scoring
+    const relevantCharacters = this.relevanceEngine
+      .filterByRelevance(
+        this.campaignData.characterProfiles || [],
+        this.sessionState,
+        this.campaignData,
+        contextType,
+        { ...filteringOptions, maxItems: 10 }
+      )
+      .map(item => {
+        const { relevanceScore, ...entity } = item
+        return entity as CharacterProfile
+      })
 
-    const relevantLocations = filterByRelevance(
-      this.campaignData.worldState?.locations || [],
-      this.sessionState,
-      2,
-      5
-    )
+    // Filter NPCs with relevance scoring
+    const relevantNPCs = this.relevanceEngine
+      .filterByRelevance(
+        this.campaignData.npcDatabase?.keyNPCs || [],
+        this.sessionState,
+        this.campaignData,
+        contextType,
+        { ...filteringOptions, maxItems: 10 }
+      )
+      .map(item => {
+        const { relevanceScore, ...entity } = item
+        return entity as KeyNPC
+      })
 
-    const relevantFactions = filterByRelevance(
-      this.campaignData.npcDatabase?.factions || [],
-      this.sessionState,
-      2,
-      5
-    )
+    // Filter locations with relevance scoring
+    const relevantLocations = this.relevanceEngine
+      .filterByRelevance(
+        this.campaignData.worldState?.locations || [],
+        this.sessionState,
+        this.campaignData,
+        contextType,
+        { ...filteringOptions, maxItems: 5 }
+      )
+      .map(item => {
+        const { relevanceScore, ...entity } = item
+        return entity as Location
+      })
+
+    // Filter factions with relevance scoring
+    const relevantFactions = this.relevanceEngine
+      .filterByRelevance(
+        this.campaignData.npcDatabase?.factions || [],
+        this.sessionState,
+        this.campaignData,
+        contextType,
+        { ...filteringOptions, maxItems: 5 }
+      )
+      .map(item => {
+        const { relevanceScore, ...entity } = item
+        return entity as any
+      })
 
     return {
       characters: relevantCharacters,
@@ -622,5 +668,175 @@ export class SessionStateManager implements MemoryManager {
       entities: [],
       importance: 6
     })
+  }
+
+  // =====================================================
+  // RELEVANCE AND FILTERING METHODS
+  // =====================================================
+
+  /**
+   * Get entities filtered by relevance with detailed scoring
+   */
+  getRelevantEntitiesWithScores(
+    contextType: ContextType,
+    focus?: string,
+    options: FilteringOptions = {}
+  ) {
+    if (!this.campaignData) return { entities: [], scores: [] }
+
+    const allEntities = this.gatherAllEntities()
+    const scored = this.relevanceEngine.filterByRelevance(
+      allEntities,
+      this.sessionState,
+      this.campaignData,
+      contextType,
+      { ...options, focusEntity: focus }
+    )
+
+    return {
+      entities: scored.map(item => {
+        const { relevanceScore, ...entity } = item
+        return entity
+      }),
+      scores: scored.map(item => item.relevanceScore)
+    }
+  }
+
+  /**
+   * Get prioritized context for AI with different priority levels
+   */
+  getPrioritizedContext(
+    contextType: ContextType,
+    focus?: string,
+    options: FilteringOptions = {}
+  ) {
+    if (!this.campaignData) {
+      return {
+        critical: [],
+        high: [],
+        medium: [],
+        low: [],
+        excluded: []
+      }
+    }
+
+    return this.relevanceEngine.generatePrioritizedContext(
+      this.sessionState,
+      this.campaignData,
+      contextType,
+      { ...options, focusEntity: focus }
+    )
+  }
+
+  /**
+   * Filter entities into foreground and background based on relevance
+   */
+  separateByRelevance<T>(
+    entities: T[],
+    contextType: ContextType
+  ): { foreground: T[]; background: T[] } {
+    if (!this.campaignData) {
+      return { foreground: entities, background: [] }
+    }
+
+    return filterBackgroundEntities(
+      entities,
+      this.sessionState,
+      this.campaignData,
+      contextType
+    )
+  }
+
+  /**
+   * Update AI context preferences including relevance threshold
+   */
+  updateRelevanceSettings(settings: {
+    relevanceThreshold?: number
+    memoryDepth?: number
+    maxContextSize?: number
+    preferredDetails?: string[]
+  }): void {
+    this.updateSessionState({
+      aiContext: {
+        ...this.sessionState.aiContext,
+        ...settings
+      }
+    })
+  }
+
+  /**
+   * Get high priority entities only (critical and high priority)
+   */
+  getHighPriorityEntities<T>(
+    entities: T[],
+    contextType: ContextType,
+    maxItems: number = 10
+  ): T[] {
+    if (!this.campaignData) return entities.slice(0, maxItems)
+
+    return getHighPriorityEntities(
+      entities,
+      this.sessionState,
+      this.campaignData,
+      contextType,
+      maxItems
+    )
+  }
+
+  /**
+   * Calculate relevance score for a specific entity
+   */
+  calculateEntityRelevance(
+    entity: any,
+    contextType: ContextType,
+    focus?: string
+  ) {
+    if (!this.campaignData)
+      return { score: 5, reasons: ["No campaign data"], priority: "medium" }
+
+    return this.relevanceEngine.calculateScore(
+      entity,
+      this.sessionState,
+      this.campaignData,
+      contextType,
+      focus
+    )
+  }
+
+  private gatherAllEntities(): any[] {
+    if (!this.campaignData) return []
+
+    const entities: any[] = []
+
+    if (this.campaignData.characterProfiles) {
+      entities.push(...this.campaignData.characterProfiles)
+    }
+
+    if (this.campaignData.npcDatabase) {
+      if (this.campaignData.npcDatabase.keyNPCs) {
+        entities.push(...this.campaignData.npcDatabase.keyNPCs)
+      }
+      if (this.campaignData.npcDatabase.minorNPCs) {
+        entities.push(...this.campaignData.npcDatabase.minorNPCs)
+      }
+      if (this.campaignData.npcDatabase.factions) {
+        entities.push(...this.campaignData.npcDatabase.factions)
+      }
+    }
+
+    if (this.campaignData.worldState?.locations) {
+      entities.push(...this.campaignData.worldState.locations)
+    }
+
+    if (this.campaignData.campaignProgression) {
+      if (this.campaignData.campaignProgression.mainPlotline) {
+        entities.push(this.campaignData.campaignProgression.mainPlotline)
+      }
+      if (this.campaignData.campaignProgression.subplots) {
+        entities.push(...this.campaignData.campaignProgression.subplots)
+      }
+    }
+
+    return entities
   }
 }

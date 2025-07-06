@@ -80,6 +80,38 @@ interface SessionStateContextType {
   // AI-ready context
   getAIContext: (query?: string) => Promise<string>
 
+  // Relevance and filtering
+  getRelevantEntitiesWithScores: (
+    contextType: ContextType,
+    focus?: string,
+    options?: any
+  ) => any
+  getPrioritizedContext: (
+    contextType: ContextType,
+    focus?: string,
+    options?: any
+  ) => any
+  separateByRelevance: (
+    entities: any[],
+    contextType: ContextType
+  ) => { foreground: any[]; background: any[] }
+  updateRelevanceSettings: (settings: {
+    relevanceThreshold?: number
+    memoryDepth?: number
+    maxContextSize?: number
+    preferredDetails?: string[]
+  }) => void
+  getHighPriorityEntities: (
+    entities: any[],
+    contextType: ContextType,
+    maxItems?: number
+  ) => any[]
+  calculateEntityRelevance: (
+    entity: any,
+    contextType: ContextType,
+    focus?: string
+  ) => any
+
   // Session management
   clearSession: () => void
   exportSession: () => void
@@ -356,6 +388,63 @@ ${Object.entries(context.additionalContext)
     URL.revokeObjectURL(url)
   }, [sessionManager, sessionState])
 
+  // Relevance and filtering methods
+  const getRelevantEntitiesWithScores = useCallback(
+    (contextType: ContextType, focus?: string, options?: any) => {
+      return sessionManager.getRelevantEntitiesWithScores(
+        contextType,
+        focus,
+        options
+      )
+    },
+    [sessionManager]
+  )
+
+  const getPrioritizedContext = useCallback(
+    (contextType: ContextType, focus?: string, options?: any) => {
+      return sessionManager.getPrioritizedContext(contextType, focus, options)
+    },
+    [sessionManager]
+  )
+
+  const separateByRelevance = useCallback(
+    (entities: any[], contextType: ContextType) => {
+      return sessionManager.separateByRelevance(entities, contextType)
+    },
+    [sessionManager]
+  )
+
+  const updateRelevanceSettings = useCallback(
+    (settings: {
+      relevanceThreshold?: number
+      memoryDepth?: number
+      maxContextSize?: number
+      preferredDetails?: string[]
+    }) => {
+      sessionManager.updateRelevanceSettings(settings)
+      setSessionState(sessionManager.currentSession)
+    },
+    [sessionManager]
+  )
+
+  const getHighPriorityEntities = useCallback(
+    (entities: any[], contextType: ContextType, maxItems?: number) => {
+      return sessionManager.getHighPriorityEntities(
+        entities,
+        contextType,
+        maxItems
+      )
+    },
+    [sessionManager]
+  )
+
+  const calculateEntityRelevance = useCallback(
+    (entity: any, contextType: ContextType, focus?: string) => {
+      return sessionManager.calculateEntityRelevance(entity, contextType, focus)
+    },
+    [sessionManager]
+  )
+
   const value: SessionStateContextType = {
     sessionManager,
     sessionState,
@@ -378,6 +467,12 @@ ${Object.entries(context.additionalContext)
     generateLocationContext,
     generateCharacterContext,
     getAIContext,
+    getRelevantEntitiesWithScores,
+    getPrioritizedContext,
+    separateByRelevance,
+    updateRelevanceSettings,
+    getHighPriorityEntities,
+    calculateEntityRelevance,
     clearSession,
     exportSession
   }

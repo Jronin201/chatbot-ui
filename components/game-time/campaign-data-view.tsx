@@ -61,6 +61,8 @@ import {
   IconBrain,
   IconHistory
 } from "@tabler/icons-react"
+import { CampaignDataEditor } from "./campaign-data-editor"
+import { BatchOperations } from "./batch-operations"
 
 interface CampaignDataViewProps {
   gameTimeData: GameTimeData | null
@@ -89,7 +91,11 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
     setCurrentLocation,
     trackAction,
     getRecentEvents,
-    getAIContext
+    getAIContext,
+    getPrioritizedContext,
+    getRelevantEntitiesWithScores,
+    updateRelevanceSettings,
+    calculateEntityRelevance
   } = useSessionState()
 
   // Search state
@@ -425,14 +431,16 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
 
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="characters">Characters</TabsTrigger>
           <TabsTrigger value="npcs">NPCs</TabsTrigger>
           <TabsTrigger value="world">World</TabsTrigger>
           <TabsTrigger value="progression">Progression</TabsTrigger>
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="management">Management</TabsTrigger>
           <TabsTrigger value="ai-context">AI Context</TabsTrigger>
+          <TabsTrigger value="relevance">Relevance</TabsTrigger>
           <TabsTrigger value="search">Search Results</TabsTrigger>
         </TabsList>
 
@@ -860,6 +868,531 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
                     </div>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Relevance Tab */}
+        <TabsContent value="relevance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <IconFilter className="size-4" />
+                Relevance Settings & Filtering
+              </CardTitle>
+              <CardDescription>
+                Configure how the AI prioritizes and filters campaign data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Relevance Settings */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">
+                    AI Context Preferences
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="relevance-threshold">
+                        Relevance Threshold (
+                        {sessionState.aiContext.relevanceThreshold}/10)
+                      </Label>
+                      <Input
+                        id="relevance-threshold"
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={sessionState.aiContext.relevanceThreshold}
+                        onChange={e =>
+                          updateRelevanceSettings({
+                            relevanceThreshold: parseInt(e.target.value)
+                          })
+                        }
+                        className="w-full"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Higher values show only the most relevant information
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="memory-depth">
+                        Memory Depth ({sessionState.aiContext.memoryDepth}{" "}
+                        events)
+                      </Label>
+                      <Input
+                        id="memory-depth"
+                        type="range"
+                        min="5"
+                        max="50"
+                        value={sessionState.aiContext.memoryDepth}
+                        onChange={e =>
+                          updateRelevanceSettings({
+                            memoryDepth: parseInt(e.target.value)
+                          })
+                        }
+                        className="w-full"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        How many past events to remember
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority Breakdown */}
+                {isSessionActive && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">
+                      Current Priority Breakdown
+                    </h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const prioritized =
+                          getPrioritizedContext("general-query")
+                        return (
+                          <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-red-600">
+                                Critical
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.critical.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Must include
+                              </div>
+                            </div>
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-orange-600">
+                                High
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.high.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Should include
+                              </div>
+                            </div>
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-yellow-600">
+                                Medium
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.medium.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Include if space
+                              </div>
+                            </div>
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-gray-600">
+                                Low/Background
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.low.length +
+                                  prioritized.excluded.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Background only
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Entity Relevance Examples */}
+                {isSessionActive && contextualData.characters.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">
+                      Sample Entity Relevance Scores
+                    </h4>
+                    <div className="space-y-2">
+                      {contextualData.characters.slice(0, 3).map(character => {
+                        const relevance = calculateEntityRelevance(
+                          character,
+                          "general-query"
+                        )
+                        return (
+                          <div
+                            key={character.id}
+                            className="flex items-center justify-between rounded border p-2"
+                          >
+                            <div>
+                              <span className="font-medium">
+                                {character.name}
+                              </span>
+                              <div className="text-muted-foreground text-xs">
+                                {relevance.reasons.slice(0, 2).join(", ")}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={
+                                  relevance.priority === "critical"
+                                    ? "destructive"
+                                    : relevance.priority === "high"
+                                      ? "default"
+                                      : relevance.priority === "medium"
+                                        ? "secondary"
+                                        : "outline"
+                                }
+                              >
+                                {relevance.priority}
+                              </Badge>
+                              <span className="font-mono text-sm">
+                                {relevance.score.toFixed(1)}/10
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {!isSessionActive && (
+                  <div className="py-8 text-center">
+                    <IconFilter className="text-muted-foreground mx-auto size-12" />
+                    <h3 className="mt-2 text-sm font-medium">
+                      Start a Session
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Start a session to see relevance scoring and filtering in
+                      action
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Data Management Tab */}
+        <TabsContent value="management" className="space-y-4">
+          <CampaignDataEditor onDataChange={loadContextualData} />
+          <BatchOperations onDataChange={loadContextualData} />
+        </TabsContent>
+
+        {/* AI Context Tab */}
+        <TabsContent value="ai-context" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <IconBrain className="size-4" />
+                AI Context Generation
+              </CardTitle>
+              <CardDescription>
+                Generate contextual information packets for AI interactions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("session-start")
+                      console.log("Session Start Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconPlayerPlay className="mr-2 size-4" />
+                    Generate Session Start Context
+                  </Button>
+
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("dialogue")
+                      console.log("Dialogue Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconUsers className="mr-2 size-4" />
+                    Generate Dialogue Context
+                  </Button>
+
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("exploration")
+                      console.log("Exploration Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconMap className="mr-2 size-4" />
+                    Generate Exploration Context
+                  </Button>
+
+                  <Button
+                    onClick={async () => {
+                      const context = await generateContext("combat")
+                      console.log("Combat Context:", context)
+                    }}
+                    variant="outline"
+                  >
+                    <IconFlag className="mr-2 size-4" />
+                    Generate Combat Context
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Recent Session Events</Label>
+                  <div className="rounded border p-3">
+                    {isSessionActive ? (
+                      <div className="space-y-2">
+                        {getRecentEvents(5).map(event => (
+                          <div
+                            key={event.id}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span>{event.description}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {event.type}
+                            </Badge>
+                          </div>
+                        ))}
+                        {getRecentEvents(5).length === 0 && (
+                          <p className="text-muted-foreground text-sm">
+                            No recent events
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        Start a session to track events
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Current AI Context Summary</Label>
+                  <div className="bg-muted/50 rounded border p-3">
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <strong>Active Characters:</strong>{" "}
+                        {sessionState.activeEntities.characters
+                          .map(c => c.name)
+                          .join(", ") || "None"}
+                      </p>
+                      <p>
+                        <strong>Current Location:</strong>{" "}
+                        {sessionState.currentContext.location?.name ||
+                          "Not set"}
+                      </p>
+                      <p>
+                        <strong>Session Active:</strong>{" "}
+                        {isSessionActive ? "Yes" : "No"}
+                      </p>
+                      <p>
+                        <strong>Recent Events:</strong>{" "}
+                        {getRecentEvents(3).length} events
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Relevance Tab */}
+        <TabsContent value="relevance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <IconFilter className="size-4" />
+                Relevance Settings & Filtering
+              </CardTitle>
+              <CardDescription>
+                Configure how the AI prioritizes and filters campaign data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Relevance Settings */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">
+                    AI Context Preferences
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="relevance-threshold">
+                        Relevance Threshold (
+                        {sessionState.aiContext.relevanceThreshold}/10)
+                      </Label>
+                      <Input
+                        id="relevance-threshold"
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={sessionState.aiContext.relevanceThreshold}
+                        onChange={e =>
+                          updateRelevanceSettings({
+                            relevanceThreshold: parseInt(e.target.value)
+                          })
+                        }
+                        className="w-full"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Higher values show only the most relevant information
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="memory-depth">
+                        Memory Depth ({sessionState.aiContext.memoryDepth}{" "}
+                        events)
+                      </Label>
+                      <Input
+                        id="memory-depth"
+                        type="range"
+                        min="5"
+                        max="50"
+                        value={sessionState.aiContext.memoryDepth}
+                        onChange={e =>
+                          updateRelevanceSettings({
+                            memoryDepth: parseInt(e.target.value)
+                          })
+                        }
+                        className="w-full"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        How many past events to remember
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority Breakdown */}
+                {isSessionActive && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">
+                      Current Priority Breakdown
+                    </h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const prioritized =
+                          getPrioritizedContext("general-query")
+                        return (
+                          <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-red-600">
+                                Critical
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.critical.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Must include
+                              </div>
+                            </div>
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-orange-600">
+                                High
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.high.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Should include
+                              </div>
+                            </div>
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-yellow-600">
+                                Medium
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.medium.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Include if space
+                              </div>
+                            </div>
+                            <div className="rounded border p-3">
+                              <div className="text-sm font-medium text-gray-600">
+                                Low/Background
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {prioritized.low.length +
+                                  prioritized.excluded.length}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                Background only
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Entity Relevance Examples */}
+                {isSessionActive && contextualData.characters.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">
+                      Sample Entity Relevance Scores
+                    </h4>
+                    <div className="space-y-2">
+                      {contextualData.characters.slice(0, 3).map(character => {
+                        const relevance = calculateEntityRelevance(
+                          character,
+                          "general-query"
+                        )
+                        return (
+                          <div
+                            key={character.id}
+                            className="flex items-center justify-between rounded border p-2"
+                          >
+                            <div>
+                              <span className="font-medium">
+                                {character.name}
+                              </span>
+                              <div className="text-muted-foreground text-xs">
+                                {relevance.reasons.slice(0, 2).join(", ")}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={
+                                  relevance.priority === "critical"
+                                    ? "destructive"
+                                    : relevance.priority === "high"
+                                      ? "default"
+                                      : relevance.priority === "medium"
+                                        ? "secondary"
+                                        : "outline"
+                                }
+                              >
+                                {relevance.priority}
+                              </Badge>
+                              <span className="font-mono text-sm">
+                                {relevance.score.toFixed(1)}/10
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {!isSessionActive && (
+                  <div className="py-8 text-center">
+                    <IconFilter className="text-muted-foreground mx-auto size-12" />
+                    <h3 className="mt-2 text-sm font-medium">
+                      Start a Session
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Start a session to see relevance scoring and filtering in
+                      action
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
