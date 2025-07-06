@@ -34,6 +34,12 @@ export interface TimePassageKeywords {
     defaultDays: number
     modifiers: { pattern: RegExp; multiplier: number }[]
   }
+  // General narrative time passage
+  narrative: {
+    patterns: RegExp[]
+    defaultDays: number
+    modifiers: { pattern: RegExp; multiplier: number }[]
+  }
   // Explicit time mentions
   explicit: {
     patterns: RegExp[]
@@ -194,7 +200,34 @@ export const DEFAULT_TIME_KEYWORDS: TimePassageKeywords = {
       ],
       extractor: () => 0.1 // Fractional day
     }
-  ]
+  ],
+  // General narrative time passage patterns
+  narrative: {
+    patterns: [
+      /days?\s+pass(?:ed)?/i,
+      /time\s+pass(?:es|ed)/i,
+      /(?:the\s+)?sun\s+(?:sets?|rises?)\s+and\s+rises?/i,
+      /(?:the\s+)?hours?\s+(?:pass|drift|slip)\s+by/i,
+      /(?:the\s+)?(?:day|night)\s+(?:wears?|drags?)\s+on/i,
+      /(?:as\s+)?(?:the\s+)?(?:day|time|hours?)\s+(?:passes?|goes?\s+by|elapses?)/i,
+      /(?:meanwhile|during\s+this\s+time|in\s+the\s+meantime)/i,
+      /(?:the\s+)?(?:following|next)\s+(?:day|morning|evening)/i,
+      /(?:later\s+that\s+)?(?:day|evening|night|morning)/i,
+      /(?:after\s+(?:a\s+)?(?:while|time))/i,
+      /(?:some\s+time\s+(?:later|passes?))/i,
+      /(?:eventually|finally|at\s+last)/i,
+      /(?:the\s+)?wait(?:ing)?\s+continues?/i
+    ],
+    defaultDays: 1,
+    modifiers: [
+      { pattern: /many\s+days|several\s+days|multiple\s+days/i, multiplier: 3 },
+      { pattern: /few\s+days|couple\s+of\s+days/i, multiplier: 2 },
+      { pattern: /single\s+day|one\s+day|a\s+day/i, multiplier: 1 },
+      { pattern: /hours?|moments?|briefly/i, multiplier: 0.1 },
+      { pattern: /weeks?|long\s+time/i, multiplier: 7 },
+      { pattern: /months?/i, multiplier: 30 }
+    ]
+  }
 }
 
 export class TimePassageAnalyzer {

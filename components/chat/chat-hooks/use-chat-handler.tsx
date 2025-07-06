@@ -397,16 +397,22 @@ export const useChatHandler = () => {
         selectedAssistant
       )
 
-      // Game Time Integration: Process message for time passage
+      // Game Time Integration: Process messages for time passage
       if (
         gameTimeData &&
         gameTimeSettings.autoDetectTimePassage &&
         !isRegeneration
       ) {
         try {
-          // Create a unique ID for this message to prevent duplicate processing
-          const messageId = `${Date.now()}-${messageContent.substring(0, 50).replace(/\s+/g, "-")}`
-          await processMessage(messageContent, messageId)
+          // Process user message for time passage
+          const userMessageId = `${Date.now()}-user-${messageContent.substring(0, 50).replace(/\s+/g, "-")}`
+          await processMessage(messageContent, userMessageId)
+
+          // Also process AI response for time passage if available
+          if (generatedText) {
+            const aiMessageId = `${Date.now()}-ai-${generatedText.substring(0, 50).replace(/\s+/g, "-")}`
+            await processMessage(generatedText, aiMessageId)
+          }
         } catch (error) {
           console.error("Error processing time passage:", error)
           // Don't throw - time passage detection failures shouldn't break chat
