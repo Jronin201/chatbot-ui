@@ -127,6 +127,17 @@ export const CampaignSelector: React.FC<CampaignSelectorProps> = ({
 
     try {
       setIsLoading(true)
+
+      // Check for duplicate campaign names
+      const duplicateCampaign = campaigns.find(
+        c => c.name.toLowerCase() === newCampaignName.trim().toLowerCase()
+      )
+
+      if (duplicateCampaign) {
+        toast.error("A campaign with this name already exists")
+        return
+      }
+
       const campaignId = GameTimeStorage.generateCampaignId()
 
       const campaignMetadata: CampaignMetadata = {
@@ -191,8 +202,20 @@ export const CampaignSelector: React.FC<CampaignSelectorProps> = ({
       // For now, we'll create a basic campaign structure
       const campaignId = GameTimeStorage.generateCampaignId()
 
+      // Generate a unique name for AI-generated campaigns
+      let baseName = "AI Generated Campaign"
+      let campaignName = baseName
+      let counter = 1
+
+      while (
+        campaigns.find(c => c.name.toLowerCase() === campaignName.toLowerCase())
+      ) {
+        campaignName = `${baseName} ${counter}`
+        counter++
+      }
+
       const campaignMetadata: CampaignMetadata = {
-        campaignName: "AI Generated Campaign",
+        campaignName,
         gameSystem: "D&D 5e", // Default, could be determined by AI
         gameMaster: "AI Assistant",
         workspaceId,

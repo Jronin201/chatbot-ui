@@ -5,7 +5,8 @@ import {
   CalendarSystem,
   CampaignMetadata,
   TimePassageEvent,
-  GameTimeSettings
+  GameTimeSettings,
+  GameTimeData
 } from "@/types/game-time"
 import { useGameTime } from "@/context/game-time-context"
 import { ChatbotUIContext } from "@/context/context"
@@ -61,7 +62,8 @@ import {
   IconDownload,
   IconTrash,
   IconSword,
-  IconChevronDown
+  IconChevronDown,
+  IconX
 } from "@tabler/icons-react"
 import {
   DropdownMenu,
@@ -103,6 +105,7 @@ export const CampaignInformationDialog: React.FC<
     null
   )
   const [activeTab, setActiveTab] = useState("overview")
+  const [isEditMode, setIsEditMode] = useState(false)
 
   // Form state for new/editing campaigns
   const [calendarSystem, setCalendarSystem] = useState<CalendarSystem>("dune")
@@ -143,6 +146,7 @@ export const CampaignInformationDialog: React.FC<
     if (isOpen) {
       loadCampaigns()
       setCurrentCampaignId(GameTimeStorage.getCurrentCampaignId())
+      setIsEditMode(false) // Reset edit mode when dialog opens
       if (gameTimeData) {
         // Pre-populate form with existing data
         setCampaignName(gameTimeData.campaignMetadata?.campaignName || "")
@@ -190,6 +194,16 @@ export const CampaignInformationDialog: React.FC<
     setIsLoading(true)
 
     try {
+      // Check for duplicate campaign names
+      const duplicateCampaign = campaigns.find(
+        c => c.name.toLowerCase() === campaignName.trim().toLowerCase()
+      )
+
+      if (duplicateCampaign) {
+        toast.error("A campaign with this name already exists")
+        return
+      }
+
       if (!gameTimeService.isValidDate(startDate, calendarSystem)) {
         const errorMsg =
           calendarSystem === "dune"
@@ -232,6 +246,75 @@ export const CampaignInformationDialog: React.FC<
     }
   }
 
+  const handleUpdateCampaign = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!campaignName.trim() || !currentCampaignId) {
+      toast.error("Campaign name is required")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Check for duplicate campaign names (excluding current campaign)
+      const duplicateCampaign = campaigns.find(
+        c =>
+          c.id !== currentCampaignId &&
+          c.name.toLowerCase() === campaignName.trim().toLowerCase()
+      )
+
+      if (duplicateCampaign) {
+        toast.error("A campaign with this name already exists")
+        return
+      }
+
+      // Load current campaign data
+      const currentCampaign =
+        await GameTimeStorage.loadCampaign(currentCampaignId)
+      if (!currentCampaign) {
+        toast.error("Campaign not found")
+        return
+      }
+
+      // Update the campaign metadata
+      const updatedCampaignMetadata: CampaignMetadata = {
+        ...currentCampaign.campaignMetadata,
+        campaignName: campaignName.trim(),
+        gameSystem: gameSystem.trim() || "Unknown",
+        workspaceId,
+        characters: characterName.trim() ? [characterName.trim()] : undefined,
+        characterInfo: characterInfo.trim() || undefined,
+        keyNPCs: keyNPCs.trim() || undefined,
+        notes: notes.trim() ? [notes.trim()] : undefined
+      }
+
+      // Update the game time data
+      const updatedGameTimeData: GameTimeData = {
+        ...currentCampaign,
+        campaignMetadata: updatedCampaignMetadata,
+        lastUpdated: new Date().toISOString()
+      }
+
+      // Save the updated campaign
+      await GameTimeStorage.saveGameTime(updatedGameTimeData)
+
+      // Reload campaigns and game time data
+      await loadCampaigns()
+      await loadGameTime()
+
+      toast.success("Campaign updated successfully!")
+      setActiveTab("overview")
+      setIsEditMode(false)
+    } catch (error) {
+      console.error("Error updating campaign:", error)
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update campaign"
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSwitchCampaign = async (campaignId: string) => {
     try {
       const success = await GameTimeStorage.switchToCampaign(campaignId)
@@ -247,6 +330,37 @@ export const CampaignInformationDialog: React.FC<
       console.error("Error switching campaign:", error)
       toast.error("Failed to switch campaign")
     }
+  }
+
+  const handleEditCampaign = () => {
+    if (gameTimeData && gameTimeData.campaignMetadata) {
+      // Pre-populate form with current campaign data
+      setCampaignName(gameTimeData.campaignMetadata.campaignName || "")
+      setGameSystem(gameTimeData.campaignMetadata.gameSystem || "")
+      setCharacterName(gameTimeData.campaignMetadata.characters?.[0] || "")
+      setCharacterInfo(gameTimeData.campaignMetadata.characterInfo || "")
+      setKeyNPCs(gameTimeData.campaignMetadata.keyNPCs || "")
+      setNotes(gameTimeData.campaignMetadata.notes?.join("\n") || "")
+      setCalendarSystem(gameTimeData.calendarSystem)
+      setStartDate(gameTimeData.startDate)
+
+      setIsEditMode(true)
+      setActiveTab("create")
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false)
+    setActiveTab("overview")
+    // Reset form fields
+    setCampaignName("")
+    setGameSystem("Dune: Adventures in the Imperium")
+    setCharacterName("")
+    setCharacterInfo("")
+    setKeyNPCs("")
+    setNotes("")
+    setCalendarSystem("dune")
+    setStartDate("")
   }
 
   const handleDeleteCampaign = async (campaignId: string) => {
@@ -405,6 +519,17 @@ export const CampaignInformationDialog: React.FC<
               <CardContent>
                 {gameTimeData ? (
                   <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEditCampaign}
+                      >
+                        <IconEdit className="mr-2 size-4" />
+                        Edit Campaign
+                      </Button>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium">
@@ -478,18 +603,41 @@ export const CampaignInformationDialog: React.FC<
                       Create a new campaign or select an existing one to get
                       started.
                     </p>
+                    <Button
+                      className="mt-4"
+                      onClick={() => {
+                        setIsEditMode(false)
+                        setActiveTab("create")
+                      }}
+                    >
+                      <IconPlus className="mr-2 size-4" />
+                      Create New Campaign
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             {/* Campaign List */}
-            {campaigns.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Available Campaigns</CardTitle>
-                </CardHeader>
-                <CardContent>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Available Campaigns</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditMode(false)
+                      setActiveTab("create")
+                    }}
+                  >
+                    <IconPlus className="mr-2 size-4" />
+                    New Campaign
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {campaigns.length > 0 ? (
                   <div className="space-y-2">
                     {campaigns.map(campaign => (
                       <div
@@ -551,14 +699,41 @@ export const CampaignInformationDialog: React.FC<
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                ) : (
+                  <div className="py-6 text-center">
+                    <IconSword className="text-muted-foreground mx-auto size-12" />
+                    <h3 className="mt-2 text-sm font-medium">
+                      No Campaigns Yet
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Create your first campaign to get started
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Create/Edit Tab */}
           <TabsContent value="create" className="space-y-4">
-            <form onSubmit={handleCreateCampaign} className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                {isEditMode ? "Edit Campaign" : "Create New Campaign"}
+              </h3>
+              {isEditMode && (
+                <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                  <IconX className="mr-2 size-4" />
+                  Cancel Edit
+                </Button>
+              )}
+            </div>
+
+            <form
+              onSubmit={
+                isEditMode ? handleUpdateCampaign : handleCreateCampaign
+              }
+              className="space-y-4"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="campaign-name">Campaign Name *</Label>
@@ -588,8 +763,9 @@ export const CampaignInformationDialog: React.FC<
                   onValueChange={(value: CalendarSystem) =>
                     setCalendarSystem(value)
                   }
+                  disabled={isEditMode}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={isEditMode ? "bg-muted" : ""}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -598,6 +774,11 @@ export const CampaignInformationDialog: React.FC<
                     <SelectItem value="custom">Custom Calendar</SelectItem>
                   </SelectContent>
                 </Select>
+                {isEditMode && (
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Calendar system cannot be changed after campaign creation
+                  </p>
+                )}
               </div>
 
               <div>
@@ -611,8 +792,15 @@ export const CampaignInformationDialog: React.FC<
                       ? "e.g., 1 Ignis 10191 A.G."
                       : "e.g., Day 1"
                   }
-                  required
+                  required={!isEditMode}
+                  disabled={isEditMode}
+                  className={isEditMode ? "bg-muted" : ""}
                 />
+                {isEditMode && (
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Start date cannot be changed after campaign creation
+                  </p>
+                )}
               </div>
 
               <div>
@@ -659,11 +847,21 @@ export const CampaignInformationDialog: React.FC<
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={onClose}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={isEditMode ? handleCancelEdit : onClose}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Creating..." : "Initialize Game Time"}
+                  {isLoading
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Creating..."
+                    : isEditMode
+                      ? "Update Campaign"
+                      : "Initialize Game Time"}
                 </Button>
               </div>
             </form>

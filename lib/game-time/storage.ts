@@ -404,10 +404,14 @@ export class GameTimeStorage {
       const data = localStorage.getItem(CAMPAIGNS_KEY)
       const allCampaigns: CampaignSummary[] = data ? JSON.parse(data) : []
 
-      // Filter by workspace
-      return allCampaigns.filter(
-        campaign => campaign.workspaceId === workspaceId
-      )
+      // Filter by workspace and sort by most recent first
+      return allCampaigns
+        .filter(campaign => campaign.workspaceId === workspaceId)
+        .sort(
+          (a, b) =>
+            new Date(b.lastUpdated).getTime() -
+            new Date(a.lastUpdated).getTime()
+        )
     } catch (error) {
       console.error("Error loading campaigns:", error)
       return []
