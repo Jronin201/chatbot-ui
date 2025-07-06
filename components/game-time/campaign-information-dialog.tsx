@@ -962,11 +962,16 @@ export const CampaignInformationDialog: React.FC<
                         <SelectValue placeholder="Select Game Master Assistant" />
                       </SelectTrigger>
                       <SelectContent>
-                        {assistants.map(assistant => (
-                          <SelectItem key={assistant.id} value={assistant.id}>
-                            {assistant.name}
-                          </SelectItem>
-                        ))}
+                        {assistants
+                          .filter(
+                            assistant =>
+                              assistant.id && assistant.id.trim() !== ""
+                          )
+                          .map(assistant => (
+                            <SelectItem key={assistant.id} value={assistant.id}>
+                              {assistant.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>

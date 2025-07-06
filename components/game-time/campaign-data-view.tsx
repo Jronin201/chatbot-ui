@@ -117,7 +117,7 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
   })
 
   // Filter state
-  const [locationFilter, setLocationFilter] = useState<string>("")
+  const [locationFilter, setLocationFilter] = useState<string>("__all__")
   const [activeTab, setActiveTab] = useState("overview")
 
   // Contextual data
@@ -144,7 +144,8 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
 
     try {
       const context = createLoadingContext({
-        currentLocation: locationFilter || undefined,
+        currentLocation:
+          locationFilter === "__all__" ? undefined : locationFilter,
         maxResults: 20,
         relevanceThreshold: 3
       })
@@ -210,7 +211,7 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
     try {
       const query = createSearchQuery({
         text: searchQuery,
-        location: locationFilter || undefined
+        location: locationFilter === "__all__" ? undefined : locationFilter
       })
 
       const results = await searchCampaignData(query, { limit: 50 })
@@ -225,7 +226,7 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
     setLocationFilter(value)
     setCurrentContext({
       ...currentContext,
-      currentLocation: value || undefined
+      currentLocation: value === "__all__" ? undefined : value
     })
   }
 
@@ -295,7 +296,7 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
                   <SelectValue placeholder="All Locations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Locations</SelectItem>
+                  <SelectItem value="__all__">All Locations</SelectItem>
                   {availableLocations.map(location => (
                     <SelectItem key={location} value={location}>
                       {location}
@@ -597,7 +598,7 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
             <CardHeader>
               <CardTitle>Player Characters</CardTitle>
               <CardDescription>
-                {locationFilter
+                {locationFilter !== "__all__"
                   ? `Characters in ${locationFilter}`
                   : "All player characters"}
               </CardDescription>
@@ -626,12 +627,12 @@ export function CampaignDataView({ gameTimeData }: CampaignDataViewProps) {
                 <div className="py-8 text-center">
                   <IconUsers className="text-muted-foreground mx-auto size-12" />
                   <h3 className="mt-2 text-sm font-medium">
-                    {locationFilter
+                    {locationFilter !== "__all__"
                       ? "No Characters in Location"
                       : "No Character Profiles"}
                   </h3>
                   <p className="text-muted-foreground mt-1 text-sm">
-                    {locationFilter
+                    {locationFilter !== "__all__"
                       ? `No characters found in ${locationFilter}`
                       : "Character profiles will appear here as they are created"}
                   </p>
