@@ -55,13 +55,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import {
-  IconPlus,
-  IconEdit,
-  IconHistory,
-  IconSword,
-  IconX
-} from "@tabler/icons-react"
+import { IconEdit, IconSword, IconX } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 interface CampaignInformationDialogProps {
@@ -76,12 +70,12 @@ export const CampaignInformationDialog: React.FC<
   const {
     gameTimeData,
     initializeGameTime,
-    updateGameTime,
-    setGameTime,
+    // updateGameTime, // Removed - was used by Adjust Time tab
+    // setGameTime, // Removed - was used by Adjust Time tab
     deleteGameTime,
-    timePassageHistory,
+    // timePassageHistory, // Removed - was used by History tab
     settings,
-    updateSettings,
+    // updateSettings, // Removed - was used by Settings tab
     formatDate,
     loadGameTime
   } = useGameTime()
@@ -102,7 +96,8 @@ export const CampaignInformationDialog: React.FC<
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(
     null
   )
-  const [activeTab, setActiveTab] = useState("management")
+  // Remove activeTab since we no longer have tabs
+  // const [activeTab, setActiveTab] = useState("management")
   const [isEditMode, setIsEditMode] = useState(false)
 
   // Form state for new/editing campaigns
@@ -127,11 +122,11 @@ export const CampaignInformationDialog: React.FC<
     npcs: false
   })
 
-  // Time adjustment state
-  const [daysToAdd, setDaysToAdd] = useState("")
-  const [timeDescription, setTimeDescription] = useState("")
-  const [newDate, setNewDate] = useState("")
-  const [dateDescription, setDateDescription] = useState("")
+  // Time adjustment state - Remove since Adjust Time tab is removed
+  // const [daysToAdd, setDaysToAdd] = useState("")
+  // const [timeDescription, setTimeDescription] = useState("")
+  // const [newDate, setNewDate] = useState("")
+  // const [dateDescription, setDateDescription] = useState("")
 
   // Settings state - Remove this section since Settings tab is removed
   // const [tempSettings, setTempSettings] = useState<GameTimeSettings>({
@@ -161,7 +156,7 @@ export const CampaignInformationDialog: React.FC<
         // No campaignId provided - this is for creating a new campaign
         setCurrentCampaignId(GameTimeStorage.getCurrentCampaignId())
         setIsEditMode(false) // Reset edit mode when dialog opens
-        setActiveTab("management") // Always go to management tab for new campaigns
+        // Remove setActiveTab since we no longer have tabs
 
         // Reset form fields for new campaign
         setCampaignName("")
@@ -225,8 +220,9 @@ export const CampaignInformationDialog: React.FC<
         )
         setCalendarSystem(campaign.calendarSystem)
         setStartDate(campaign.startDate)
-        setNewDate(campaign.currentDate)
-        setActiveTab("create") // Show the edit form
+        // Remove setNewDate and setActiveTab since those tabs are removed
+        // setNewDate(campaign.currentDate)
+        // setActiveTab("create") // Show the edit form
       } else {
         toast.error("Campaign not found")
       }
@@ -288,7 +284,7 @@ export const CampaignInformationDialog: React.FC<
       setCurrentCampaignId(campaignId)
 
       toast.success("Campaign created successfully!")
-      setActiveTab("overview")
+      // Remove setActiveTab since we no longer have tabs
     } catch (error) {
       console.error("Error creating campaign:", error)
       toast.error(
@@ -357,7 +353,7 @@ export const CampaignInformationDialog: React.FC<
       await loadGameTime()
 
       toast.success("Campaign updated successfully!")
-      setActiveTab("overview")
+      // Remove setActiveTab since we no longer have tabs
       setIsEditMode(false)
     } catch (error) {
       console.error("Error updating campaign:", error)
@@ -399,13 +395,13 @@ export const CampaignInformationDialog: React.FC<
       setStartDate(gameTimeData.startDate)
 
       setIsEditMode(true)
-      setActiveTab("create")
+      // Remove setActiveTab since we no longer have tabs
     }
   }
 
   const handleCancelEdit = () => {
     setIsEditMode(false)
-    setActiveTab("overview")
+    // Remove setActiveTab since we no longer have tabs
     // Reset form fields
     setCampaignName("")
     setGameSystem("Dune: Adventures in the Imperium")
@@ -435,44 +431,45 @@ export const CampaignInformationDialog: React.FC<
     }
   }
 
-  const handleAddTime = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!daysToAdd || !timeDescription) {
-      toast.error("Please fill in all fields")
-      return
-    }
+  // Remove unused functions from removed tabs
+  // const handleAddTime = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   if (!daysToAdd || !timeDescription) {
+  //     toast.error("Please fill in all fields")
+  //     return
+  //   }
 
-    const days = parseFloat(daysToAdd)
-    if (isNaN(days)) {
-      toast.error("Please enter a valid number of days")
-      return
-    }
+  //   const days = parseFloat(daysToAdd)
+  //   if (isNaN(days)) {
+  //     toast.error("Please enter a valid number of days")
+  //     return
+  //   }
 
-    try {
-      await updateGameTime(days, timeDescription)
-      setDaysToAdd("")
-      setTimeDescription("")
-      toast.success("Time updated successfully")
-    } catch (error) {
-      toast.error("Failed to update time")
-    }
-  }
+  //   try {
+  //     await updateGameTime(days, timeDescription)
+  //     setDaysToAdd("")
+  //     setTimeDescription("")
+  //     toast.success("Time updated successfully")
+  //   } catch (error) {
+  //     toast.error("Failed to update time")
+  //   }
+  // }
 
-  const handleSetDate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newDate || !dateDescription) {
-      toast.error("Please fill in all fields")
-      return
-    }
+  // const handleSetDate = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   if (!newDate || !dateDescription) {
+  //     toast.error("Please fill in all fields")
+  //     return
+  //   }
 
-    try {
-      await setGameTime(newDate, dateDescription)
-      setDateDescription("")
-      toast.success("Date set successfully")
-    } catch (error) {
-      toast.error("Failed to set date")
-    }
-  }
+  //   try {
+  //     await setGameTime(newDate, dateDescription)
+  //     setDateDescription("")
+  //     toast.success("Date set successfully")
+  //   } catch (error) {
+  //     toast.error("Failed to set date")
+  //   }
+  // }
 
   // Remove unused functions from removed tabs
   // const handleSaveSettings = async () => {
@@ -597,363 +594,187 @@ export const CampaignInformationDialog: React.FC<
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-1">
-            <TabsTrigger value="management">Management</TabsTrigger>
-          </TabsList>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">
+              {isEditMode ? "Edit Campaign" : "Create New Campaign"}
+            </h3>
+            {isEditMode && (
+              <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                <IconX className="mr-2 size-4" />
+                Cancel Edit
+              </Button>
+            )}
+          </div>
 
-          {/* Management Tab - Combines Create/Edit, Adjust Time, and History */}
-          <TabsContent value="management" className="space-y-4">
-            <Tabs defaultValue="create" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="create">Create/Edit</TabsTrigger>
-                <TabsTrigger value="adjust">Adjust Time</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
+          <form
+            onSubmit={isEditMode ? handleUpdateCampaign : handleCreateCampaign}
+            className="space-y-4"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="campaign-name">Campaign Name *</Label>
+                <Input
+                  id="campaign-name"
+                  value={campaignName}
+                  onChange={e => setCampaignName(e.target.value)}
+                  placeholder="Enter campaign name"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="game-system">Game System</Label>
+                <Input
+                  id="game-system"
+                  value={gameSystem}
+                  onChange={e => setGameSystem(e.target.value)}
+                  placeholder="e.g., D&D 5e, Pathfinder, Dune"
+                />
+              </div>
+            </div>
 
-              {/* Create/Edit Sub-tab */}
-              <TabsContent value="create" className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">
-                    {isEditMode ? "Edit Campaign" : "Create New Campaign"}
-                  </h3>
-                  {isEditMode && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelEdit}
-                    >
-                      <IconX className="mr-2 size-4" />
-                      Cancel Edit
-                    </Button>
-                  )}
+            <div>
+              <Label htmlFor="calendar-system">Calendar System</Label>
+              <Select
+                value={calendarSystem}
+                onValueChange={(value: CalendarSystem) =>
+                  setCalendarSystem(value)
+                }
+                disabled={isEditMode}
+              >
+                <SelectTrigger className={isEditMode ? "bg-muted" : ""}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dune">Dune Calendar</SelectItem>
+                  <SelectItem value="standard">Standard Calendar</SelectItem>
+                  <SelectItem value="custom">Custom Calendar</SelectItem>
+                </SelectContent>
+              </Select>
+              {isEditMode && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Calendar system cannot be changed after campaign creation
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="start-date">Start Date *</Label>
+              <Input
+                id="start-date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                placeholder={
+                  calendarSystem === "dune"
+                    ? "e.g., 1 Ignis 10191 A.G."
+                    : "e.g., Day 1"
+                }
+                required={!isEditMode}
+                disabled={isEditMode}
+                className={isEditMode ? "bg-muted" : ""}
+              />
+              {isEditMode && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Start date cannot be changed after campaign creation
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="game-master">Game Master Assistant</Label>
+              <Select
+                value={gameMasterAssistantId}
+                onValueChange={setGameMasterAssistantId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Game Master Assistant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assistants
+                    .filter(
+                      assistant => assistant.id && assistant.id.trim() !== ""
+                    )
+                    .map(assistant => (
+                      <SelectItem key={assistant.id} value={assistant.id}>
+                        {assistant.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="character-name">Character Name</Label>
+              <Input
+                id="character-name"
+                value={characterName}
+                onChange={e => setCharacterName(e.target.value)}
+                placeholder="Your character's name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="character-info">Character Information</Label>
+              <Textarea
+                id="character-info"
+                value={characterInfo}
+                onChange={e => setCharacterInfo(e.target.value)}
+                placeholder="Character stats, abilities, background, etc."
+                rows={6}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="key-npcs">Key NPCs</Label>
+              <Textarea
+                id="key-npcs"
+                value={keyNPCs}
+                onChange={e => setKeyNPCs(e.target.value)}
+                placeholder="Important NPCs, their relationships, goals, etc."
+                rows={6}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Campaign Notes</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Important notes or reminders for this campaign"
+                rows={6}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={isEditMode ? handleCancelEdit : onClose}
+              >
+                Cancel
+              </Button>
+              {isEditMode ? (
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? "Updating..." : "Update Campaign"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleContinueCampaign}
+                    disabled={isLoading}
+                  >
+                    Continue Campaign
+                  </Button>
                 </div>
-
-                <form
-                  onSubmit={
-                    isEditMode ? handleUpdateCampaign : handleCreateCampaign
-                  }
-                  className="space-y-4"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="campaign-name">Campaign Name *</Label>
-                      <Input
-                        id="campaign-name"
-                        value={campaignName}
-                        onChange={e => setCampaignName(e.target.value)}
-                        placeholder="Enter campaign name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="game-system">Game System</Label>
-                      <Input
-                        id="game-system"
-                        value={gameSystem}
-                        onChange={e => setGameSystem(e.target.value)}
-                        placeholder="e.g., D&D 5e, Pathfinder, Dune"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="calendar-system">Calendar System</Label>
-                    <Select
-                      value={calendarSystem}
-                      onValueChange={(value: CalendarSystem) =>
-                        setCalendarSystem(value)
-                      }
-                      disabled={isEditMode}
-                    >
-                      <SelectTrigger className={isEditMode ? "bg-muted" : ""}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dune">Dune Calendar</SelectItem>
-                        <SelectItem value="standard">
-                          Standard Calendar
-                        </SelectItem>
-                        <SelectItem value="custom">Custom Calendar</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {isEditMode && (
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Calendar system cannot be changed after campaign
-                        creation
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="start-date">Start Date *</Label>
-                    <Input
-                      id="start-date"
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      placeholder={
-                        calendarSystem === "dune"
-                          ? "e.g., 1 Ignis 10191 A.G."
-                          : "e.g., Day 1"
-                      }
-                      required={!isEditMode}
-                      disabled={isEditMode}
-                      className={isEditMode ? "bg-muted" : ""}
-                    />
-                    {isEditMode && (
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Start date cannot be changed after campaign creation
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="game-master">Game Master Assistant</Label>
-                    <Select
-                      value={gameMasterAssistantId}
-                      onValueChange={setGameMasterAssistantId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Game Master Assistant" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {assistants
-                          .filter(
-                            assistant =>
-                              assistant.id && assistant.id.trim() !== ""
-                          )
-                          .map(assistant => (
-                            <SelectItem key={assistant.id} value={assistant.id}>
-                              {assistant.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="character-name">Character Name</Label>
-                    <Input
-                      id="character-name"
-                      value={characterName}
-                      onChange={e => setCharacterName(e.target.value)}
-                      placeholder="Your character's name"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="character-info">
-                      Character Information
-                    </Label>
-                    <Textarea
-                      id="character-info"
-                      value={characterInfo}
-                      onChange={e => setCharacterInfo(e.target.value)}
-                      placeholder="Character stats, abilities, background, etc."
-                      rows={6}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="key-npcs">Key NPCs</Label>
-                    <Textarea
-                      id="key-npcs"
-                      value={keyNPCs}
-                      onChange={e => setKeyNPCs(e.target.value)}
-                      placeholder="Important NPCs, their relationships, goals, etc."
-                      rows={6}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="notes">Campaign Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={notes}
-                      onChange={e => setNotes(e.target.value)}
-                      placeholder="Important notes or reminders for this campaign"
-                      rows={6}
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={isEditMode ? handleCancelEdit : onClose}
-                    >
-                      Cancel
-                    </Button>
-                    {isEditMode ? (
-                      <div className="flex gap-2">
-                        <Button type="submit" disabled={isLoading}>
-                          {isLoading ? "Updating..." : "Update Campaign"}
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={handleContinueCampaign}
-                          disabled={isLoading}
-                        >
-                          Continue Campaign
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button type="submit" disabled={isLoading}>
-                        {isLoading ? "Creating..." : "Initialize Game Time"}
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </TabsContent>
-
-              {/* Adjust Time Sub-tab */}
-              <TabsContent value="adjust" className="space-y-4">
-                {gameTimeData ? (
-                  <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Add Time</CardTitle>
-                        <CardDescription>
-                          Advance the game time by a number of days
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <form onSubmit={handleAddTime} className="space-y-4">
-                          <div>
-                            <Label htmlFor="days-to-add">Days to Add</Label>
-                            <Input
-                              id="days-to-add"
-                              type="number"
-                              step="0.1"
-                              value={daysToAdd}
-                              onChange={e => setDaysToAdd(e.target.value)}
-                              placeholder="Enter number of days"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="time-description">
-                              Description
-                            </Label>
-                            <Input
-                              id="time-description"
-                              value={timeDescription}
-                              onChange={e => setTimeDescription(e.target.value)}
-                              placeholder="What happened during this time?"
-                            />
-                          </div>
-                          <Button
-                            type="submit"
-                            disabled={!daysToAdd || !timeDescription}
-                          >
-                            <IconPlus className="mr-2 size-4" />
-                            Add Time
-                          </Button>
-                        </form>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Set Specific Date</CardTitle>
-                        <CardDescription>
-                          Jump to a specific date in the game
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <form onSubmit={handleSetDate} className="space-y-4">
-                          <div>
-                            <Label htmlFor="new-date">New Date</Label>
-                            <Input
-                              id="new-date"
-                              value={newDate}
-                              onChange={e => setNewDate(e.target.value)}
-                              placeholder={
-                                gameTimeData.calendarSystem === "dune"
-                                  ? "e.g., 15 Ignis 10191 A.G."
-                                  : "e.g., Day 15"
-                              }
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="date-description">
-                              Description
-                            </Label>
-                            <Input
-                              id="date-description"
-                              value={dateDescription}
-                              onChange={e => setDateDescription(e.target.value)}
-                              placeholder="Reason for date change"
-                            />
-                          </div>
-                          <Button
-                            type="submit"
-                            disabled={!newDate || !dateDescription}
-                          >
-                            <IconEdit className="mr-2 size-4" />
-                            Set Date
-                          </Button>
-                        </form>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="py-6 text-center">
-                    <p className="text-muted-foreground">
-                      No campaign active. Please create or select a campaign
-                      first.
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* History Sub-tab */}
-              <TabsContent value="history" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Time Passage History</CardTitle>
-                    <CardDescription>
-                      A record of all time changes in this campaign
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {timePassageHistory.length > 0 ? (
-                      <div className="max-h-96 space-y-2 overflow-y-auto">
-                        {timePassageHistory.map((event, index) => (
-                          <div
-                            key={index}
-                            className="border-l-2 border-blue-200 py-2 pl-4"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">
-                                {event.description}
-                              </span>
-                              <Badge variant="outline">
-                                {event.daysElapsed} days
-                              </Badge>
-                            </div>
-                            <div className="text-muted-foreground text-sm">
-                              {event.previousDate} → {event.newDate}
-                            </div>
-                            <div className="text-muted-foreground text-xs">
-                              {new Date(event.timestamp).toLocaleString()}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="py-6 text-center">
-                        <IconHistory className="text-muted-foreground mx-auto size-12" />
-                        <p className="text-muted-foreground mt-2 text-sm">
-                          No time passage events recorded yet
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
-        </Tabs>
+              ) : (
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Creating..." : "Initialize Game Time"}
+                </Button>
+              )}
+            </div>
+          </form>
+        </div>
 
         <div className="flex justify-end">
           <Button variant="outline" onClick={onClose}>
