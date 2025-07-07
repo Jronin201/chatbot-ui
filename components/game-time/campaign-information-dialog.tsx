@@ -111,6 +111,13 @@ export const CampaignInformationDialog: React.FC<
   const [characterInfo, setCharacterInfo] = useState("")
   const [keyNPCs, setKeyNPCs] = useState("")
   const [notes, setNotes] = useState("")
+  const [campaignPlot, setCampaignPlot] = useState("")
+  const [campaignGoal, setCampaignGoal] = useState("")
+  const [subplot1, setSubplot1] = useState("")
+  const [subplot2, setSubplot2] = useState("")
+  const [subplot3, setSubplot3] = useState("")
+  const [startingLocation, setStartingLocation] = useState("")
+  const [startingSituation, setStartingSituation] = useState("")
   const [gameMasterAssistantId, setGameMasterAssistantId] = useState("")
 
   // AI generation options
@@ -165,6 +172,13 @@ export const CampaignInformationDialog: React.FC<
         setCharacterInfo("")
         setKeyNPCs("")
         setNotes("")
+        setCampaignPlot("")
+        setCampaignGoal("")
+        setSubplot1("")
+        setSubplot2("")
+        setSubplot3("")
+        setStartingLocation("")
+        setStartingSituation("")
         setCalendarSystem("dune")
         setStartDate("")
         setGameMasterAssistantId("")
@@ -215,6 +229,13 @@ export const CampaignInformationDialog: React.FC<
         setCharacterInfo(campaign.campaignMetadata?.characterInfo || "")
         setKeyNPCs(campaign.campaignMetadata?.keyNPCs || "")
         setNotes(campaign.campaignMetadata?.notes?.join("\\n") || "")
+        setCampaignPlot(campaign.campaignMetadata?.campaignPlot || "")
+        setCampaignGoal(campaign.campaignMetadata?.campaignGoal || "")
+        setSubplot1(campaign.campaignMetadata?.subplot1 || "")
+        setSubplot2(campaign.campaignMetadata?.subplot2 || "")
+        setSubplot3(campaign.campaignMetadata?.subplot3 || "")
+        setStartingLocation(campaign.campaignMetadata?.startingLocation || "")
+        setStartingSituation(campaign.campaignMetadata?.startingSituation || "")
         setGameMasterAssistantId(
           campaign.campaignMetadata?.gameMasterAssistantId || ""
         )
@@ -269,6 +290,13 @@ export const CampaignInformationDialog: React.FC<
         characterInfo: characterInfo.trim() || undefined,
         keyNPCs: keyNPCs.trim() || undefined,
         notes: notes.trim() ? [notes.trim()] : undefined,
+        campaignPlot: campaignPlot.trim() || undefined,
+        campaignGoal: campaignGoal.trim() || undefined,
+        subplot1: subplot1.trim() || undefined,
+        subplot2: subplot2.trim() || undefined,
+        subplot3: subplot3.trim() || undefined,
+        startingLocation: startingLocation.trim() || undefined,
+        startingSituation: startingSituation.trim() || undefined,
         gameMasterAssistantId: gameMasterAssistantId || undefined
       }
 
@@ -335,6 +363,13 @@ export const CampaignInformationDialog: React.FC<
         characterInfo: characterInfo.trim() || undefined,
         keyNPCs: keyNPCs.trim() || undefined,
         notes: notes.trim() ? [notes.trim()] : undefined,
+        campaignPlot: campaignPlot.trim() || undefined,
+        campaignGoal: campaignGoal.trim() || undefined,
+        subplot1: subplot1.trim() || undefined,
+        subplot2: subplot2.trim() || undefined,
+        subplot3: subplot3.trim() || undefined,
+        startingLocation: startingLocation.trim() || undefined,
+        startingSituation: startingSituation.trim() || undefined,
         gameMasterAssistantId: gameMasterAssistantId || undefined
       }
 
@@ -391,6 +426,18 @@ export const CampaignInformationDialog: React.FC<
       setCharacterInfo(gameTimeData.campaignMetadata.characterInfo || "")
       setKeyNPCs(gameTimeData.campaignMetadata.keyNPCs || "")
       setNotes(gameTimeData.campaignMetadata.notes?.join("\n") || "")
+      setCampaignPlot(gameTimeData.campaignMetadata.campaignPlot || "")
+      setCampaignGoal(gameTimeData.campaignMetadata.campaignGoal || "")
+      setSubplot1(gameTimeData.campaignMetadata.subplot1 || "")
+      setSubplot2(gameTimeData.campaignMetadata.subplot2 || "")
+      setSubplot3(gameTimeData.campaignMetadata.subplot3 || "")
+      setStartingLocation(gameTimeData.campaignMetadata.startingLocation || "")
+      setStartingSituation(
+        gameTimeData.campaignMetadata.startingSituation || ""
+      )
+      setGameMasterAssistantId(
+        gameTimeData.campaignMetadata.gameMasterAssistantId || ""
+      )
       setCalendarSystem(gameTimeData.calendarSystem)
       setStartDate(gameTimeData.startDate)
 
@@ -409,6 +456,13 @@ export const CampaignInformationDialog: React.FC<
     setCharacterInfo("")
     setKeyNPCs("")
     setNotes("")
+    setCampaignPlot("")
+    setCampaignGoal("")
+    setSubplot1("")
+    setSubplot2("")
+    setSubplot3("")
+    setStartingLocation("")
+    setStartingSituation("")
     setCalendarSystem("dune")
     setStartDate("")
   }
@@ -743,6 +797,83 @@ export const CampaignInformationDialog: React.FC<
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Important notes or reminders for this campaign"
                 rows={6}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="campaign-plot">Campaign Plot</Label>
+              <Textarea
+                id="campaign-plot"
+                value={campaignPlot}
+                onChange={e => setCampaignPlot(e.target.value)}
+                placeholder="Main storyline and plot overview"
+                rows={6}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="campaign-goal">Campaign Goal</Label>
+              <Textarea
+                id="campaign-goal"
+                value={campaignGoal}
+                onChange={e => setCampaignGoal(e.target.value)}
+                placeholder="Primary objectives and end goals for the campaign"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="subplot-1">Subplot 1</Label>
+              <Textarea
+                id="subplot-1"
+                value={subplot1}
+                onChange={e => setSubplot1(e.target.value)}
+                placeholder="First subplot or side quest"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="subplot-2">Subplot 2</Label>
+              <Textarea
+                id="subplot-2"
+                value={subplot2}
+                onChange={e => setSubplot2(e.target.value)}
+                placeholder="Second subplot or side quest"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="subplot-3">Subplot 3</Label>
+              <Textarea
+                id="subplot-3"
+                value={subplot3}
+                onChange={e => setSubplot3(e.target.value)}
+                placeholder="Third subplot or side quest"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="starting-location">Starting Location</Label>
+              <Textarea
+                id="starting-location"
+                value={startingLocation}
+                onChange={e => setStartingLocation(e.target.value)}
+                placeholder="Where the campaign begins"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="starting-situation">Starting Situation</Label>
+              <Textarea
+                id="starting-situation"
+                value={startingSituation}
+                onChange={e => setStartingSituation(e.target.value)}
+                placeholder="Initial circumstances and scenario"
+                rows={4}
               />
             </div>
 

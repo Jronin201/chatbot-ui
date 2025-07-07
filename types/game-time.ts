@@ -99,6 +99,20 @@ export interface CampaignMetadata {
   keyNPCs?: string
   /** Important notes or reminders */
   notes?: string[]
+  /** Campaign plot overview */
+  campaignPlot?: string
+  /** Campaign goal and objectives */
+  campaignGoal?: string
+  /** First subplot */
+  subplot1?: string
+  /** Second subplot */
+  subplot2?: string
+  /** Third subplot */
+  subplot3?: string
+  /** Starting location */
+  startingLocation?: string
+  /** Starting situation */
+  startingSituation?: string
   /** Workspace ID this campaign belongs to */
   workspaceId?: string
 }
