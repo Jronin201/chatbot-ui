@@ -16,6 +16,7 @@ Window IDs follow the pattern: `[COMPONENT]-[NUMBER]` or `[COMPONENT]-A[NUMBER]`
 
 - **CI-001** - Campaign Information Dialog (`CampaignInformationDialog`)
   - Simplified campaign management window with only Create/Edit functionality (all tabs removed for streamlined experience)
+  - Input fields: Campaign Name, Game System, Calendar System, Start Date, Game Master Assistant, Character Name, Character Information, Key NPCs, Campaign Notes, Campaign Plot, Campaign Goal, Subplot 1, Subplot 2, Subplot 3, Starting Location, Starting Situation
 - **CI-A01** - Campaign Information Delete Confirmation Alert
   - Alert dialog for confirming campaign deletion
 - **GTI-001** - Game Time Init Dialog (`GameTimeInitDialog`)
