@@ -142,6 +142,15 @@ export const CampaignInformationDialog: React.FC<
   const [notes, setNotes] = useState("")
   const [gameMasterAssistantId, setGameMasterAssistantId] = useState("")
 
+  // AI generation options
+  const [useAIGeneration, setUseAIGeneration] = useState(false)
+  const [aiGenerationOptions, setAiGenerationOptions] = useState({
+    campaignName: false,
+    startDate: false,
+    characters: false,
+    npcs: false
+  })
+
   // Time adjustment state
   const [daysToAdd, setDaysToAdd] = useState("")
   const [timeDescription, setTimeDescription] = useState("")
@@ -882,7 +891,20 @@ export const CampaignInformationDialog: React.FC<
                 >
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="campaign-name">Campaign Name *</Label>
+                      <div className="mb-2 flex items-center gap-2">
+                        <Label htmlFor="campaign-name">Campaign Name *</Label>
+                        {useAIGeneration && (
+                          <Switch
+                            checked={aiGenerationOptions.campaignName}
+                            onCheckedChange={checked =>
+                              setAiGenerationOptions(prev => ({
+                                ...prev,
+                                campaignName: checked
+                              }))
+                            }
+                          />
+                        )}
+                      </div>
                       <Input
                         id="campaign-name"
                         value={campaignName}
@@ -931,7 +953,20 @@ export const CampaignInformationDialog: React.FC<
                   </div>
 
                   <div>
-                    <Label htmlFor="start-date">Start Date *</Label>
+                    <div className="mb-2 flex items-center gap-2">
+                      <Label htmlFor="start-date">Start Date *</Label>
+                      {useAIGeneration && !isEditMode && (
+                        <Switch
+                          checked={aiGenerationOptions.startDate}
+                          onCheckedChange={checked =>
+                            setAiGenerationOptions(prev => ({
+                              ...prev,
+                              startDate: checked
+                            }))
+                          }
+                        />
+                      )}
+                    </div>
                     <Input
                       id="start-date"
                       value={startDate}
@@ -987,9 +1022,22 @@ export const CampaignInformationDialog: React.FC<
                   </div>
 
                   <div>
-                    <Label htmlFor="character-info">
-                      Character Information
-                    </Label>
+                    <div className="mb-2 flex items-center gap-2">
+                      <Label htmlFor="character-info">
+                        Character Information
+                      </Label>
+                      {useAIGeneration && (
+                        <Switch
+                          checked={aiGenerationOptions.characters}
+                          onCheckedChange={checked =>
+                            setAiGenerationOptions(prev => ({
+                              ...prev,
+                              characters: checked
+                            }))
+                          }
+                        />
+                      )}
+                    </div>
                     <Textarea
                       id="character-info"
                       value={characterInfo}
@@ -1000,7 +1048,20 @@ export const CampaignInformationDialog: React.FC<
                   </div>
 
                   <div>
-                    <Label htmlFor="key-npcs">Key NPCs</Label>
+                    <div className="mb-2 flex items-center gap-2">
+                      <Label htmlFor="key-npcs">Key NPCs</Label>
+                      {useAIGeneration && (
+                        <Switch
+                          checked={aiGenerationOptions.npcs}
+                          onCheckedChange={checked =>
+                            setAiGenerationOptions(prev => ({
+                              ...prev,
+                              npcs: checked
+                            }))
+                          }
+                        />
+                      )}
+                    </div>
                     <Textarea
                       id="key-npcs"
                       value={keyNPCs}
@@ -1008,6 +1069,101 @@ export const CampaignInformationDialog: React.FC<
                       placeholder="Important NPCs, their relationships, goals, etc."
                       rows={6}
                     />
+                  </div>
+
+                  {/* AI Generation Section */}
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-md font-semibold">AI Generation</h4>
+                        <p className="text-muted-foreground text-sm">
+                          Enable AI to help generate campaign content
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="use-ai">Use AI Generation</Label>
+                        <Switch
+                          id="use-ai"
+                          checked={useAIGeneration}
+                          onCheckedChange={setUseAIGeneration}
+                        />
+                      </div>
+                    </div>
+
+                    {useAIGeneration && (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Generate campaign name
+                            if (
+                              aiGenerationOptions.campaignName &&
+                              !campaignName.trim()
+                            ) {
+                              setCampaignName(
+                                "The " +
+                                  (gameSystem.includes("Dune")
+                                    ? "Great Game"
+                                    : "Dragon's Wake")
+                              )
+                            }
+                            // Generate start date
+                            if (
+                              aiGenerationOptions.startDate &&
+                              !startDate.trim()
+                            ) {
+                              setStartDate(
+                                gameSystem.includes("Dune")
+                                  ? "1 Ignis 10191 A.G."
+                                  : "Day 1"
+                              )
+                            }
+                            // Generate character info
+                            if (
+                              aiGenerationOptions.characters &&
+                              !characterInfo.trim()
+                            ) {
+                              setCharacterInfo(
+                                gameSystem.includes("Dune")
+                                  ? "Lady Arianna Corrino - Noble Scion. Skilled in diplomacy and intrigue."
+                                  : "Aelar Silverleaf - Elven Ranger, Level 3. Skilled in archery and survival."
+                              )
+                            }
+                            // Generate NPCs
+                            if (aiGenerationOptions.npcs && !keyNPCs.trim()) {
+                              setKeyNPCs(
+                                gameSystem.includes("Dune")
+                                  ? "Duke Leto Atreides - Honorable leader seeking to protect his people\nStilgar - Wise Fremen leader who knows desert secrets"
+                                  : "Lord Aldric Ravencrest - Noble lord with a dark secret\nBrother Thomas - Devout cleric providing guidance"
+                              )
+                            }
+                            toast.success(
+                              "AI content generated for selected fields!"
+                            )
+                          }}
+                        >
+                          Generate Selected Content
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setAiGenerationOptions({
+                              campaignName: true,
+                              startDate: true,
+                              characters: true,
+                              npcs: true
+                            })
+                            toast.success("All AI generation options enabled")
+                          }}
+                        >
+                          Enable All AI
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <div>
