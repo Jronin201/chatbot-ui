@@ -191,7 +191,7 @@ export const CampaignInformationDialog: React.FC<
           setActiveTab("overview")
         } else {
           // Reset form for new campaign
-          setActiveTab("create")
+          setActiveTab("management")
         }
       }
       setTempSettings({ ...settings })
@@ -731,7 +731,7 @@ export const CampaignInformationDialog: React.FC<
                       className="mt-4"
                       onClick={() => {
                         setIsEditMode(false)
-                        setActiveTab("create")
+                        setActiveTab("management")
                       }}
                     >
                       <IconPlus className="mr-2 size-4" />
@@ -752,7 +752,7 @@ export const CampaignInformationDialog: React.FC<
                     size="sm"
                     onClick={() => {
                       setIsEditMode(false)
-                      setActiveTab("create")
+                      setActiveTab("management")
                     }}
                   >
                     <IconPlus className="mr-2 size-4" />

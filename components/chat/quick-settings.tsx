@@ -292,7 +292,11 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                     name: "New Campaign",
                     description: "Create a new campaign"
                   }}
-                  onSelect={() => setShowNewCampaignDialog(true)}
+                  onSelect={() => {
+                    setSelectedCampaignId(null) // Clear any selected campaign
+                    setShowNewCampaignDialog(true)
+                    setIsOpen(false) // Close the quick settings menu
+                  }}
                   image=""
                 />
 
