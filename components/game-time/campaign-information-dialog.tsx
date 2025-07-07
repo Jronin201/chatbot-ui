@@ -158,6 +158,8 @@ export const CampaignInformationDialog: React.FC<
   // AI generation options
   const [useAIGeneration, setUseAIGeneration] = useState(false)
   const [aiGenerationOptions, setAiGenerationOptions] = useState({
+    campaignName: false,
+    startDate: false,
     characters: false,
     npcs: false,
     locations: false,
@@ -167,6 +169,7 @@ export const CampaignInformationDialog: React.FC<
     mainPlot: false,
     subplots: false,
     timeline: false,
+    consequences: false,
     houseRules: false,
     challenges: false
   })
@@ -305,6 +308,8 @@ export const CampaignInformationDialog: React.FC<
       }
 
       // Handle AI generation if requested
+      let finalCampaignName = campaignName
+      let finalStartDate = startDate
       let finalCharacterInfo = characterInfo
       let finalWorldLocations = worldLocations
       let finalPoliticalSituation = politicalSituation
@@ -313,6 +318,7 @@ export const CampaignInformationDialog: React.FC<
       let finalMainPlotline = mainPlotline
       let finalSubplots = subplots
       let finalTimeline = timeline
+      let finalConsequences = consequences
       let finalHouseRules = houseRules
       let finalChallenges = challenges
       let finalKeyNPCs = keyNPCs
@@ -320,99 +326,177 @@ export const CampaignInformationDialog: React.FC<
       if (useAIGeneration) {
         const generatedFields: string[] = []
 
+        // Create context object for enhanced AI generation
+        const getExistingFields = () => ({
+          campaignName: finalCampaignName,
+          gameSystem: gameSystem,
+          characterInfo: finalCharacterInfo,
+          keyNPCs: finalKeyNPCs,
+          worldLocations: finalWorldLocations,
+          politicalSituation: finalPoliticalSituation,
+          economicConditions: finalEconomicConditions,
+          culturalNorms: finalCulturalNorms,
+          mainPlotline: finalMainPlotline,
+          subplots: finalSubplots,
+          timeline: finalTimeline,
+          consequences: finalConsequences,
+          houseRules: finalHouseRules,
+          challenges: finalChallenges,
+          notes: notes
+        })
+
+        // Campaign Name generation (considers all other fields)
+        if (aiGenerationOptions.campaignName && !campaignName.trim()) {
+          finalCampaignName = generateAIContent(
+            "campaignName",
+            gameSystem,
+            "temp",
+            getExistingFields()
+          )
+          generatedFields.push("Campaign Name")
+        }
+
+        // Start Date generation (considers plot and setting)
+        if (aiGenerationOptions.startDate && !startDate.trim()) {
+          finalStartDate = generateAIContent(
+            "startDate",
+            gameSystem,
+            finalCampaignName,
+            getExistingFields()
+          )
+          generatedFields.push("Start Date")
+        }
+
+        // Character Information generation
         if (aiGenerationOptions.characters && !characterInfo.trim()) {
           finalCharacterInfo = generateAIContent(
             "characters",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Character Information")
         }
 
+        // NPCs generation
+        if (aiGenerationOptions.npcs && !keyNPCs.trim()) {
+          finalKeyNPCs = generateAIContent(
+            "npcs",
+            gameSystem,
+            finalCampaignName,
+            getExistingFields()
+          )
+          generatedFields.push("Key NPCs")
+        }
+
+        // World Locations generation
         if (aiGenerationOptions.locations && !worldLocations.trim()) {
           finalWorldLocations = generateAIContent(
             "locations",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("World Locations")
         }
 
+        // Political Situation generation
         if (aiGenerationOptions.politics && !politicalSituation.trim()) {
           finalPoliticalSituation = generateAIContent(
             "politics",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Political Situation")
         }
 
+        // Economic Conditions generation
         if (aiGenerationOptions.economy && !economicConditions.trim()) {
           finalEconomicConditions = generateAIContent(
             "economy",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Economic Conditions")
         }
 
+        // Cultural Norms generation
         if (aiGenerationOptions.culture && !culturalNorms.trim()) {
           finalCulturalNorms = generateAIContent(
             "culture",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Cultural Norms")
         }
 
+        // Main Plotline generation
         if (aiGenerationOptions.mainPlot && !mainPlotline.trim()) {
           finalMainPlotline = generateAIContent(
             "mainPlot",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Main Plotline")
         }
 
+        // Subplots generation (contextual based on main plot)
         if (aiGenerationOptions.subplots && !subplots.trim()) {
           finalSubplots = generateAIContent(
             "subplots",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Subplots")
         }
 
+        // Timeline generation (contextual based on plot and system)
         if (aiGenerationOptions.timeline && !timeline.trim()) {
           finalTimeline = generateAIContent(
             "timeline",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Timeline")
         }
 
+        // Consequences generation
+        if (aiGenerationOptions.consequences && !consequences.trim()) {
+          finalConsequences = generateAIContent(
+            "consequences",
+            gameSystem,
+            finalCampaignName,
+            getExistingFields()
+          )
+          generatedFields.push("Consequences")
+        }
+
+        // House Rules generation
         if (aiGenerationOptions.houseRules && !houseRules.trim()) {
           finalHouseRules = generateAIContent(
             "houseRules",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("House Rules")
         }
 
+        // Challenges generation
         if (aiGenerationOptions.challenges && !challenges.trim()) {
           finalChallenges = generateAIContent(
             "challenges",
             gameSystem,
-            campaignName
+            finalCampaignName,
+            getExistingFields()
           )
           generatedFields.push("Challenges")
-        }
-
-        if (aiGenerationOptions.npcs && !keyNPCs.trim()) {
-          finalKeyNPCs = generateAIContent("npcs", gameSystem, campaignName)
-          generatedFields.push("Key NPCs")
         }
 
         if (generatedFields.length > 0) {
@@ -423,7 +507,7 @@ export const CampaignInformationDialog: React.FC<
       }
 
       const campaignMetadata: CampaignMetadata = {
-        campaignName: campaignName.trim(),
+        campaignName: finalCampaignName.trim(),
         gameSystem: gameSystem.trim() || "Unknown",
         workspaceId,
         characters: characterName.trim() ? [characterName.trim()] : undefined,
@@ -448,7 +532,7 @@ export const CampaignInformationDialog: React.FC<
           sessionSummaries.trim()
             ? `Session Summary Template:\n${sessionSummaries}`
             : "",
-          consequences.trim() ? `Consequences:\n${consequences}` : ""
+          finalConsequences.trim() ? `Consequences:\n${finalConsequences}` : ""
         ].filter(note => note.trim() !== ""),
         gameMasterAssistantId: gameMasterAssistantId || undefined
       }
@@ -459,7 +543,7 @@ export const CampaignInformationDialog: React.FC<
       // Set this as the current campaign
       GameTimeStorage.setCurrentCampaignId(campaignId)
 
-      await initializeGameTime(startDate, calendarSystem, campaignMetadata)
+      await initializeGameTime(finalStartDate, calendarSystem, campaignMetadata)
 
       await loadCampaigns()
       setCurrentCampaignId(campaignId)
@@ -609,6 +693,8 @@ export const CampaignInformationDialog: React.FC<
     // Reset AI generation options
     setUseAIGeneration(false)
     setAiGenerationOptions({
+      campaignName: false,
+      startDate: false,
       characters: false,
       npcs: false,
       locations: false,
@@ -618,6 +704,7 @@ export const CampaignInformationDialog: React.FC<
       mainPlot: false,
       subplots: false,
       timeline: false,
+      consequences: false,
       houseRules: false,
       challenges: false
     })
@@ -784,13 +871,211 @@ export const CampaignInformationDialog: React.FC<
     }
   }
 
-  // AI Generation Helper
+  // Enhanced AI Generation Helper with Contextual Awareness
   const generateAIContent = (
     fieldType: string,
     gameSystem: string,
-    campaignName: string
+    campaignName: string,
+    existingFields?: {
+      campaignName?: string
+      gameSystem?: string
+      characterInfo?: string
+      keyNPCs?: string
+      worldLocations?: string
+      politicalSituation?: string
+      economicConditions?: string
+      culturalNorms?: string
+      mainPlotline?: string
+      subplots?: string
+      timeline?: string
+      consequences?: string
+      houseRules?: string
+      challenges?: string
+      notes?: string
+    }
   ): string => {
+    // Helper function to generate contextual campaign names
+    const generateCampaignName = (): string => {
+      const context = {
+        hasCharacters: !!existingFields?.characterInfo?.trim(),
+        hasPlot: !!existingFields?.mainPlotline?.trim(),
+        hasLocations: !!existingFields?.worldLocations?.trim(),
+        hasPolitics: !!existingFields?.politicalSituation?.trim(),
+        hasTheme: !!existingFields?.culturalNorms?.trim()
+      }
+
+      // Extract themes from existing content
+      const plotThemes = existingFields?.mainPlotline?.toLowerCase() || ""
+      const locationThemes = existingFields?.worldLocations?.toLowerCase() || ""
+      const politicalThemes =
+        existingFields?.politicalSituation?.toLowerCase() || ""
+
+      // Generate contextual names based on existing content
+      if (context.hasPlot) {
+        if (
+          plotThemes.includes("ancient") ||
+          plotThemes.includes("evil") ||
+          plotThemes.includes("artifact")
+        ) {
+          return gameSystem === "D&D 5e"
+            ? "The Ancient Shadows"
+            : gameSystem === "Dune: Adventures in the Imperium"
+              ? "Echoes of the Past"
+              : "The Forgotten Legacy"
+        }
+        if (
+          plotThemes.includes("kingdom") ||
+          plotThemes.includes("throne") ||
+          plotThemes.includes("heir")
+        ) {
+          return gameSystem === "D&D 5e"
+            ? "Crown of Destiny"
+            : gameSystem === "Dune: Adventures in the Imperium"
+              ? "The Succession Wars"
+              : "Royal Bloodlines"
+        }
+        if (
+          plotThemes.includes("conspiracy") ||
+          plotThemes.includes("secret") ||
+          plotThemes.includes("shadow")
+        ) {
+          return gameSystem === "D&D 5e"
+            ? "Whispers in the Dark"
+            : gameSystem === "Dune: Adventures in the Imperium"
+              ? "The Hidden Hand"
+              : "Veiled Truths"
+        }
+      }
+
+      if (context.hasLocations) {
+        if (
+          locationThemes.includes("desert") ||
+          locationThemes.includes("sand")
+        ) {
+          return gameSystem === "Dune: Adventures in the Imperium"
+            ? "Sands of Fate"
+            : "Desert Winds"
+        }
+        if (
+          locationThemes.includes("forest") ||
+          locationThemes.includes("wood")
+        ) {
+          return "Heart of the Wildlands"
+        }
+        if (
+          locationThemes.includes("city") ||
+          locationThemes.includes("urban")
+        ) {
+          return "Chronicles of the City-States"
+        }
+      }
+
+      // Fallback to system-appropriate names
+      const systemNames = {
+        "D&D 5e": [
+          "Heroes of the Realm",
+          "The Shattered Crown",
+          "Echoes of Magic",
+          "The Dragon's Wake"
+        ],
+        "Dune: Adventures in the Imperium": [
+          "Spice and Shadows",
+          "Desert Intrigue",
+          "The Great Game",
+          "House of Secrets"
+        ],
+        Pathfinder: [
+          "Pathfinder Chronicles",
+          "The Stolen Lands",
+          "Rise of the Runelords",
+          "Curse of the Crimson Throne"
+        ]
+      }
+
+      const names =
+        systemNames[gameSystem as keyof typeof systemNames] ||
+        systemNames["D&D 5e"]
+      return names[Math.floor(Math.random() * names.length)]
+    }
+
+    // Helper function to generate contextual start dates
+    const generateStartDate = (): string => {
+      const hasPlot = !!existingFields?.mainPlotline?.trim()
+      const plotContent = existingFields?.mainPlotline?.toLowerCase() || ""
+
+      if (gameSystem === "Dune: Adventures in the Imperium") {
+        if (
+          hasPlot &&
+          plotContent.includes("house") &&
+          plotContent.includes("war")
+        ) {
+          return "15 Ignis 10191 A.G."
+        }
+        if (hasPlot && plotContent.includes("spice")) {
+          return "3 Septimus 10191 A.G."
+        }
+        return "1 Ignis 10191 A.G."
+      }
+
+      if (gameSystem === "Pathfinder") {
+        if (
+          (hasPlot && plotContent.includes("winter")) ||
+          plotContent.includes("cold")
+        ) {
+          return "1st of Kuthona (Winter)"
+        }
+        if (
+          (hasPlot && plotContent.includes("harvest")) ||
+          plotContent.includes("autumn")
+        ) {
+          return "15th of Lamashan (Autumn)"
+        }
+        return "1st of Abadius (New Year)"
+      }
+
+      // D&D 5e and generic
+      if (
+        (hasPlot && plotContent.includes("spring")) ||
+        plotContent.includes("new")
+      ) {
+        return "Day 1 of Spring"
+      }
+      if (
+        (hasPlot && plotContent.includes("war")) ||
+        plotContent.includes("conflict")
+      ) {
+        return "Day 1 of the Campaign Year"
+      }
+      return "Day 1"
+    }
+
     const templates: Record<string, Record<string, string[]>> = {
+      campaignName: {
+        contextual: [generateCampaignName()]
+      },
+      startDate: {
+        contextual: [generateStartDate()]
+      },
+      consequences: {
+        "D&D 5e": [
+          "Failed quests may result in innocent lives lost and evil spreading unchecked",
+          "Character deaths could lead to vengeful spirits or unfinished business haunting the party",
+          "Political missteps might alienate potential allies and create powerful enemies",
+          "Magical experiments gone wrong could tear rifts in reality or attract unwanted attention"
+        ],
+        "Dune: Adventures in the Imperium": [
+          "House dishonor could result in loss of political standing and exile from Imperial society",
+          "Spice addiction may compromise judgment and create dependencies on dangerous suppliers",
+          "Failed missions could shift the balance of power between Great Houses",
+          "Breaking the conventions of war might invite devastating retaliation from other Houses"
+        ],
+        Pathfinder: [
+          "Unleashed ancient evils could threaten entire regions or planes of existence",
+          "Failed diplomatic missions might trigger wars between nations or races",
+          "Magical disasters could permanently alter the landscape or create dangerous phenomena",
+          "Character choices may determine the fate of entire civilizations or divine powers"
+        ]
+      },
       characters: {
         "D&D 5e": [
           "Aelar Silverleaf - Elven Ranger, Level 3. Background: Outlander. Skilled in archery and survival, seeks to protect the natural world from dark forces.",
@@ -1016,6 +1301,109 @@ export const CampaignInformationDialog: React.FC<
       }
     }
 
+    // Enhanced contextual generation for subplots
+    const generateContextualSubplots = (): string => {
+      const mainPlot = existingFields?.mainPlotline?.toLowerCase() || ""
+      const locations = existingFields?.worldLocations?.toLowerCase() || ""
+      const npcs = existingFields?.keyNPCs?.toLowerCase() || ""
+
+      let subplotTemplates: string[] = []
+
+      if (mainPlot.includes("ancient") || mainPlot.includes("artifact")) {
+        subplotTemplates.push(
+          "A scholar seeks the party's help to decipher ancient texts related to the main quest"
+        )
+        subplotTemplates.push(
+          "Rival adventurers are also hunting for pieces of the same ancient power"
+        )
+      }
+
+      if (mainPlot.includes("kingdom") || mainPlot.includes("political")) {
+        subplotTemplates.push(
+          "A noble's son/daughter becomes romantically entangled with a party member"
+        )
+        subplotTemplates.push(
+          "Merchant guilds are manipulating events for their own profit"
+        )
+      }
+
+      if (locations.includes("forest") || locations.includes("wilderness")) {
+        subplotTemplates.push(
+          "Druids request help dealing with an unnatural blight affecting their grove"
+        )
+        subplotTemplates.push(
+          "A pack of intelligent wolves offers guidance in exchange for aid"
+        )
+      }
+
+      if (npcs.includes("merchant") || npcs.includes("trader")) {
+        subplotTemplates.push(
+          "The merchant has gambling debts that put the party in danger"
+        )
+        subplotTemplates.push(
+          "A competitor is trying to sabotage the merchant's business"
+        )
+      }
+
+      // If no contextual matches, use system defaults
+      if (subplotTemplates.length === 0) {
+        const defaults =
+          templates.subplots?.[gameSystem] ||
+          templates.subplots?.["D&D 5e"] ||
+          []
+        subplotTemplates = defaults.slice(0, 3)
+      }
+
+      return subplotTemplates.slice(0, 3).join("\n\n")
+    }
+
+    // Enhanced contextual generation for timeline
+    const generateContextualTimeline = (): string => {
+      const mainPlot = existingFields?.mainPlotline?.toLowerCase() || ""
+      const consequences = existingFields?.consequences?.toLowerCase() || ""
+
+      if (gameSystem === "Dune: Adventures in the Imperium") {
+        if (mainPlot.includes("house") && mainPlot.includes("war")) {
+          return "Season 1: Establish House alliances and gather intelligence\nSeason 2: Uncover the enemy's plans and counter-strategies\nSeason 3: Open conflict and decisive battles\nSeason 4: Aftermath and new political landscape"
+        }
+        if (mainPlot.includes("spice")) {
+          return "Season 1: Learn desert survival and Fremen ways\nSeason 2: Discover spice production secrets\nSeason 3: Navigate Guild politics and dependencies\nSeason 4: Control spice flow and leverage power"
+        }
+      }
+
+      if (gameSystem === "Pathfinder") {
+        if (mainPlot.includes("kingdom") || mainPlot.includes("building")) {
+          return "Level 1-4: Establish settlements and clear immediate threats\nLevel 5-8: Expand territory and deal with neighboring powers\nLevel 9-12: Face kingdom-level threats and political intrigue\nLevel 13+: Handle planar threats and epic challenges"
+        }
+      }
+
+      // Use existing timeline templates as fallback
+      const defaults =
+        templates.timeline?.[gameSystem] || templates.timeline?.["D&D 5e"] || []
+      return defaults.slice(0, 4).join("\n")
+    }
+
+    // Special handling for contextual fields
+    if (fieldType === "campaignName") {
+      return generateCampaignName()
+    }
+
+    if (fieldType === "startDate") {
+      return generateStartDate()
+    }
+
+    if (fieldType === "subplots" && existingFields?.mainPlotline) {
+      return generateContextualSubplots()
+    }
+
+    if (
+      fieldType === "timeline" &&
+      (existingFields?.mainPlotline || existingFields?.subplots)
+    ) {
+      return generateContextualTimeline()
+    }
+
+    // Standard template selection for other fields
     const systemTemplates =
       templates[fieldType]?.[gameSystem] ||
       templates[fieldType]?.["D&D 5e"] ||
@@ -1324,7 +1712,20 @@ export const CampaignInformationDialog: React.FC<
                 >
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="campaign-name">Campaign Name *</Label>
+                      <div className="mb-2 flex items-center gap-2">
+                        <Label htmlFor="campaign-name">Campaign Name *</Label>
+                        {useAIGeneration && (
+                          <Switch
+                            checked={aiGenerationOptions.campaignName}
+                            onCheckedChange={checked =>
+                              setAiGenerationOptions(prev => ({
+                                ...prev,
+                                campaignName: checked
+                              }))
+                            }
+                          />
+                        )}
+                      </div>
                       <Input
                         id="campaign-name"
                         value={campaignName}
@@ -1373,7 +1774,20 @@ export const CampaignInformationDialog: React.FC<
                   </div>
 
                   <div>
-                    <Label htmlFor="start-date">Start Date *</Label>
+                    <div className="mb-2 flex items-center gap-2">
+                      <Label htmlFor="start-date">Start Date *</Label>
+                      {useAIGeneration && !isEditMode && (
+                        <Switch
+                          checked={aiGenerationOptions.startDate}
+                          onCheckedChange={checked =>
+                            setAiGenerationOptions(prev => ({
+                              ...prev,
+                              startDate: checked
+                            }))
+                          }
+                        />
+                      )}
+                    </div>
                     <Input
                       id="start-date"
                       value={startDate}
@@ -1511,6 +1925,8 @@ export const CampaignInformationDialog: React.FC<
                             size="sm"
                             onClick={() => {
                               setAiGenerationOptions({
+                                campaignName: true,
+                                startDate: true,
                                 characters: true,
                                 npcs: true,
                                 locations: true,
@@ -1520,6 +1936,7 @@ export const CampaignInformationDialog: React.FC<
                                 mainPlot: true,
                                 subplots: true,
                                 timeline: true,
+                                consequences: true,
                                 houseRules: true,
                                 challenges: true
                               })
@@ -1738,7 +2155,20 @@ export const CampaignInformationDialog: React.FC<
                         </div>
 
                         <div>
-                          <Label htmlFor="consequences">Consequences</Label>
+                          <div className="mb-2 flex items-center gap-2">
+                            <Label htmlFor="consequences">Consequences</Label>
+                            {useAIGeneration && (
+                              <Switch
+                                checked={aiGenerationOptions.consequences}
+                                onCheckedChange={checked =>
+                                  setAiGenerationOptions(prev => ({
+                                    ...prev,
+                                    consequences: checked
+                                  }))
+                                }
+                              />
+                            )}
+                          </div>
                           <Textarea
                             id="consequences"
                             value={consequences}
