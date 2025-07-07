@@ -35,7 +35,7 @@ export const ChatRetrievalSettings: FC<ChatRetrievalSettingsProps> = ({}) => {
         />
       </DialogTrigger>
 
-      <DialogContent>
+      <DialogContent windowId="CRS-001">
         <div className="space-y-3">
           <Label className="flex items-center space-x-1">
             <div>Source Count:</div>

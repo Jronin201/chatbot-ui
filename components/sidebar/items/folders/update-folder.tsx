@@ -50,7 +50,7 @@ export const UpdateFolder: FC<UpdateFolderProps> = ({ folder }) => {
         <IconEdit className="hover:opacity-50" size={18} />
       </DialogTrigger>
 
-      <DialogContent onKeyDown={handleKeyDown}>
+      <DialogContent onKeyDown={handleKeyDown} windowId="UF-001">
         <DialogHeader>
           <DialogTitle>Edit Folder</DialogTitle>
         </DialogHeader>

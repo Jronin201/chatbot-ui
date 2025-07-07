@@ -186,7 +186,7 @@ export const CampaignManager: React.FC<CampaignManagerProps> = ({
                           <IconTrash className="size-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent windowId="CM-A01">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
                           <AlertDialogDescription>

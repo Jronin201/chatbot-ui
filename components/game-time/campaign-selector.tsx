@@ -335,7 +335,7 @@ export const CampaignSelector: React.FC<CampaignSelectorProps> = ({
                         <IconTrash className="size-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent windowId="CS-A01">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -371,7 +371,7 @@ export const CampaignSelector: React.FC<CampaignSelectorProps> = ({
 
       {/* Create Campaign Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" windowId="CS-001">
           <DialogHeader>
             <DialogTitle>Create New Campaign</DialogTitle>
             <DialogDescription>
@@ -471,7 +471,7 @@ export const CampaignSelector: React.FC<CampaignSelectorProps> = ({
 
       {/* AI Create Campaign Dialog */}
       <Dialog open={showAICreateDialog} onOpenChange={setShowAICreateDialog}>
-        <DialogContent>
+        <DialogContent windowId="CS-002">
           <DialogHeader>
             <DialogTitle>Create Campaign with AI</DialogTitle>
             <DialogDescription>

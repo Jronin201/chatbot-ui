@@ -155,7 +155,7 @@ export const SidebarDeleteItem: FC<SidebarDeleteItemProps> = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent onKeyDown={handleKeyDown}>
+      <DialogContent onKeyDown={handleKeyDown} windowId="SDI-001">
         <DialogHeader>
           <DialogTitle>Delete {contentType.slice(0, -1)}</DialogTitle>
 

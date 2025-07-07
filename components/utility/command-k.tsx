@@ -46,7 +46,7 @@ export const CommandK: FC<CommandKProps> = ({}) => {
   return (
     isOpen && (
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent onKeyDown={handleKeyDown}>
+        <DialogContent onKeyDown={handleKeyDown} windowId="CK-001">
           {profile.openai_api_key ? (
             <div className="space-y-2">
               <div>{content}</div>

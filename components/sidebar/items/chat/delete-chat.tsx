@@ -52,7 +52,7 @@ export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {
         <IconTrash className="hover:opacity-50" size={18} />
       </DialogTrigger>
 
-      <DialogContent onKeyDown={handleKeyDown}>
+      <DialogContent onKeyDown={handleKeyDown} windowId="DC-001">
         <DialogHeader>
           <DialogTitle>Delete {chat.name}</DialogTitle>
 

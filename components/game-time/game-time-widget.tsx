@@ -382,7 +382,7 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
 
       {/* Adjust Time Dialog */}
       <Dialog open={showAddTimeDialog} onOpenChange={setShowAddTimeDialog}>
-        <DialogContent>
+        <DialogContent windowId="GTW-001">
           <DialogHeader>
             <DialogTitle>Adjust Time</DialogTitle>
             <DialogDescription>
@@ -433,7 +433,7 @@ export const GameTimeWidget: React.FC<GameTimeWidgetProps> = ({
 
       {/* Set Date Dialog */}
       <Dialog open={showSetDateDialog} onOpenChange={setShowSetDateDialog}>
-        <DialogContent>
+        <DialogContent windowId="GTW-002">
           <DialogHeader>
             <DialogTitle>Set Date</DialogTitle>
             <DialogDescription>

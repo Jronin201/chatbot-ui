@@ -38,7 +38,7 @@ export const GameTimeHistoryDialog: React.FC<GameTimeHistoryDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[80vh] max-w-2xl">
+      <DialogContent className="max-h-[80vh] max-w-2xl" windowId="GTH-001">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconClock className="size-5" />

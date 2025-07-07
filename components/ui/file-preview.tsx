@@ -27,6 +27,7 @@ export const FilePreview: FC<FilePreviewProps> = ({
           "flex items-center justify-center outline-none",
           "border-transparent bg-transparent"
         )}
+        windowId="FP-001"
       >
         {(() => {
           if (type === "image") {

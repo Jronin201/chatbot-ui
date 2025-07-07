@@ -541,7 +541,10 @@ export function BatchOperations({ onDataChange }: BatchOperationsProps) {
 
     return (
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
+        <DialogContent
+          className="max-h-[80vh] max-w-4xl overflow-y-auto"
+          windowId="BO-001"
+        >
           <DialogHeader>
             <DialogTitle>Batch Operations</DialogTitle>
             <DialogDescription>

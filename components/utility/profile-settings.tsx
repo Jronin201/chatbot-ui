@@ -315,6 +315,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
         className="flex flex-col justify-between"
         side="left"
         onKeyDown={handleKeyDown}
+        windowId="PS-001"
       >
         <div className="grow overflow-auto">
           <SheetHeader>

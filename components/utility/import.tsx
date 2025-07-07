@@ -223,6 +223,7 @@ export const Import: FC<ImportProps> = ({}) => {
           <DialogContent
             className="max-w-[600px] space-y-4"
             onKeyDown={handleKeyDown}
+            windowId="IM-001"
           >
             <DialogHeader>
               <div className="text-2xl font-bold">Import Data</div>

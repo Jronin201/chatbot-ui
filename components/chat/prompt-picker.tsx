@@ -142,7 +142,10 @@ export const PromptPicker: FC<PromptPickerProps> = ({}) => {
               open={showPromptVariables}
               onOpenChange={setShowPromptVariables}
             >
-              <DialogContent onKeyDown={handleKeydownPromptVariables}>
+              <DialogContent
+                onKeyDown={handleKeydownPromptVariables}
+                windowId="PP-001"
+              >
                 <DialogHeader>
                   <DialogTitle>Enter Prompt Variables</DialogTitle>
                 </DialogHeader>

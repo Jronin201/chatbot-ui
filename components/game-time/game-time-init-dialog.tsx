@@ -822,7 +822,10 @@ Goals: Unclear, likely connected to the main campaign mysteries`
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+      <DialogContent
+        className="max-h-[90vh] max-w-4xl overflow-y-auto"
+        windowId="GTI-001"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconSword className="size-5" />

@@ -69,7 +69,7 @@ export const DeleteWorkspace: FC<DeleteWorkspaceProps> = ({
         <Button variant="destructive">Delete</Button>
       </DialogTrigger>
 
-      <DialogContent onKeyDown={handleKeyDown}>
+      <DialogContent onKeyDown={handleKeyDown} windowId="DW-001">
         <DialogHeader>
           <DialogTitle>Delete {workspace.name}</DialogTitle>
 

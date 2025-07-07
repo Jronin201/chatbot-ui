@@ -560,7 +560,7 @@ export function CampaignDataEditor({ onDataChange }: CampaignDataEditorProps) {
                       <IconTrash className="size-4" />
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent windowId="CDE-A01">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete {type}</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -766,7 +766,10 @@ export function CampaignDataEditor({ onDataChange }: CampaignDataEditorProps) {
 
   const renderEditDialog = () => (
     <Dialog open={editState.isOpen} onOpenChange={closeDialog}>
-      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+      <DialogContent
+        className="max-h-[80vh] max-w-2xl overflow-y-auto"
+        windowId="CDE-001"
+      >
         <DialogHeader>
           <DialogTitle>
             {editState.mode === "create" ? "Create" : "Edit"}{" "}

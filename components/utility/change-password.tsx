@@ -34,7 +34,7 @@ export const ChangePassword: FC<ChangePasswordProps> = () => {
 
   return (
     <Dialog open={true}>
-      <DialogContent className="h-[240px] w-[400px] p-4">
+      <DialogContent className="h-[240px] w-[400px] p-4" windowId="CP-001">
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>
         </DialogHeader>

@@ -605,7 +605,10 @@ export const CampaignInformationDialog: React.FC<
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+      <DialogContent
+        className="max-h-[90vh] max-w-4xl overflow-y-auto"
+        windowId="CI-001"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconSword className="size-5" />
@@ -809,7 +812,7 @@ export const CampaignInformationDialog: React.FC<
                                 <IconTrash className="size-4" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
+                            <AlertDialogContent windowId="CI-A01">
                               <AlertDialogHeader>
                                 <AlertDialogTitle>
                                   Delete Campaign

@@ -50,7 +50,7 @@ export const UpdateChat: FC<UpdateChatProps> = ({ chat }) => {
         <IconEdit className="hover:opacity-50" size={18} />
       </DialogTrigger>
 
-      <DialogContent onKeyDown={handleKeyDown}>
+      <DialogContent onKeyDown={handleKeyDown} windowId="UC-001">
         <DialogHeader>
           <DialogTitle>Edit Chat</DialogTitle>
         </DialogHeader>

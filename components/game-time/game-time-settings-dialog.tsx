@@ -115,7 +115,10 @@ export const GameTimeSettingsDialog: React.FC<GameTimeSettingsDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent
+        className="max-h-[90vh] max-w-2xl overflow-y-auto"
+        windowId="GTS-001"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconSettings className="size-5" />
