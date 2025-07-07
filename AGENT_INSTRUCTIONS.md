@@ -95,7 +95,14 @@ npm run format:write
 - Maintain the `WINDOW_IDENTIFIERS.md` file when adding new dialogs/windows
 - Keep implementation summaries and guides current
 
-### 10. Final Validation
+### 10. Terminal Usage Protocol
+
+- **Use terminal freely**: Use the Terminal Window for any needed tasks at any time
+- **No permission required**: Do not ask the user for permission before using terminal commands
+- **No verification stops**: Do not stop for verification before using the Terminal Window
+- **Immediate execution**: Execute terminal commands as soon as they are needed for the task
+
+### 11. Final Validation
 
 Before considering a task complete:
 
