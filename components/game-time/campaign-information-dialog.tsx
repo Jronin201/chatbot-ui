@@ -142,6 +142,15 @@ export const CampaignInformationDialog: React.FC<
   const [notes, setNotes] = useState("")
   const [gameMasterAssistantId, setGameMasterAssistantId] = useState("")
 
+  // AI generation options
+  const [useAIGeneration, setUseAIGeneration] = useState(false)
+  const [aiGenerationOptions, setAiGenerationOptions] = useState({
+    campaignName: false,
+    startDate: false,
+    characters: false,
+    npcs: false
+  })
+
   // Time adjustment state
   const [daysToAdd, setDaysToAdd] = useState("")
   const [timeDescription, setTimeDescription] = useState("")
@@ -173,26 +182,30 @@ export const CampaignInformationDialog: React.FC<
       if (campaignId) {
         loadSpecificCampaign(campaignId)
       } else {
+        // No campaignId provided - this is for creating a new campaign
         setCurrentCampaignId(GameTimeStorage.getCurrentCampaignId())
         setIsEditMode(false) // Reset edit mode when dialog opens
-        if (gameTimeData) {
-          // Pre-populate form with existing data
-          setCampaignName(gameTimeData.campaignMetadata?.campaignName || "")
-          setGameSystem(gameTimeData.campaignMetadata?.gameSystem || "")
-          setCharacterInfo(gameTimeData.campaignMetadata?.characterInfo || "")
-          setKeyNPCs(gameTimeData.campaignMetadata?.keyNPCs || "")
-          setNotes(gameTimeData.campaignMetadata?.notes?.join("\\n") || "")
-          setGameMasterAssistantId(
-            gameTimeData.campaignMetadata?.gameMasterAssistantId || ""
-          )
-          setCalendarSystem(gameTimeData.calendarSystem)
-          setStartDate(gameTimeData.startDate)
-          setNewDate(gameTimeData.currentDate)
-          setActiveTab("overview")
-        } else {
-          // Reset form for new campaign
-          setActiveTab("create")
-        }
+        setActiveTab("management") // Always go to management tab for new campaigns
+
+        // Reset form fields for new campaign
+        setCampaignName("")
+        setGameSystem("Dune: Adventures in the Imperium")
+        setCharacterName("")
+        setCharacterInfo("")
+        setKeyNPCs("")
+        setNotes("")
+        setCalendarSystem("dune")
+        setStartDate("")
+        setGameMasterAssistantId("")
+
+        // Reset AI generation options
+        setUseAIGeneration(false)
+        setAiGenerationOptions({
+          campaignName: false,
+          startDate: false,
+          characters: false,
+          npcs: false
+        })
       }
       setTempSettings({ ...settings })
     }
