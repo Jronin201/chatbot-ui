@@ -15,7 +15,7 @@ Window IDs follow the pattern: `[COMPONENT]-[NUMBER]` or `[COMPONENT]-A[NUMBER]`
 ### Campaign & Game Time Management
 
 - **CI-001** - Campaign Information Dialog (`CampaignInformationDialog`)
-  - Main campaign management window with Overview, Campaign Data, Management, and Settings tabs
+  - Campaign management window with Management tab only (Overview, Campaign Data, and Settings tabs removed)
 - **CI-A01** - Campaign Information Delete Confirmation Alert
   - Alert dialog for confirming campaign deletion
 - **GTI-001** - Game Time Init Dialog (`GameTimeInitDialog`)

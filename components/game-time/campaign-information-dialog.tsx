@@ -9,9 +9,6 @@ import {
   GameTimeData
 } from "@/types/game-time"
 import { useGameTime } from "@/context/game-time-context"
-import { CampaignDataProvider } from "@/context/campaign-data-context"
-import { SessionStateProvider } from "@/context/session-state-context"
-import { CampaignDataView } from "./campaign-data-view"
 import { ChatbotUIContext } from "@/context/context"
 import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
 import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
@@ -59,33 +56,12 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import {
-  IconCalendar,
-  IconClock,
-  IconWorld,
   IconPlus,
   IconEdit,
   IconHistory,
-  IconSettings,
-  IconDownload,
-  IconTrash,
   IconSword,
-  IconChevronDown,
-  IconX,
-  IconUsers,
-  IconUser,
-  IconFlag,
-  IconMap,
-  IconBook,
-  IconNotes,
-  IconDatabase
+  IconX
 } from "@tabler/icons-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 
 interface CampaignInformationDialogProps {
@@ -126,7 +102,7 @@ export const CampaignInformationDialog: React.FC<
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(
     null
   )
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState("management")
   const [isEditMode, setIsEditMode] = useState(false)
 
   // Form state for new/editing campaigns
@@ -157,19 +133,19 @@ export const CampaignInformationDialog: React.FC<
   const [newDate, setNewDate] = useState("")
   const [dateDescription, setDateDescription] = useState("")
 
-  // Settings state
-  const [tempSettings, setTempSettings] = useState<GameTimeSettings>({
-    autoDetectTimePassage: true,
-    showTimePassageNotifications: true,
-    defaultTimeIntervals: {
-      travel: 3,
-      rest: 1,
-      training: 7,
-      research: 3,
-      shopping: 0.5
-    },
-    customKeywords: {}
-  })
+  // Settings state - Remove this section since Settings tab is removed
+  // const [tempSettings, setTempSettings] = useState<GameTimeSettings>({
+  //   autoDetectTimePassage: true,
+  //   showTimePassageNotifications: true,
+  //   defaultTimeIntervals: {
+  //     travel: 3,
+  //     rest: 1,
+  //     training: 7,
+  //     research: 3,
+  //     shopping: 0.5
+  //   },
+  //   customKeywords: {}
+  // })
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -207,7 +183,8 @@ export const CampaignInformationDialog: React.FC<
           npcs: false
         })
       }
-      setTempSettings({ ...settings })
+      // Remove tempSettings reference since Settings tab is removed
+      // setTempSettings({ ...settings })
     }
   }, [isOpen, gameTimeData, settings, campaignId])
 
@@ -497,48 +474,49 @@ export const CampaignInformationDialog: React.FC<
     }
   }
 
-  const handleSaveSettings = async () => {
-    try {
-      await updateSettings(tempSettings)
-      toast.success("Settings saved successfully")
-    } catch (error) {
-      toast.error("Failed to save settings")
-    }
-  }
+  // Remove unused functions from removed tabs
+  // const handleSaveSettings = async () => {
+  //   try {
+  //     await updateSettings(tempSettings)
+  //     toast.success("Settings saved successfully")
+  //   } catch (error) {
+  //     toast.error("Failed to save settings")
+  //   }
+  // }
 
-  const handleExportData = async () => {
-    try {
-      const { GameTimeService } = await import(
-        "@/lib/game-time/game-time-service"
-      )
-      const service = GameTimeService.getInstance()
-      const data = await service.exportData()
+  // const handleExportData = async () => {
+  //   try {
+  //     const { GameTimeService } = await import(
+  //       "@/lib/game-time/game-time-service"
+  //     )
+  //     const service = GameTimeService.getInstance()
+  //     const data = await service.exportData()
 
-      const blob = new Blob([data], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `game-time-${gameTimeData?.campaignMetadata?.campaignName || "campaign"}-${new Date().toISOString().split("T")[0]}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+  //     const blob = new Blob([data], { type: "application/json" })
+  //     const url = URL.createObjectURL(blob)
+  //     const a = document.createElement("a")
+  //     a.href = url
+  //     a.download = `game-time-${gameTimeData?.campaignMetadata?.campaignName || "campaign"}-${new Date().toISOString().split("T")[0]}.json`
+  //     document.body.appendChild(a)
+  //     a.click()
+  //     document.body.removeChild(a)
+  //     URL.revokeObjectURL(url)
 
-      toast.success("Game time data exported")
-    } catch (error) {
-      toast.error("Failed to export data")
-    }
-  }
+  //     toast.success("Game time data exported")
+  //   } catch (error) {
+  //     toast.error("Failed to export data")
+  //   }
+  // }
 
-  const handleDeleteAllData = async () => {
-    try {
-      await deleteGameTime()
-      toast.success("All game time data deleted")
-      onClose()
-    } catch (error) {
-      toast.error("Failed to delete game time data")
-    }
-  }
+  // const handleDeleteAllData = async () => {
+  //   try {
+  //     await deleteGameTime()
+  //     toast.success("All game time data deleted")
+  //     onClose()
+  //   } catch (error) {
+  //     toast.error("Failed to delete game time data")
+  //   }
+  // }
 
   const handleContinueCampaign = async () => {
     if (!gameMasterAssistantId) {
@@ -620,248 +598,9 @@ export const CampaignInformationDialog: React.FC<
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="campaign-data">Campaign Data</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="management">Management</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Current Campaign</span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        Actions <IconChevronDown className="ml-2 size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={handleExportData}>
-                        <IconDownload className="mr-2 size-4" />
-                        Export Data
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={handleDeleteAllData}
-                        className="text-red-600"
-                      >
-                        <IconTrash className="mr-2 size-4" />
-                        Delete All Data
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {gameTimeData ? (
-                  <div className="space-y-4">
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleEditCampaign}
-                      >
-                        <IconEdit className="mr-2 size-4" />
-                        Edit Campaign
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Campaign Name
-                        </Label>
-                        <p className="text-muted-foreground text-sm">
-                          {gameTimeData.campaignMetadata?.campaignName ||
-                            "Unnamed Campaign"}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Game System
-                        </Label>
-                        <p className="text-muted-foreground text-sm">
-                          {gameTimeData.campaignMetadata?.gameSystem ||
-                            "Unknown"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Current Date
-                        </Label>
-                        <p className="bg-muted rounded p-2 font-mono text-sm">
-                          {formatDate(
-                            gameTimeData.currentDate,
-                            gameTimeData.calendarSystem
-                          )}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Days Elapsed
-                        </Label>
-                        <p className="text-muted-foreground text-sm">
-                          {gameTimeData.totalDaysElapsed} days since start
-                        </p>
-                      </div>
-                    </div>
-
-                    {gameTimeData.campaignMetadata?.characterInfo && (
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Character Information
-                        </Label>
-                        <p className="text-muted-foreground whitespace-pre-wrap text-sm">
-                          {gameTimeData.campaignMetadata.characterInfo}
-                        </p>
-                      </div>
-                    )}
-
-                    {gameTimeData.campaignMetadata?.keyNPCs && (
-                      <div>
-                        <Label className="text-sm font-medium">Key NPCs</Label>
-                        <p className="text-muted-foreground whitespace-pre-wrap text-sm">
-                          {gameTimeData.campaignMetadata.keyNPCs}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="py-6 text-center">
-                    <IconCalendar className="text-muted-foreground mx-auto size-12" />
-                    <h3 className="mt-2 text-sm font-medium">
-                      No Campaign Active
-                    </h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Create a new campaign or select an existing one to get
-                      started.
-                    </p>
-                    <Button
-                      className="mt-4"
-                      onClick={() => {
-                        setIsEditMode(false)
-                        setActiveTab("create")
-                      }}
-                    >
-                      <IconPlus className="mr-2 size-4" />
-                      Create New Campaign
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Campaign List */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Available Campaigns</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIsEditMode(false)
-                      setActiveTab("create")
-                    }}
-                  >
-                    <IconPlus className="mr-2 size-4" />
-                    New Campaign
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {campaigns.length > 0 ? (
-                  <div className="space-y-2">
-                    {campaigns.map(campaign => (
-                      <div
-                        key={campaign.id}
-                        className="flex items-center justify-between rounded-lg border p-3"
-                      >
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{campaign.name}</span>
-                            {campaign.id === currentCampaignId && (
-                              <Badge variant="secondary">Current</Badge>
-                            )}
-                          </div>
-                          <div className="text-muted-foreground text-sm">
-                            {campaign.gameSystem} • {campaign.currentDate} •{" "}
-                            {campaign.totalDaysElapsed} days
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          {campaign.id !== currentCampaignId && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSwitchCampaign(campaign.id)}
-                            >
-                              Switch
-                            </Button>
-                          )}
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <IconTrash className="size-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent windowId="CI-A01">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Delete Campaign
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete &quot;
-                                  {campaign.name}&quot;? This action cannot be
-                                  undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleDeleteCampaign(campaign.id)
-                                  }
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-6 text-center">
-                    <IconSword className="text-muted-foreground mx-auto size-12" />
-                    <h3 className="mt-2 text-sm font-medium">
-                      No Campaigns Yet
-                    </h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Create your first campaign to get started
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Campaign Data Tab - Enhanced with Search and Filtering */}
-          <TabsContent value="campaign-data" className="space-y-4">
-            <CampaignDataProvider>
-              <SessionStateProvider>
-                <CampaignDataView gameTimeData={gameTimeData} />
-              </SessionStateProvider>
-            </CampaignDataProvider>
-          </TabsContent>
 
           {/* Management Tab - Combines Create/Edit, Adjust Time, and History */}
           <TabsContent value="management" className="space-y-4">
@@ -1213,134 +952,6 @@ export const CampaignInformationDialog: React.FC<
                 </Card>
               </TabsContent>
             </Tabs>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Game Time Settings</CardTitle>
-                <CardDescription>
-                  Configure how game time tracking behaves
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Auto-detect time passage</Label>
-                    <p className="text-muted-foreground text-sm">
-                      Automatically detect time passage in chat messages
-                    </p>
-                  </div>
-                  <Switch
-                    checked={tempSettings.autoDetectTimePassage}
-                    onCheckedChange={checked =>
-                      setTempSettings({
-                        ...tempSettings,
-                        autoDetectTimePassage: checked
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Show notifications</Label>
-                    <p className="text-muted-foreground text-sm">
-                      Show notifications when time passes
-                    </p>
-                  </div>
-                  <Switch
-                    checked={tempSettings.showTimePassageNotifications}
-                    onCheckedChange={checked =>
-                      setTempSettings({
-                        ...tempSettings,
-                        showTimePassageNotifications: checked
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Default Time Intervals (days)</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm">Travel</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={tempSettings.defaultTimeIntervals.travel}
-                        onChange={e =>
-                          setTempSettings({
-                            ...tempSettings,
-                            defaultTimeIntervals: {
-                              ...tempSettings.defaultTimeIntervals,
-                              travel: parseFloat(e.target.value) || 0
-                            }
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Rest</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={tempSettings.defaultTimeIntervals.rest}
-                        onChange={e =>
-                          setTempSettings({
-                            ...tempSettings,
-                            defaultTimeIntervals: {
-                              ...tempSettings.defaultTimeIntervals,
-                              rest: parseFloat(e.target.value) || 0
-                            }
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Training</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={tempSettings.defaultTimeIntervals.training}
-                        onChange={e =>
-                          setTempSettings({
-                            ...tempSettings,
-                            defaultTimeIntervals: {
-                              ...tempSettings.defaultTimeIntervals,
-                              training: parseFloat(e.target.value) || 0
-                            }
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Research</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={tempSettings.defaultTimeIntervals.research}
-                        onChange={e =>
-                          setTempSettings({
-                            ...tempSettings,
-                            defaultTimeIntervals: {
-                              ...tempSettings.defaultTimeIntervals,
-                              research: parseFloat(e.target.value) || 0
-                            }
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Button onClick={handleSaveSettings}>
-                  <IconSettings className="mr-2 size-4" />
-                  Save Settings
-                </Button>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
 
