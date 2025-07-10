@@ -1833,6 +1833,184 @@ Keep each NPC focused and concise. Only include mechanics that are actually rele
     }
   }
 
+  const handleGenerateCampaignPlot = async () => {
+    if (!profile || !selectedWorkspace) {
+      toast.error(
+        "Unable to generate campaign plot - user profile not available"
+      )
+      return
+    }
+
+    // Use existing chat settings or create default ones
+    const currentChatSettings = chatSettings || {
+      model: "gpt-4" as LLMID,
+      prompt: "You are a helpful assistant for tabletop RPG campaign creation.",
+      temperature: 0.8,
+      contextLength: 4096,
+      includeProfileContext: false,
+      includeWorkspaceInstructions: false,
+      embeddingsProvider: "openai" as const
+    }
+
+    try {
+      // Check if Campaign Goal has content to guide the plot
+      const hasGoal = campaignGoal && campaignGoal.trim().length > 0
+
+      // Build the campaign plot generation prompt
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling campaign plot for the specified game system that would work well as a story or TV show plot. The plot must be lore-accurate and include specific, actionable elements - no vague or fluffy descriptions.
+
+Game System: ${gameSystem}
+${hasGoal ? `Campaign Goal: ${campaignGoal}` : ""}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
+
+Generate a campaign plot that includes:
+1. Clear, specific central conflict or threat
+2. Tangible objectives and goals for the players
+3. Specific locations, factions, or organizations involved
+4. Actionable plot hooks and story beats
+5. Concrete stakes and consequences
+6. Specific antagonists or opposing forces
+
+${
+  hasGoal
+    ? `The plot MUST align with and support the specified Campaign Goal. Design the story to naturally lead the players toward achieving that goal.`
+    : `Create an engaging plot that fits the themes and tone of ${gameSystem}. Draw inspiration from popular stories, movies, or TV shows that would fit this game system.`
+}
+
+Make the plot detailed enough to be immediately usable but concise enough to be clear. Focus on concrete, actionable elements rather than abstract concepts. The plot should feel like it could be adapted into a compelling story or TV series.`
+
+      const userPrompt = hasGoal
+        ? `Create a campaign plot for ${gameSystem} that leads the players to achieve this goal: ${campaignGoal}`
+        : `Create an engaging campaign plot for ${gameSystem} with clear objectives and actionable story elements.`
+
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ]
+
+      // Check API key availability based on model
+      const modelProvider = currentChatSettings.model.includes("gpt")
+        ? "openai"
+        : currentChatSettings.model.includes("claude")
+          ? "anthropic"
+          : currentChatSettings.model.includes("gemini")
+            ? "google"
+            : "openai"
+
+      let apiKey = ""
+      if (modelProvider === "openai") {
+        apiKey = profile.openai_api_key || ""
+      } else if (modelProvider === "anthropic") {
+        apiKey = profile.anthropic_api_key || ""
+      } else if (modelProvider === "google") {
+        apiKey = profile.google_gemini_api_key || ""
+      }
+
+      if (!apiKey) {
+        toast.error(
+          `${modelProvider.charAt(0).toUpperCase() + modelProvider.slice(1)} API key not found. Please set it in your profile settings.`
+        )
+        return
+      }
+
+      const loadingMessage = hasGoal
+        ? "Generating campaign plot based on goal..."
+        : "Generating campaign plot..."
+
+      toast.info(loadingMessage)
+
+      // Make API call to generate campaign plot
+      const response = await fetch(`/api/chat/${modelProvider}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chatSettings: currentChatSettings,
+          messages: messages
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to generate campaign plot")
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let generatedText = ""
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // For OpenAI streaming responses, we might get JSON chunks
+          // Try to handle both direct text and JSON responses
+          try {
+            // Check if it looks like a streaming JSON response
+            if (chunk.trim().startsWith("data: ")) {
+              const lines = chunk.split("\n")
+              for (const line of lines) {
+                if (line.startsWith("data: ") && !line.includes("[DONE]")) {
+                  try {
+                    const jsonStr = line.substring(6) // Remove 'data: '
+                    const parsed = JSON.parse(jsonStr)
+                    const content = parsed.choices?.[0]?.delta?.content
+                    if (content) {
+                      generatedText += content
+                    }
+                  } catch (e) {
+                    // Ignore JSON parse errors for individual chunks
+                  }
+                }
+              }
+            } else {
+              // Direct text response
+              generatedText += chunk
+            }
+          } catch (e) {
+            // If parsing fails, treat as direct text
+            generatedText += chunk
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!generatedText.trim()) {
+        throw new Error("No campaign plot data generated")
+      }
+
+      // Update Campaign Plot field
+      setCampaignPlot(generatedText)
+
+      const successMessage = hasGoal
+        ? "Campaign plot generated based on goal!"
+        : "Campaign plot generated successfully!"
+
+      toast.success(successMessage)
+    } catch (error) {
+      console.error("Error generating campaign plot:", error)
+      toast.error(
+        `Failed to generate campaign plot: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -2056,9 +2234,7 @@ Keep each NPC focused and concise. Only include mechanics that are actually rele
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateCampaignPlot}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
