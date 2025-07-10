@@ -946,6 +946,563 @@ export const CampaignInformationDialog: React.FC<
     return `${day}th of ${month}, ${year} AR` // AR = After Realm founding
   }
 
+  const handleGenerateCharacterName = () => {
+    const hasCharacterInfo = characterInfo.trim().length > 0
+
+    if (hasCharacterInfo) {
+      // Generate name based on character information
+      const generatedName = generateCharacterNameFromInfo(
+        characterInfo,
+        gameSystem
+      )
+      setCharacterName(generatedName)
+      toast.success("Character name generated based on character information")
+    } else {
+      // Generate random name based on game system
+      const randomName = generateRandomCharacterName(gameSystem)
+      setCharacterName(randomName)
+      toast.success("Random character name generated")
+    }
+  }
+
+  const generateCharacterNameFromInfo = (
+    info: string,
+    system: string
+  ): string => {
+    const words = info.toLowerCase().split(/\s+/)
+    const systemLower = system.toLowerCase()
+
+    // Extract character traits and roles from the info
+    const traits = {
+      warrior: [
+        "fighter",
+        "warrior",
+        "soldier",
+        "knight",
+        "guard",
+        "mercenary",
+        "swordsman"
+      ],
+      mage: [
+        "mage",
+        "wizard",
+        "sorcerer",
+        "warlock",
+        "spellcaster",
+        "magic",
+        "arcane"
+      ],
+      rogue: [
+        "rogue",
+        "thief",
+        "assassin",
+        "spy",
+        "stealth",
+        "sneak",
+        "shadow"
+      ],
+      noble: ["noble", "lord", "lady", "duke", "baron", "royal", "aristocrat"],
+      desert: ["desert", "sand", "dune", "fremen", "nomad", "tribal"],
+      tech: ["tech", "cyber", "hacker", "data", "net", "digital", "chrome"]
+    }
+
+    let characterType = "common"
+    for (const [type, keywords] of Object.entries(traits)) {
+      if (
+        keywords.some(keyword => words.some(word => word.includes(keyword)))
+      ) {
+        characterType = type
+        break
+      }
+    }
+
+    return generateLoreAccurateName(systemLower, characterType)
+  }
+
+  const generateRandomCharacterName = (system: string): string => {
+    const systemLower = system.toLowerCase()
+    const randomTypes = ["warrior", "mage", "rogue", "noble", "common"]
+    const characterType =
+      randomTypes[Math.floor(Math.random() * randomTypes.length)]
+
+    return generateLoreAccurateName(systemLower, characterType)
+  }
+
+  const generateLoreAccurateName = (
+    system: string,
+    characterType: string
+  ): string => {
+    if (system.includes("dune")) {
+      return generateDuneCharacterName(characterType)
+    } else if (system.includes("d&d") || system.includes("dungeons")) {
+      return generateDnDCharacterName(characterType)
+    } else if (system.includes("pathfinder")) {
+      return generatePathfinderCharacterName(characterType)
+    } else if (system.includes("cyberpunk") || system.includes("shadowrun")) {
+      return generateCyberpunkCharacterName(characterType)
+    } else if (system.includes("warhammer")) {
+      return generateWarhammerCharacterName(characterType)
+    } else if (system.includes("star wars")) {
+      return generateStarWarsCharacterName(characterType)
+    } else {
+      // Generic fantasy
+      return generateFantasyCharacterName(characterType)
+    }
+  }
+
+  const generateDuneCharacterName = (type: string): string => {
+    const duneNames: { [key: string]: string[] } = {
+      noble: [
+        "Leto Harkonnen",
+        "Duncan Corrino",
+        "Shaddam Atreides",
+        "Feyd Ordos",
+        "Alia Vernius",
+        "Irulan Ginaz",
+        "Stilgar Harkonnen",
+        "Gurney Moritani"
+      ],
+      warrior: [
+        "Stilgar",
+        "Duncan Idaho",
+        "Gurney Halleck",
+        "Naib Korba",
+        "Jamis",
+        "Turok",
+        "Harah",
+        "Chani Kynes"
+      ],
+      desert: [
+        "Muad'Dib",
+        "Usul",
+        "Jamis",
+        "Stilgar",
+        "Chani",
+        "Naib",
+        "Korba",
+        "Otheym",
+        "Farok",
+        "Turok"
+      ],
+      mage: [
+        "Reverend Mother Gaius",
+        "Piter De Vries",
+        "Yueh Suk",
+        "Mohiam",
+        "Margot Fenring",
+        "Irulan Corrino",
+        "Alia Atreides",
+        "Jessica Atreides"
+      ],
+      common: [
+        "Yueh",
+        "Hawat",
+        "Kynes",
+        "Rabban",
+        "Fenring",
+        "Tuek",
+        "Vries",
+        "Suk",
+        "Harq",
+        "Nefud"
+      ]
+    }
+
+    const names = duneNames[type] || duneNames.common
+    return names[Math.floor(Math.random() * names.length)]
+  }
+
+  const generateDnDCharacterName = (type: string): string => {
+    const dndNames: { [key: string]: string[] } = {
+      warrior: [
+        "Gareth Ironforge",
+        "Thora Battlehammer",
+        "Marcus Steelbane",
+        "Lyra Dragonsbane",
+        "Korgan Axebreaker",
+        "Seraphina Goldshield",
+        "Dain Stormforge",
+        "Aria Lightbringer"
+      ],
+      mage: [
+        "Elminster Aumar",
+        "Mordenkainen",
+        "Tasha Blackheart",
+        "Bigby Spellweaver",
+        "Zelda Starweaver",
+        "Gandris Moonwhisper",
+        "Mystra Arcanum",
+        "Khelben Shadowstaff"
+      ],
+      rogue: [
+        "Artemis Entreri",
+        "Drizzt Do'Urden",
+        "Silk Shadowstep",
+        "Raven Nightfall",
+        "Garrett Lockpick",
+        "Luna Whisperwind",
+        "Shadow Nightblade",
+        "Vex Darkcrow"
+      ],
+      noble: [
+        "Lord Blackwood",
+        "Lady Silvermane",
+        "Duke Ravencrest",
+        "Baroness Goldleaf",
+        "Prince Stormwind",
+        "Duchess Moonhaven",
+        "Earl Dragonmoor",
+        "Countess Starfall"
+      ],
+      common: [
+        "Gareth",
+        "Thora",
+        "Marcus",
+        "Lyra",
+        "Korgan",
+        "Seraphina",
+        "Dain",
+        "Aria",
+        "Eldric",
+        "Maya",
+        "Thorin",
+        "Elara"
+      ]
+    }
+
+    const names = dndNames[type] || dndNames.common
+    return names[Math.floor(Math.random() * names.length)]
+  }
+
+  const generatePathfinderCharacterName = (type: string): string => {
+    const pathfinderNames: { [key: string]: string[] } = {
+      warrior: [
+        "Amiri Kellid",
+        "Valeros Fighter",
+        "Seoni Sorcerer",
+        "Harsk Ranger",
+        "Kyra Cleric",
+        "Ezren Wizard",
+        "Merisiel Rogue",
+        "Lem Bard"
+      ],
+      mage: [
+        "Seoni Varisian",
+        "Ezren Wizard",
+        "Feiya Witch",
+        "Alahazra Oracle",
+        "Damiel Alchemist",
+        "Lini Druid",
+        "Jirelle Swashbuckler",
+        "Hakon Skald"
+      ],
+      rogue: [
+        "Merisiel Elf",
+        "Red Raven",
+        "Sajan Monk",
+        "Crowe Bloodrager",
+        "Reiko Ninja",
+        "Seltyiel Magus",
+        "Oloch Warpriest",
+        "Zadim Slayer"
+      ],
+      noble: [
+        "Lord Gyr",
+        "Lady Darchana",
+        "Count Jeggare",
+        "Baroness Vencarlo",
+        "Duke Dou-Bral",
+        "Duchess Galfrey",
+        "Prince Stavian",
+        "Queen Abrogail"
+      ],
+      common: [
+        "Amiri",
+        "Valeros",
+        "Seoni",
+        "Harsk",
+        "Kyra",
+        "Ezren",
+        "Merisiel",
+        "Lem",
+        "Sajan",
+        "Lini",
+        "Feiya",
+        "Damiel"
+      ]
+    }
+
+    const names = pathfinderNames[type] || pathfinderNames.common
+    return names[Math.floor(Math.random() * names.length)]
+  }
+
+  const generateCyberpunkCharacterName = (type: string): string => {
+    const cyberpunkNames: { [key: string]: string[] } = {
+      tech: [
+        "Neo Matrix",
+        "Cipher Ghost",
+        "Raven Data",
+        "Vex Chrome",
+        "Zero Cool",
+        "Trinity Net",
+        "Echo Binary",
+        "Nyx Digital",
+        "Blade Runner",
+        "Phoenix Code"
+      ],
+      warrior: [
+        "Molly Millions",
+        "Case Neuromancer",
+        "Armitage Colonel",
+        "Riviera Artist",
+        "Dixie Flatline",
+        "Wintermute AI",
+        "Johnny Mnemonic",
+        "Lori Machine"
+      ],
+      rogue: [
+        "Slip Shadow",
+        "Hack Phantom",
+        "Glitch Runner",
+        "Proxy Ghost",
+        "Wire Frame",
+        "Data Thief",
+        "Net Crawler",
+        "Code Breaker",
+        "Cyber Ninja",
+        "Ghost Walker"
+      ],
+      noble: [
+        "Corp Executive",
+        "Zaibatsu Head",
+        "Mr. Johnson",
+        "Lady Chrome",
+        "Director Steel",
+        "Chairman Zero",
+        "Executive Alpha",
+        "Boss Matrix"
+      ],
+      common: [
+        "Jack",
+        "Nova",
+        "Raven",
+        "Vex",
+        "Zero",
+        "Echo",
+        "Nyx",
+        "Blade",
+        "Phoenix",
+        "Cipher",
+        "Ghost",
+        "Chrome",
+        "Wire",
+        "Slip",
+        "Hack"
+      ]
+    }
+
+    const names = cyberpunkNames[type] || cyberpunkNames.common
+    return names[Math.floor(Math.random() * names.length)]
+  }
+
+  const generateWarhammerCharacterName = (type: string): string => {
+    const warhammerNames: { [key: string]: string[] } = {
+      warrior: [
+        "Sigmar Heldenhammer",
+        "Karl Franz",
+        "Gotrek Gurnisson",
+        "Felix Jaeger",
+        "Tyrion Prince",
+        "Teclis Mage",
+        "Grimgor Ironhide",
+        "Archaon Everchosen"
+      ],
+      mage: [
+        "Teclis",
+        "Malekith",
+        "Nagash",
+        "Mannfred",
+        "Balthasar Gelt",
+        "Grey Seer",
+        "Thanquol",
+        "Ikit Claw",
+        "Morathi",
+        "Alarielle"
+      ],
+      noble: [
+        "Emperor Karl",
+        "Prince Tyrion",
+        "High King Thorgrim",
+        "Elector Count",
+        "Baron von Carstein",
+        "Duke Alberic",
+        "Lord Kroak",
+        "Phoenix King"
+      ],
+      common: [
+        "Markus",
+        "Heinrich",
+        "Wilhelm",
+        "Gunther",
+        "Dieter",
+        "Johann",
+        "Klaus",
+        "Otto",
+        "Franz",
+        "Ludwig",
+        "Matthias",
+        "Stefan"
+      ]
+    }
+
+    const names = warhammerNames[type] || warhammerNames.common
+    return names[Math.floor(Math.random() * names.length)]
+  }
+
+  const generateStarWarsCharacterName = (type: string): string => {
+    const starWarsNames: { [key: string]: string[] } = {
+      mage: [
+        "Jedi Master Kira",
+        "Sith Lord Vex",
+        "Padawan Zara",
+        "Master Theron",
+        "Dark Jedi Malak",
+        "Force Adept Nomi",
+        "Jedi Knight Bastila",
+        "Sith Apprentice Revan"
+      ],
+      warrior: [
+        "Captain Rex",
+        "Commander Cody",
+        "Sergeant Havoc",
+        "Trooper Fives",
+        "Mandalorian Jango",
+        "Bounty Hunter Boba",
+        "Rebel Pilot Wedge",
+        "Imperial Admiral"
+      ],
+      rogue: [
+        "Smuggler Solo",
+        "Scoundrel Lando",
+        "Pilot Poe",
+        "Spy Cassian",
+        "Thief Jyn",
+        "Rebel Sabine",
+        "Outlaw Din",
+        "Mercenary Fennec"
+      ],
+      noble: [
+        "Princess Leia",
+        "Senator Amidala",
+        "Count Dooku",
+        "Duke Pantoran",
+        "Queen Breha",
+        "Baron Administrator",
+        "Viceroy Gunray",
+        "Chancellor Palpatine"
+      ],
+      common: [
+        "Kira",
+        "Vex",
+        "Zara",
+        "Theron",
+        "Nomi",
+        "Bastila",
+        "Rex",
+        "Cody",
+        "Havoc",
+        "Fives",
+        "Jango",
+        "Wedge",
+        "Solo",
+        "Lando",
+        "Poe",
+        "Cassian"
+      ]
+    }
+
+    const names = starWarsNames[type] || starWarsNames.common
+    return names[Math.floor(Math.random() * names.length)]
+  }
+
+  const generateFantasyCharacterName = (type: string): string => {
+    const fantasyNames: { [key: string]: string[] } = {
+      warrior: [
+        "Aragorn",
+        "Boromir",
+        "Gimli",
+        "Thorin",
+        "Conan",
+        "Beowulf",
+        "Arthur",
+        "Lancelot",
+        "Gawain",
+        "Percival",
+        "Gareth",
+        "Galahad"
+      ],
+      mage: [
+        "Gandalf",
+        "Merlin",
+        "Saruman",
+        "Radagast",
+        "Elrond",
+        "Galadriel",
+        "Morgoth",
+        "Sauron",
+        "Voldemort",
+        "Dumbledore",
+        "Flamel",
+        "Prospero"
+      ],
+      rogue: [
+        "Bilbo",
+        "Frodo",
+        "Sam",
+        "Merry",
+        "Pippin",
+        "Legolas",
+        "Robin Hood",
+        "Artemis",
+        "Hermes",
+        "Loki",
+        "Silk",
+        "Shadow"
+      ],
+      noble: [
+        "King Arthur",
+        "Lord Elrond",
+        "Lady Galadriel",
+        "Prince Legolas",
+        "Duke Boromir",
+        "Earl Faramir",
+        "Baron Gimli",
+        "Count Aragorn"
+      ],
+      common: [
+        "Aiden",
+        "Cora",
+        "Dara",
+        "Ewan",
+        "Fynn",
+        "Gwen",
+        "Hale",
+        "Iris",
+        "Jace",
+        "Kira",
+        "Lars",
+        "Mira",
+        "Noel",
+        "Orin",
+        "Piper",
+        "Quinn"
+      ]
+    }
+
+    const names = fantasyNames[type] || fantasyNames.common
+    return names[Math.floor(Math.random() * names.length)]
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -1104,9 +1661,7 @@ export const CampaignInformationDialog: React.FC<
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateCharacterName}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
