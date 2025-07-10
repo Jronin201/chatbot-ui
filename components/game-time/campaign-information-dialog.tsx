@@ -2575,6 +2575,199 @@ Keep the description to 2-3 sentences maximum. Focus only on the location itself
     }
   }
 
+  const handleGenerateStartingSituation = async () => {
+    if (!profile || !selectedWorkspace) {
+      toast.error(
+        "Unable to generate starting situation - user profile not available"
+      )
+      return
+    }
+
+    // Use existing chat settings or create default ones
+    const currentChatSettings = chatSettings || {
+      model: "gpt-4" as LLMID,
+      prompt: "You are a helpful assistant for tabletop RPG campaign creation.",
+      temperature: 0.8,
+      contextLength: 4096,
+      includeProfileContext: false,
+      includeWorkspaceInstructions: false,
+      embeddingsProvider: "openai" as const
+    }
+
+    try {
+      // Check if Campaign Plot, Subplots, or Starting Location have content
+      const plotText = campaignPlot?.trim() || ""
+      const subplot1Text = subplot1?.trim() || ""
+      const subplot2Text = subplot2?.trim() || ""
+      const subplot3Text = subplot3?.trim() || ""
+      const locationText = startingLocation?.trim() || ""
+
+      const allContextContent = [
+        plotText,
+        subplot1Text,
+        subplot2Text,
+        subplot3Text,
+        locationText
+      ]
+        .filter(text => text.length > 0)
+        .join(" ")
+
+      const hasContext = allContextContent.length > 0
+
+      // Build the starting situation generation prompt
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a brief, practical starting situation for the specified game system. Keep the description short and focused - only describe the immediate circumstances and what's happening when the campaign begins.
+
+Game System: ${gameSystem}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignGoal ? ` Goal: ${campaignGoal.substring(0, 200)}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
+${hasContext ? `\nContext Information:\n${allContextContent.substring(0, 800)}` : ""}
+
+Generate a starting situation description that includes ONLY:
+1. What immediate circumstances the player characters find themselves in
+2. What specific situation or event is happening right now
+3. Key actionable elements the characters can immediately respond to
+
+${
+  hasContext
+    ? `The starting situation MUST align with and connect to the plot, subplots, and starting location mentioned above. Create a situation that naturally flows from this context.`
+    : `Create a situation that fits the themes and tone of ${gameSystem}.`
+}
+
+Keep the description to 2-3 sentences maximum. Focus only on the immediate situation and what's happening - no background exposition, no NPCs descriptions, no location details. Be concrete and actionable, avoid flowery language.`
+
+      const userPrompt = hasContext
+        ? `Create a brief starting situation for ${gameSystem} that connects to this context: ${allContextContent.substring(0, 300)}`
+        : `Create a brief starting situation for ${gameSystem}.`
+
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ]
+
+      // Check API key availability based on model
+      const modelProvider = currentChatSettings.model.includes("gpt")
+        ? "openai"
+        : currentChatSettings.model.includes("claude")
+          ? "anthropic"
+          : currentChatSettings.model.includes("gemini")
+            ? "google"
+            : "openai"
+
+      let apiKey = ""
+      if (modelProvider === "openai") {
+        apiKey = profile.openai_api_key || ""
+      } else if (modelProvider === "anthropic") {
+        apiKey = profile.anthropic_api_key || ""
+      } else if (modelProvider === "google") {
+        apiKey = profile.google_gemini_api_key || ""
+      }
+
+      if (!apiKey) {
+        toast.error(
+          `${modelProvider.charAt(0).toUpperCase() + modelProvider.slice(1)} API key not found. Please set it in your profile settings.`
+        )
+        return
+      }
+
+      const loadingMessage = hasContext
+        ? "Generating starting situation based on context..."
+        : "Generating starting situation..."
+
+      toast.info(loadingMessage)
+
+      // Make API call to generate starting situation
+      const response = await fetch(`/api/chat/${modelProvider}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chatSettings: currentChatSettings,
+          messages: messages
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.message || "Failed to generate starting situation"
+        )
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let generatedText = ""
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // For OpenAI streaming responses, we might get JSON chunks
+          // Try to handle both direct text and JSON responses
+          try {
+            // Check if it looks like a streaming JSON response
+            if (chunk.trim().startsWith("data: ")) {
+              const lines = chunk.split("\n")
+              for (const line of lines) {
+                if (line.startsWith("data: ") && !line.includes("[DONE]")) {
+                  try {
+                    const jsonStr = line.substring(6) // Remove 'data: '
+                    const parsed = JSON.parse(jsonStr)
+                    const content = parsed.choices?.[0]?.delta?.content
+                    if (content) {
+                      generatedText += content
+                    }
+                  } catch (e) {
+                    // Ignore JSON parse errors for individual chunks
+                  }
+                }
+              }
+            } else {
+              // Direct text response
+              generatedText += chunk
+            }
+          } catch (e) {
+            // If parsing fails, treat as direct text
+            generatedText += chunk
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!generatedText.trim()) {
+        throw new Error("No starting situation data generated")
+      }
+
+      // Update Starting Situation field
+      setStartingSituation(generatedText)
+
+      const successMessage = hasContext
+        ? "Starting situation generated based on context!"
+        : "Starting situation generated successfully!"
+
+      toast.success(successMessage)
+    } catch (error) {
+      console.error("Error generating starting situation:", error)
+      toast.error(
+        `Failed to generate starting situation: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -2930,9 +3123,7 @@ Keep the description to 2-3 sentences maximum. Focus only on the location itself
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateStartingSituation}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
