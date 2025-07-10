@@ -1676,6 +1676,163 @@ Format the response as a well-structured character sheet that can be directly us
     }
   }
 
+  const handleGenerateKeyNPCs = async () => {
+    if (!profile || !selectedWorkspace) {
+      toast.error("Unable to generate NPCs - user profile not available")
+      return
+    }
+
+    // Use existing chat settings or create default ones
+    const currentChatSettings = chatSettings || {
+      model: "gpt-4" as LLMID,
+      prompt: "You are a helpful assistant for tabletop RPG NPC creation.",
+      temperature: 0.8,
+      contextLength: 4096,
+      includeProfileContext: false,
+      includeWorkspaceInstructions: false,
+      embeddingsProvider: "openai" as const
+    }
+
+    try {
+      // Build the NPC generation prompt
+      const systemPrompt = `You are an expert tabletop RPG NPC generator. Create exactly 3 distinct Non-Player Characters (NPCs) for the specified game system. Each NPC should be complete but concise, focusing only on relevant stats and mechanics for their role.
+
+Game System: ${gameSystem}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignPlot ? ` Plot: ${campaignPlot}` : ""}${campaignGoal ? ` Goal: ${campaignGoal}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}
+
+For each of the 3 NPCs, generate:
+1. Name (appropriate for the game system)
+2. Role/Class/Profession
+3. Only the RELEVANT stats/attributes (not full character sheets)
+4. Key skills and abilities (only what matters for their role)
+5. Notable traits or special mechanics
+6. Background (exactly 2 sentences)
+7. Personality (exactly 2 sentences)
+
+Keep each NPC focused and concise. Only include mechanics that are actually relevant to their role in the campaign. Format as a clear, easy-to-read list with proper spacing between each NPC.`
+
+      const userPrompt = `Create 3 distinct NPCs for ${gameSystem} that would be suitable for this campaign context.`
+
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ]
+
+      // Check API key availability based on model
+      const modelProvider = currentChatSettings.model.includes("gpt")
+        ? "openai"
+        : currentChatSettings.model.includes("claude")
+          ? "anthropic"
+          : currentChatSettings.model.includes("gemini")
+            ? "google"
+            : "openai"
+
+      let apiKey = ""
+      if (modelProvider === "openai") {
+        apiKey = profile.openai_api_key || ""
+      } else if (modelProvider === "anthropic") {
+        apiKey = profile.anthropic_api_key || ""
+      } else if (modelProvider === "google") {
+        apiKey = profile.google_gemini_api_key || ""
+      }
+
+      if (!apiKey) {
+        toast.error(
+          `${modelProvider.charAt(0).toUpperCase() + modelProvider.slice(1)} API key not found. Please set it in your profile settings.`
+        )
+        return
+      }
+
+      toast.info("Generating 3 NPCs...")
+
+      // Make API call to generate NPCs
+      const response = await fetch(`/api/chat/${modelProvider}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chatSettings: currentChatSettings,
+          messages: messages
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to generate NPCs")
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let generatedText = ""
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // For OpenAI streaming responses, we might get JSON chunks
+          // Try to handle both direct text and JSON responses
+          try {
+            // Check if it looks like a streaming JSON response
+            if (chunk.trim().startsWith("data: ")) {
+              const lines = chunk.split("\n")
+              for (const line of lines) {
+                if (line.startsWith("data: ") && !line.includes("[DONE]")) {
+                  try {
+                    const jsonStr = line.substring(6) // Remove 'data: '
+                    const parsed = JSON.parse(jsonStr)
+                    const content = parsed.choices?.[0]?.delta?.content
+                    if (content) {
+                      generatedText += content
+                    }
+                  } catch (e) {
+                    // Ignore JSON parse errors for individual chunks
+                  }
+                }
+              }
+            } else {
+              // Direct text response
+              generatedText += chunk
+            }
+          } catch (e) {
+            // If parsing fails, treat as direct text
+            generatedText += chunk
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!generatedText.trim()) {
+        throw new Error("No NPC data generated")
+      }
+
+      // Update Key NPCs field
+      setKeyNPCs(generatedText)
+
+      toast.success("3 NPCs generated successfully!")
+    } catch (error) {
+      console.error("Error generating NPCs:", error)
+      toast.error(
+        `Failed to generate NPCs: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -1877,9 +2034,7 @@ Format the response as a well-structured character sheet that can be directly us
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateKeyNPCs}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
