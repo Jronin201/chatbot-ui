@@ -55,7 +55,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { IconEdit, IconSword, IconX } from "@tabler/icons-react"
+import { IconEdit, IconSword, IconX, IconTerminal } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 interface CampaignInformationDialogProps {
@@ -667,7 +667,20 @@ export const CampaignInformationDialog: React.FC<
           >
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="campaign-name">Campaign Name *</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="campaign-name">Campaign Name *</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="size-6 p-0"
+                    onClick={() => {
+                      // Command button functionality will be added later
+                    }}
+                  >
+                    <IconTerminal className="size-3" />
+                  </Button>
+                </div>
                 <Input
                   id="campaign-name"
                   value={campaignName}
@@ -713,7 +726,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="start-date">Start Date *</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="start-date">Start Date *</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Input
                 id="start-date"
                 value={startDate}
@@ -758,7 +784,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="character-name">Character Name</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="character-name">Character Name</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Input
                 id="character-name"
                 value={characterName}
@@ -768,7 +807,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="character-info">Character Information</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="character-info">Character Information</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="character-info"
                 value={characterInfo}
@@ -779,7 +831,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="key-npcs">Key NPCs</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="key-npcs">Key NPCs</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="key-npcs"
                 value={keyNPCs}
@@ -801,7 +866,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="campaign-plot">Campaign Plot</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="campaign-plot">Campaign Plot</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="campaign-plot"
                 value={campaignPlot}
