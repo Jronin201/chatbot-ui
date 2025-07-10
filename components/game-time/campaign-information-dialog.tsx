@@ -855,17 +855,6 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="notes">Campaign Notes</Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Important notes or reminders for this campaign"
-                rows={6}
-              />
-            </div>
-
-            <div>
               <div className="flex items-center gap-2">
                 <Label htmlFor="campaign-plot">Campaign Plot</Label>
                 <Button
@@ -890,7 +879,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="campaign-goal">Campaign Goal</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="campaign-goal">Campaign Goal</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="campaign-goal"
                 value={campaignGoal}
@@ -901,7 +903,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="subplot-1">Subplot 1</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="subplot-1">Subplot 1</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="subplot-1"
                 value={subplot1}
@@ -912,7 +927,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="subplot-2">Subplot 2</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="subplot-2">Subplot 2</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="subplot-2"
                 value={subplot2}
@@ -923,7 +951,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="subplot-3">Subplot 3</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="subplot-3">Subplot 3</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="subplot-3"
                 value={subplot3}
@@ -934,7 +975,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="starting-location">Starting Location</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="starting-location">Starting Location</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="starting-location"
                 value={startingLocation}
@@ -945,7 +999,20 @@ export const CampaignInformationDialog: React.FC<
             </div>
 
             <div>
-              <Label htmlFor="starting-situation">Starting Situation</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="starting-situation">Starting Situation</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="size-6 p-0"
+                  onClick={() => {
+                    // Command button functionality will be added later
+                  }}
+                >
+                  <IconTerminal className="size-3" />
+                </Button>
+              </div>
               <Textarea
                 id="starting-situation"
                 value={startingSituation}
