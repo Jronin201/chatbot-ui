@@ -867,6 +867,85 @@ export const CampaignInformationDialog: React.FC<
     return genericNames[Math.floor(Math.random() * genericNames.length)]
   }
 
+  const handleGenerateStartDate = () => {
+    const randomDate = generateRandomStartDate(calendarSystem)
+    setStartDate(randomDate)
+    toast.success(`Random start date generated for ${calendarSystem} calendar`)
+  }
+
+  const generateRandomStartDate = (calendar: CalendarSystem): string => {
+    switch (calendar) {
+      case "dune":
+        return generateDuneDate()
+      case "standard":
+        return generateStandardDate()
+      case "custom":
+        return generateCustomDate()
+      default:
+        return generateDuneDate() // Default fallback
+    }
+  }
+
+  const generateDuneDate = (): string => {
+    // Dune calendar months in order
+    const duneMonths = [
+      "Ignis",
+      "Canus",
+      "Chusuk",
+      "Grumman",
+      "Ix",
+      "Kaitan",
+      "Kaitain",
+      "Richese",
+      "Salusa",
+      "Tleilax",
+      "Tupile",
+      "Wallach"
+    ]
+
+    // Random day (1-30 for simplicity)
+    const day = Math.floor(Math.random() * 30) + 1
+
+    // Random month
+    const month = duneMonths[Math.floor(Math.random() * duneMonths.length)]
+
+    // Random year in the typical Dune era (10180-10200 A.G.)
+    const year = Math.floor(Math.random() * 21) + 10180
+
+    return `${day} ${month} ${year} A.G.`
+  }
+
+  const generateStandardDate = (): string => {
+    // Standard calendar - just use "Day X" format
+    const day = Math.floor(Math.random() * 365) + 1
+    return `Day ${day}`
+  }
+
+  const generateCustomDate = (): string => {
+    // For custom calendar, create a fantasy-style date
+    const fantasyMonths = [
+      "Frostfall",
+      "Sunsbane",
+      "Morningstar",
+      "Harvesttide",
+      "Starweave",
+      "Moonhaven",
+      "Goldleaf",
+      "Stormwind",
+      "Shadowmere",
+      "Brightblade",
+      "Ironforge",
+      "Dragonmoon"
+    ]
+
+    const day = Math.floor(Math.random() * 28) + 1
+    const month =
+      fantasyMonths[Math.floor(Math.random() * fantasyMonths.length)]
+    const year = Math.floor(Math.random() * 500) + 1000 // Years 1000-1499
+
+    return `${day}th of ${month}, ${year} AR` // AR = After Realm founding
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -968,9 +1047,8 @@ export const CampaignInformationDialog: React.FC<
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateStartDate}
+                  disabled={isEditMode}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
