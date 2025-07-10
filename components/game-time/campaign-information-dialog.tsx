@@ -2189,6 +2189,201 @@ Make the goal detailed enough to provide clear direction but concise enough to b
     }
   }
 
+  const handleGenerateSubplot = async (subplotNumber: 1 | 2 | 3) => {
+    if (!profile || !selectedWorkspace) {
+      toast.error("Unable to generate subplot - user profile not available")
+      return
+    }
+
+    // Use existing chat settings or create default ones
+    const currentChatSettings = chatSettings || {
+      model: "gpt-4" as LLMID,
+      prompt: "You are a helpful assistant for tabletop RPG campaign creation.",
+      temperature: 0.8,
+      contextLength: 4096,
+      includeProfileContext: false,
+      includeWorkspaceInstructions: false,
+      embeddingsProvider: "openai" as const
+    }
+
+    try {
+      // Check if Campaign Plot has content to guide the subplot
+      const hasPlot = campaignPlot && campaignPlot.trim().length > 0
+
+      // Get existing subplots to ensure uniqueness
+      const existingSubplots = [
+        subplotNumber !== 1 ? subplot1 : "",
+        subplotNumber !== 2 ? subplot2 : "",
+        subplotNumber !== 3 ? subplot3 : ""
+      ].filter(sub => sub.trim().length > 0)
+
+      // Build the subplot generation prompt
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling subplot for the specified game system that would work well as a secondary story in a TV show or novel. The subplot must be lore-accurate and include specific, actionable elements - no vague or fluffy descriptions.
+
+Game System: ${gameSystem}
+${hasPlot ? `Main Campaign Plot: ${campaignPlot}` : ""}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignGoal ? ` Goal: ${campaignGoal}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
+
+${existingSubplots.length > 0 ? `Existing Subplots (make this one DIFFERENT): ${existingSubplots.join("; ")}` : ""}
+
+Generate a subplot that includes:
+1. Clear, specific secondary conflict or opportunity
+2. Tangible objectives separate from the main plot
+3. Specific locations, characters, or factions involved
+4. Actionable side quest elements and story hooks
+5. Concrete rewards, stakes, or consequences
+6. Connection points to the main story (but not dependent on it)
+
+${
+  hasPlot
+    ? `The subplot should occur in approximately the same locations as the main plot and have at least one overlapping element (character, faction, location, or theme) while remaining a distinct story thread.`
+    : `Create an engaging subplot that fits the themes and tone of ${gameSystem}. Draw inspiration from popular side stories, subplots, or secondary quests that would fit this game system.`
+}
+
+Make this subplot different from any existing subplots. The subplot should be detailed enough to be immediately usable but concise enough to be clear. Focus on concrete, actionable elements rather than abstract concepts. This should feel like a compelling side story that enhances the main campaign.`
+
+      const userPrompt = hasPlot
+        ? `Create subplot ${subplotNumber} for ${gameSystem} that connects to but is separate from this main plot: ${campaignPlot.substring(0, 400)}`
+        : `Create an engaging subplot ${subplotNumber} for ${gameSystem} with clear objectives and actionable side quest elements.`
+
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ]
+
+      // Check API key availability based on model
+      const modelProvider = currentChatSettings.model.includes("gpt")
+        ? "openai"
+        : currentChatSettings.model.includes("claude")
+          ? "anthropic"
+          : currentChatSettings.model.includes("gemini")
+            ? "google"
+            : "openai"
+
+      let apiKey = ""
+      if (modelProvider === "openai") {
+        apiKey = profile.openai_api_key || ""
+      } else if (modelProvider === "anthropic") {
+        apiKey = profile.anthropic_api_key || ""
+      } else if (modelProvider === "google") {
+        apiKey = profile.google_gemini_api_key || ""
+      }
+
+      if (!apiKey) {
+        toast.error(
+          `${modelProvider.charAt(0).toUpperCase() + modelProvider.slice(1)} API key not found. Please set it in your profile settings.`
+        )
+        return
+      }
+
+      const loadingMessage = hasPlot
+        ? `Generating subplot ${subplotNumber} based on main plot...`
+        : `Generating subplot ${subplotNumber}...`
+
+      toast.info(loadingMessage)
+
+      // Make API call to generate subplot
+      const response = await fetch(`/api/chat/${modelProvider}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chatSettings: currentChatSettings,
+          messages: messages
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to generate subplot")
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let generatedText = ""
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // For OpenAI streaming responses, we might get JSON chunks
+          // Try to handle both direct text and JSON responses
+          try {
+            // Check if it looks like a streaming JSON response
+            if (chunk.trim().startsWith("data: ")) {
+              const lines = chunk.split("\n")
+              for (const line of lines) {
+                if (line.startsWith("data: ") && !line.includes("[DONE]")) {
+                  try {
+                    const jsonStr = line.substring(6) // Remove 'data: '
+                    const parsed = JSON.parse(jsonStr)
+                    const content = parsed.choices?.[0]?.delta?.content
+                    if (content) {
+                      generatedText += content
+                    }
+                  } catch (e) {
+                    // Ignore JSON parse errors for individual chunks
+                  }
+                }
+              }
+            } else {
+              // Direct text response
+              generatedText += chunk
+            }
+          } catch (e) {
+            // If parsing fails, treat as direct text
+            generatedText += chunk
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!generatedText.trim()) {
+        throw new Error("No subplot data generated")
+      }
+
+      // Update the appropriate subplot field
+      switch (subplotNumber) {
+        case 1:
+          setSubplot1(generatedText)
+          break
+        case 2:
+          setSubplot2(generatedText)
+          break
+        case 3:
+          setSubplot3(generatedText)
+          break
+      }
+
+      const successMessage = hasPlot
+        ? `Subplot ${subplotNumber} generated based on main plot!`
+        : `Subplot ${subplotNumber} generated successfully!`
+
+      toast.success(successMessage)
+    } catch (error) {
+      console.error("Error generating subplot:", error)
+      toast.error(
+        `Failed to generate subplot ${subplotNumber}: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -2456,9 +2651,7 @@ Make the goal detailed enough to provide clear direction but concise enough to b
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={() => handleGenerateSubplot(1)}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
@@ -2480,9 +2673,7 @@ Make the goal detailed enough to provide clear direction but concise enough to b
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={() => handleGenerateSubplot(2)}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
@@ -2504,9 +2695,7 @@ Make the goal detailed enough to provide clear direction but concise enough to b
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={() => handleGenerateSubplot(3)}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
