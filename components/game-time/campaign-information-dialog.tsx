@@ -8,6 +8,7 @@ import {
   GameTimeSettings,
   GameTimeData
 } from "@/types/game-time"
+import { LLMID } from "@/types"
 import { useGameTime } from "@/context/game-time-context"
 import { ChatbotUIContext } from "@/context/context"
 import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
@@ -85,7 +86,9 @@ export const CampaignInformationDialog: React.FC<
     setSelectedAssistant,
     setChatFiles,
     setSelectedTools,
-    setShowFilesDisplay
+    setShowFilesDisplay,
+    profile,
+    chatSettings
   } = useContext(ChatbotUIContext)
   const gameTimeService = GameTimeService.getInstance()
 
@@ -1503,6 +1506,176 @@ export const CampaignInformationDialog: React.FC<
     return names[Math.floor(Math.random() * names.length)]
   }
 
+  const handleGenerateCharacterInfo = async () => {
+    if (!profile || !selectedWorkspace) {
+      toast.error("Unable to generate character - user profile not available")
+      return
+    }
+
+    // Use existing chat settings or create default ones
+    const currentChatSettings = chatSettings || {
+      model: "gpt-4" as LLMID,
+      prompt:
+        "You are a helpful assistant for tabletop RPG character creation.",
+      temperature: 0.8,
+      contextLength: 4096,
+      includeProfileContext: false,
+      includeWorkspaceInstructions: false,
+      embeddingsProvider: "openai" as const
+    }
+
+    try {
+      // Build the character generation prompt
+      const systemPrompt = `You are an expert tabletop RPG character generator. Create a complete, playable character for the specified game system. Include all necessary stats, abilities, skills, background, and personality traits.
+
+Game System: ${gameSystem}
+Character Name: ${characterName || "Generate a suitable name"}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignPlot ? ` Plot: ${campaignPlot}` : ""}${campaignGoal ? ` Goal: ${campaignGoal}` : ""}
+
+Generate a complete character sheet with:
+1. Character Name (if not provided)
+2. Race/Species and Class/Profession
+3. Core Stats/Attributes (appropriate for the game system)
+4. Skills and Abilities
+5. Background and Backstory
+6. Personality Traits and Motivations
+7. Equipment and Starting Gear
+8. Any system-specific mechanics
+
+Format the response as a well-structured character sheet that can be directly used in play. Be lore-accurate for the specified game system.`
+
+      const userPrompt = `Create a complete character for ${gameSystem}${characterName ? ` named ${characterName}` : ""}.`
+
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ]
+
+      // Check API key availability based on model
+      const modelProvider = currentChatSettings.model.includes("gpt")
+        ? "openai"
+        : currentChatSettings.model.includes("claude")
+          ? "anthropic"
+          : currentChatSettings.model.includes("gemini")
+            ? "google"
+            : "openai"
+
+      let apiKey = ""
+      if (modelProvider === "openai") {
+        apiKey = profile.openai_api_key || ""
+      } else if (modelProvider === "anthropic") {
+        apiKey = profile.anthropic_api_key || ""
+      } else if (modelProvider === "google") {
+        apiKey = profile.google_gemini_api_key || ""
+      }
+
+      if (!apiKey) {
+        toast.error(
+          `${modelProvider.charAt(0).toUpperCase() + modelProvider.slice(1)} API key not found. Please set it in your profile settings.`
+        )
+        return
+      }
+
+      toast.info("Generating character...")
+
+      // Make API call to generate character
+      const response = await fetch(`/api/chat/${modelProvider}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chatSettings: currentChatSettings,
+          messages: messages
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to generate character")
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let generatedText = ""
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // For OpenAI streaming responses, we might get JSON chunks
+          // Try to handle both direct text and JSON responses
+          try {
+            // Check if it looks like a streaming JSON response
+            if (chunk.trim().startsWith("data: ")) {
+              const lines = chunk.split("\n")
+              for (const line of lines) {
+                if (line.startsWith("data: ") && !line.includes("[DONE]")) {
+                  try {
+                    const jsonStr = line.substring(6) // Remove 'data: '
+                    const parsed = JSON.parse(jsonStr)
+                    const content = parsed.choices?.[0]?.delta?.content
+                    if (content) {
+                      generatedText += content
+                    }
+                  } catch (e) {
+                    // Ignore JSON parse errors for individual chunks
+                  }
+                }
+              }
+            } else {
+              // Direct text response
+              generatedText += chunk
+            }
+          } catch (e) {
+            // If parsing fails, treat as direct text
+            generatedText += chunk
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!generatedText.trim()) {
+        throw new Error("No character data generated")
+      }
+
+      // Update character information field
+      setCharacterInfo(generatedText)
+
+      // If no character name was provided, try to extract it from the generated text
+      if (!characterName) {
+        const nameMatch = generatedText.match(
+          /(?:Name|Character Name):\s*([^\n\r]+)/i
+        )
+        if (nameMatch) {
+          setCharacterName(nameMatch[1].trim())
+        }
+      }
+
+      toast.success("Character generated successfully!")
+    } catch (error) {
+      console.error("Error generating character:", error)
+      toast.error(
+        `Failed to generate character: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -1682,9 +1855,7 @@ export const CampaignInformationDialog: React.FC<
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateCharacterInfo}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
