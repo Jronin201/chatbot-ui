@@ -2011,6 +2011,184 @@ Make the plot detailed enough to be immediately usable but concise enough to be 
     }
   }
 
+  const handleGenerateCampaignGoal = async () => {
+    if (!profile || !selectedWorkspace) {
+      toast.error(
+        "Unable to generate campaign goal - user profile not available"
+      )
+      return
+    }
+
+    // Use existing chat settings or create default ones
+    const currentChatSettings = chatSettings || {
+      model: "gpt-4" as LLMID,
+      prompt: "You are a helpful assistant for tabletop RPG campaign creation.",
+      temperature: 0.8,
+      contextLength: 4096,
+      includeProfileContext: false,
+      includeWorkspaceInstructions: false,
+      embeddingsProvider: "openai" as const
+    }
+
+    try {
+      // Check if Campaign Plot has content to guide the goal
+      const hasPlot = campaignPlot && campaignPlot.trim().length > 0
+
+      // Build the campaign goal generation prompt
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling campaign goal for the specified game system that would work well as a story or TV show objective. The goal must be lore-accurate and include specific, actionable elements - no vague or fluffy descriptions.
+
+Game System: ${gameSystem}
+${hasPlot ? `Campaign Plot: ${campaignPlot}` : ""}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
+
+Generate a campaign goal that includes:
+1. Clear, specific primary objective for the players
+2. Tangible outcomes and measurable success criteria
+3. Concrete stakes and what happens if they fail
+4. Specific targets, locations, or entities to interact with
+5. Actionable steps or milestones toward the goal
+6. Compelling motivation that drives the story forward
+
+${
+  hasPlot
+    ? `The goal MUST align with and be supported by the specified Campaign Plot. Design the goal to naturally emerge from and be achieved through the plot events.`
+    : `Create an engaging goal that fits the themes and tone of ${gameSystem}. Draw inspiration from popular stories, movies, or TV shows that would fit this game system.`
+}
+
+Make the goal detailed enough to provide clear direction but concise enough to be memorable. Focus on concrete, actionable objectives rather than abstract concepts. The goal should feel like it could be the central objective of a compelling story or TV series.`
+
+      const userPrompt = hasPlot
+        ? `Create a campaign goal for ${gameSystem} that emerges from and aligns with this plot: ${campaignPlot.substring(0, 500)}`
+        : `Create an engaging campaign goal for ${gameSystem} with clear objectives and actionable elements.`
+
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ]
+
+      // Check API key availability based on model
+      const modelProvider = currentChatSettings.model.includes("gpt")
+        ? "openai"
+        : currentChatSettings.model.includes("claude")
+          ? "anthropic"
+          : currentChatSettings.model.includes("gemini")
+            ? "google"
+            : "openai"
+
+      let apiKey = ""
+      if (modelProvider === "openai") {
+        apiKey = profile.openai_api_key || ""
+      } else if (modelProvider === "anthropic") {
+        apiKey = profile.anthropic_api_key || ""
+      } else if (modelProvider === "google") {
+        apiKey = profile.google_gemini_api_key || ""
+      }
+
+      if (!apiKey) {
+        toast.error(
+          `${modelProvider.charAt(0).toUpperCase() + modelProvider.slice(1)} API key not found. Please set it in your profile settings.`
+        )
+        return
+      }
+
+      const loadingMessage = hasPlot
+        ? "Generating campaign goal based on plot..."
+        : "Generating campaign goal..."
+
+      toast.info(loadingMessage)
+
+      // Make API call to generate campaign goal
+      const response = await fetch(`/api/chat/${modelProvider}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chatSettings: currentChatSettings,
+          messages: messages
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to generate campaign goal")
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let generatedText = ""
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // For OpenAI streaming responses, we might get JSON chunks
+          // Try to handle both direct text and JSON responses
+          try {
+            // Check if it looks like a streaming JSON response
+            if (chunk.trim().startsWith("data: ")) {
+              const lines = chunk.split("\n")
+              for (const line of lines) {
+                if (line.startsWith("data: ") && !line.includes("[DONE]")) {
+                  try {
+                    const jsonStr = line.substring(6) // Remove 'data: '
+                    const parsed = JSON.parse(jsonStr)
+                    const content = parsed.choices?.[0]?.delta?.content
+                    if (content) {
+                      generatedText += content
+                    }
+                  } catch (e) {
+                    // Ignore JSON parse errors for individual chunks
+                  }
+                }
+              }
+            } else {
+              // Direct text response
+              generatedText += chunk
+            }
+          } catch (e) {
+            // If parsing fails, treat as direct text
+            generatedText += chunk
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!generatedText.trim()) {
+        throw new Error("No campaign goal data generated")
+      }
+
+      // Update Campaign Goal field
+      setCampaignGoal(generatedText)
+
+      const successMessage = hasPlot
+        ? "Campaign goal generated based on plot!"
+        : "Campaign goal generated successfully!"
+
+      toast.success(successMessage)
+    } catch (error) {
+      console.error("Error generating campaign goal:", error)
+      toast.error(
+        `Failed to generate campaign goal: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -2256,9 +2434,7 @@ Make the plot detailed enough to be immediately usable but concise enough to be 
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateCampaignGoal}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
