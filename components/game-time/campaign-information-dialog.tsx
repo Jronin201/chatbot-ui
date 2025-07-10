@@ -671,14 +671,14 @@ export const CampaignInformationDialog: React.FC<
                   <Label htmlFor="campaign-name">Campaign Name *</Label>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     className="size-6 p-0"
                     onClick={() => {
                       // Command button functionality will be added later
                     }}
                   >
-                    <IconTerminal className="size-3" />
+                    <IconTerminal className="size-4" />
                   </Button>
                 </div>
                 <Input
@@ -730,14 +730,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="start-date">Start Date *</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Input
@@ -788,14 +788,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="character-name">Character Name</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Input
@@ -811,14 +811,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="character-info">Character Information</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -835,14 +835,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="key-npcs">Key NPCs</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -859,14 +859,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="campaign-plot">Campaign Plot</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -883,14 +883,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="campaign-goal">Campaign Goal</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -907,14 +907,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="subplot-1">Subplot 1</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -931,14 +931,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="subplot-2">Subplot 2</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -955,14 +955,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="subplot-3">Subplot 3</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -979,14 +979,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="starting-location">Starting Location</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
@@ -1003,14 +1003,14 @@ export const CampaignInformationDialog: React.FC<
                 <Label htmlFor="starting-situation">Starting Situation</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   className="size-6 p-0"
                   onClick={() => {
                     // Command button functionality will be added later
                   }}
                 >
-                  <IconTerminal className="size-3" />
+                  <IconTerminal className="size-4" />
                 </Button>
               </div>
               <Textarea
