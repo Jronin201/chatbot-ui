@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useContext, useEffect } from "react"
+import React, { useState, useContext, useEffect, useRef } from "react"
 import {
   CalendarSystem,
   CampaignMetadata,
@@ -153,6 +153,143 @@ export const CampaignInformationDialog: React.FC<
   // })
 
   const [isLoading, setIsLoading] = useState(false)
+
+  // Refs for auto-resizing text fields
+  const campaignNameRef = useRef<HTMLInputElement>(null)
+  const gameSystemRef = useRef<HTMLInputElement>(null)
+  const startDateRef = useRef<HTMLInputElement>(null)
+  const characterNameRef = useRef<HTMLInputElement>(null)
+  const characterInfoRef = useRef<HTMLTextAreaElement>(null)
+  const keyNPCsRef = useRef<HTMLTextAreaElement>(null)
+  const campaignPlotRef = useRef<HTMLTextAreaElement>(null)
+  const campaignGoalRef = useRef<HTMLTextAreaElement>(null)
+  const subplot1Ref = useRef<HTMLTextAreaElement>(null)
+  const subplot2Ref = useRef<HTMLTextAreaElement>(null)
+  const subplot3Ref = useRef<HTMLTextAreaElement>(null)
+  const startingLocationRef = useRef<HTMLTextAreaElement>(null)
+  const startingSituationRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-resize function for textareas
+  const autoResize = (textarea: HTMLTextAreaElement) => {
+    if (!textarea) return
+
+    // Reset height to get accurate scrollHeight
+    textarea.style.height = "auto"
+
+    // Calculate the new height based on content
+    const scrollHeight = textarea.scrollHeight
+    const minHeight = 60 // Minimum height in pixels (roughly 3 lines)
+    const maxHeight = 300 // Maximum height in pixels (roughly 12 lines)
+
+    // Set the new height, respecting min/max constraints
+    const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight)
+    textarea.style.height = `${newHeight}px`
+  }
+
+  // Auto-resize function for inputs
+  const autoResizeInput = (input: HTMLInputElement) => {
+    if (!input) return
+
+    // Create a temporary element to measure text width
+    const canvas = document.createElement("canvas")
+    const context = canvas.getContext("2d")
+    if (!context) return
+
+    // Use the same font as the input
+    const computedStyle = window.getComputedStyle(input)
+    context.font = `${computedStyle.fontSize} ${computedStyle.fontFamily}`
+
+    // Measure the text width
+    const textWidth = context.measureText(
+      input.value || input.placeholder || ""
+    ).width
+    const minWidth = 200 // Minimum width in pixels
+    const maxWidth = 600 // Maximum width in pixels
+    const padding = 32 // Account for padding and borders
+
+    // Set the new width, respecting min/max constraints
+    const newWidth = Math.min(Math.max(textWidth + padding, minWidth), maxWidth)
+    input.style.width = `${newWidth}px`
+  }
+
+  // Auto-resize effects for all fields
+  useEffect(() => {
+    if (campaignNameRef.current) autoResizeInput(campaignNameRef.current)
+  }, [campaignName])
+
+  useEffect(() => {
+    if (gameSystemRef.current) autoResizeInput(gameSystemRef.current)
+  }, [gameSystem])
+
+  useEffect(() => {
+    if (startDateRef.current) autoResizeInput(startDateRef.current)
+  }, [startDate])
+
+  useEffect(() => {
+    if (characterNameRef.current) autoResizeInput(characterNameRef.current)
+  }, [characterName])
+
+  useEffect(() => {
+    if (characterInfoRef.current) autoResize(characterInfoRef.current)
+  }, [characterInfo])
+
+  useEffect(() => {
+    if (keyNPCsRef.current) autoResize(keyNPCsRef.current)
+  }, [keyNPCs])
+
+  useEffect(() => {
+    if (campaignPlotRef.current) autoResize(campaignPlotRef.current)
+  }, [campaignPlot])
+
+  useEffect(() => {
+    if (campaignGoalRef.current) autoResize(campaignGoalRef.current)
+  }, [campaignGoal])
+
+  useEffect(() => {
+    if (subplot1Ref.current) autoResize(subplot1Ref.current)
+  }, [subplot1])
+
+  useEffect(() => {
+    if (subplot2Ref.current) autoResize(subplot2Ref.current)
+  }, [subplot2])
+
+  useEffect(() => {
+    if (subplot3Ref.current) autoResize(subplot3Ref.current)
+  }, [subplot3])
+
+  useEffect(() => {
+    if (startingLocationRef.current) autoResize(startingLocationRef.current)
+  }, [startingLocation])
+
+  useEffect(() => {
+    if (startingSituationRef.current) autoResize(startingSituationRef.current)
+  }, [startingSituation])
+
+  // Trigger auto-resize for all fields when dialog opens or content loads
+  useEffect(() => {
+    if (isOpen) {
+      // Use setTimeout to ensure refs are available after render
+      setTimeout(() => {
+        // Auto-resize all input fields
+        if (campaignNameRef.current) autoResizeInput(campaignNameRef.current)
+        if (gameSystemRef.current) autoResizeInput(gameSystemRef.current)
+        if (startDateRef.current) autoResizeInput(startDateRef.current)
+        if (characterNameRef.current) autoResizeInput(characterNameRef.current)
+
+        // Auto-resize all textarea fields
+        if (characterInfoRef.current) autoResize(characterInfoRef.current)
+        if (keyNPCsRef.current) autoResize(keyNPCsRef.current)
+        if (campaignPlotRef.current) autoResize(campaignPlotRef.current)
+        if (campaignGoalRef.current) autoResize(campaignGoalRef.current)
+        if (subplot1Ref.current) autoResize(subplot1Ref.current)
+        if (subplot2Ref.current) autoResize(subplot2Ref.current)
+        if (subplot3Ref.current) autoResize(subplot3Ref.current)
+        if (startingLocationRef.current) autoResize(startingLocationRef.current)
+        if (startingSituationRef.current)
+          autoResize(startingSituationRef.current)
+      }, 100)
+    }
+  }, [isOpen])
 
   // Load data when dialog opens
   useEffect(() => {
@@ -2828,20 +2965,44 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                   </Button>
                 </div>
                 <Input
+                  ref={campaignNameRef}
                   id="campaign-name"
                   value={campaignName}
-                  onChange={e => setCampaignName(e.target.value)}
+                  onChange={e => {
+                    setCampaignName(e.target.value)
+                    setTimeout(() => {
+                      if (campaignNameRef.current)
+                        autoResizeInput(campaignNameRef.current)
+                    }, 0)
+                  }}
                   placeholder="Enter campaign name"
                   required
+                  style={{
+                    width: "auto",
+                    minWidth: "200px",
+                    maxWidth: "600px"
+                  }}
                 />
               </div>
               <div>
                 <Label htmlFor="game-system">Game System</Label>
                 <Input
+                  ref={gameSystemRef}
                   id="game-system"
                   value={gameSystem}
-                  onChange={e => setGameSystem(e.target.value)}
+                  onChange={e => {
+                    setGameSystem(e.target.value)
+                    setTimeout(() => {
+                      if (gameSystemRef.current)
+                        autoResizeInput(gameSystemRef.current)
+                    }, 0)
+                  }}
                   placeholder="e.g., D&D 5e, Pathfinder, Dune"
+                  style={{
+                    width: "auto",
+                    minWidth: "200px",
+                    maxWidth: "600px"
+                  }}
                 />
               </div>
             </div>
@@ -2886,9 +3047,16 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Input
+                ref={startDateRef}
                 id="start-date"
                 value={startDate}
-                onChange={e => setStartDate(e.target.value)}
+                onChange={e => {
+                  setStartDate(e.target.value)
+                  setTimeout(() => {
+                    if (startDateRef.current)
+                      autoResizeInput(startDateRef.current)
+                  }, 0)
+                }}
                 placeholder={
                   calendarSystem === "dune"
                     ? "e.g., 1 Ignis 10191 A.G."
@@ -2897,6 +3065,7 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 required={!isEditMode}
                 disabled={isEditMode}
                 className={isEditMode ? "bg-muted" : ""}
+                style={{ width: "auto", minWidth: "200px", maxWidth: "600px" }}
               />
               {isEditMode && (
                 <p className="text-muted-foreground mt-1 text-xs">
@@ -2942,10 +3111,18 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Input
+                ref={characterNameRef}
                 id="character-name"
                 value={characterName}
-                onChange={e => setCharacterName(e.target.value)}
+                onChange={e => {
+                  setCharacterName(e.target.value)
+                  setTimeout(() => {
+                    if (characterNameRef.current)
+                      autoResizeInput(characterNameRef.current)
+                  }, 0)
+                }}
                 placeholder="Your character's name"
+                style={{ width: "auto", minWidth: "200px", maxWidth: "600px" }}
               />
             </div>
 
@@ -2963,11 +3140,25 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={characterInfoRef}
                 id="character-info"
                 value={characterInfo}
-                onChange={e => setCharacterInfo(e.target.value)}
+                onChange={e => {
+                  setCharacterInfo(e.target.value)
+                  setTimeout(() => {
+                    if (characterInfoRef.current)
+                      autoResize(characterInfoRef.current)
+                  }, 0)
+                }}
                 placeholder="Character stats, abilities, background, etc."
-                rows={6}
+                rows={3}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -2985,11 +3176,24 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={keyNPCsRef}
                 id="key-npcs"
                 value={keyNPCs}
-                onChange={e => setKeyNPCs(e.target.value)}
+                onChange={e => {
+                  setKeyNPCs(e.target.value)
+                  setTimeout(() => {
+                    if (keyNPCsRef.current) autoResize(keyNPCsRef.current)
+                  }, 0)
+                }}
                 placeholder="Important NPCs, their relationships, goals, etc."
-                rows={6}
+                rows={3}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -3007,11 +3211,25 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={campaignPlotRef}
                 id="campaign-plot"
                 value={campaignPlot}
-                onChange={e => setCampaignPlot(e.target.value)}
+                onChange={e => {
+                  setCampaignPlot(e.target.value)
+                  setTimeout(() => {
+                    if (campaignPlotRef.current)
+                      autoResize(campaignPlotRef.current)
+                  }, 0)
+                }}
                 placeholder="Main storyline and plot overview"
-                rows={6}
+                rows={3}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -3029,11 +3247,25 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={campaignGoalRef}
                 id="campaign-goal"
                 value={campaignGoal}
-                onChange={e => setCampaignGoal(e.target.value)}
+                onChange={e => {
+                  setCampaignGoal(e.target.value)
+                  setTimeout(() => {
+                    if (campaignGoalRef.current)
+                      autoResize(campaignGoalRef.current)
+                  }, 0)
+                }}
                 placeholder="Primary objectives and end goals for the campaign"
-                rows={4}
+                rows={2}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -3051,11 +3283,24 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={subplot1Ref}
                 id="subplot-1"
                 value={subplot1}
-                onChange={e => setSubplot1(e.target.value)}
+                onChange={e => {
+                  setSubplot1(e.target.value)
+                  setTimeout(() => {
+                    if (subplot1Ref.current) autoResize(subplot1Ref.current)
+                  }, 0)
+                }}
                 placeholder="First subplot or side quest"
-                rows={4}
+                rows={2}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -3073,11 +3318,24 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={subplot2Ref}
                 id="subplot-2"
                 value={subplot2}
-                onChange={e => setSubplot2(e.target.value)}
+                onChange={e => {
+                  setSubplot2(e.target.value)
+                  setTimeout(() => {
+                    if (subplot2Ref.current) autoResize(subplot2Ref.current)
+                  }, 0)
+                }}
                 placeholder="Second subplot or side quest"
-                rows={4}
+                rows={2}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -3095,11 +3353,24 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={subplot3Ref}
                 id="subplot-3"
                 value={subplot3}
-                onChange={e => setSubplot3(e.target.value)}
+                onChange={e => {
+                  setSubplot3(e.target.value)
+                  setTimeout(() => {
+                    if (subplot3Ref.current) autoResize(subplot3Ref.current)
+                  }, 0)
+                }}
                 placeholder="Third subplot or side quest"
-                rows={4}
+                rows={2}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -3117,11 +3388,25 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={startingLocationRef}
                 id="starting-location"
                 value={startingLocation}
-                onChange={e => setStartingLocation(e.target.value)}
+                onChange={e => {
+                  setStartingLocation(e.target.value)
+                  setTimeout(() => {
+                    if (startingLocationRef.current)
+                      autoResize(startingLocationRef.current)
+                  }, 0)
+                }}
                 placeholder="Where the campaign begins"
-                rows={3}
+                rows={2}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
@@ -3139,11 +3424,25 @@ Keep the description to 2-3 sentences maximum. Focus only on the immediate situa
                 </Button>
               </div>
               <Textarea
+                ref={startingSituationRef}
                 id="starting-situation"
                 value={startingSituation}
-                onChange={e => setStartingSituation(e.target.value)}
+                onChange={e => {
+                  setStartingSituation(e.target.value)
+                  setTimeout(() => {
+                    if (startingSituationRef.current)
+                      autoResize(startingSituationRef.current)
+                  }, 0)
+                }}
                 placeholder="Initial circumstances and scenario"
-                rows={4}
+                rows={2}
+                style={{
+                  height: "auto",
+                  minHeight: "60px",
+                  maxHeight: "300px",
+                  resize: "none",
+                  overflow: "hidden"
+                }}
               />
             </div>
 
