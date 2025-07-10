@@ -1857,31 +1857,34 @@ Keep each NPC focused and concise. Only include mechanics that are actually rele
       const hasGoal = campaignGoal && campaignGoal.trim().length > 0
 
       // Build the campaign plot generation prompt
-      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling campaign plot for the specified game system that would work well as a story or TV show plot. The plot must be lore-accurate and include specific, actionable elements - no vague or fluffy descriptions.
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a focused campaign plot for the specified game system. Focus ONLY on the main story events and conflicts - do NOT include goals, locations, or objectives as those are handled separately.
 
 Game System: ${gameSystem}
-${hasGoal ? `Campaign Goal: ${campaignGoal}` : ""}
+${hasGoal ? `Campaign Goal Context: ${campaignGoal}` : ""}
 Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
 
-Generate a campaign plot that includes:
-1. Clear, specific central conflict or threat
-2. Tangible objectives and goals for the players
-3. Specific locations, factions, or organizations involved
-4. Actionable plot hooks and story beats
-5. Concrete stakes and consequences
-6. Specific antagonists or opposing forces
+Generate a campaign plot that includes ONLY:
+1. Central conflict or threat (what is happening)
+2. Key story events and narrative beats
+3. Main antagonists or opposing forces
+4. Stakes and consequences of the conflict
+
+Do NOT include:
+- Goals or objectives (handled in Campaign Goal field)
+- Specific locations (handled in Starting Location field)
+- Detailed action plans (handled in subplots)
 
 ${
   hasGoal
-    ? `The plot MUST align with and support the specified Campaign Goal. Design the story to naturally lead the players toward achieving that goal.`
-    : `Create an engaging plot that fits the themes and tone of ${gameSystem}. Draw inspiration from popular stories, movies, or TV shows that would fit this game system.`
+    ? `The plot should support the specified Campaign Goal context but focus only on the story events, not the goals themselves.`
+    : `Create an engaging plot that fits the themes and tone of ${gameSystem}.`
 }
 
-Make the plot detailed enough to be immediately usable but concise enough to be clear. Focus on concrete, actionable elements rather than abstract concepts. The plot should feel like it could be adapted into a compelling story or TV series.`
+Keep the plot concise (3-4 sentences) and focused purely on the main story conflict and events.`
 
       const userPrompt = hasGoal
-        ? `Create a campaign plot for ${gameSystem} that leads the players to achieve this goal: ${campaignGoal}`
-        : `Create an engaging campaign plot for ${gameSystem} with clear objectives and actionable story elements.`
+        ? `Create a focused campaign plot for ${gameSystem} that supports this goal context: ${campaignGoal.substring(0, 200)}`
+        : `Create a focused campaign plot for ${gameSystem} with clear story events and conflicts.`
 
       const messages = [
         {
@@ -2035,31 +2038,34 @@ Make the plot detailed enough to be immediately usable but concise enough to be 
       const hasPlot = campaignPlot && campaignPlot.trim().length > 0
 
       // Build the campaign goal generation prompt
-      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling campaign goal for the specified game system that would work well as a story or TV show objective. The goal must be lore-accurate and include specific, actionable elements - no vague or fluffy descriptions.
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create 1-3 specific campaign goals for the specified game system. Focus ONLY on clear objectives - do NOT include plot details, locations, or story events as those are handled separately.
 
 Game System: ${gameSystem}
-${hasPlot ? `Campaign Plot: ${campaignPlot}` : ""}
+${hasPlot ? `Campaign Plot Context: ${campaignPlot}` : ""}
 Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
 
-Generate a campaign goal that includes:
-1. Clear, specific primary objective for the players
-2. Tangible outcomes and measurable success criteria
-3. Concrete stakes and what happens if they fail
-4. Specific targets, locations, or entities to interact with
-5. Actionable steps or milestones toward the goal
-6. Compelling motivation that drives the story forward
+Generate 1-3 campaign goals that include ONLY:
+1. Specific, measurable objectives for the players
+2. Clear success criteria (what does "winning" look like?)
+3. Tangible outcomes if achieved
+
+Do NOT include:
+- Plot details or story events (handled in Campaign Plot field)
+- Specific locations (handled in Starting Location field) 
+- Step-by-step plans (handled in subplots)
+- Background exposition or narrative elements
 
 ${
   hasPlot
-    ? `The goal MUST align with and be supported by the specified Campaign Plot. Design the goal to naturally emerge from and be achieved through the plot events.`
-    : `Create an engaging goal that fits the themes and tone of ${gameSystem}. Draw inspiration from popular stories, movies, or TV shows that would fit this game system.`
+    ? `The goals should align with the plot context but focus only on what the characters need to achieve, not how the story unfolds.`
+    : `Create engaging goals that fit the themes and tone of ${gameSystem}.`
 }
 
-Make the goal detailed enough to provide clear direction but concise enough to be memorable. Focus on concrete, actionable objectives rather than abstract concepts. The goal should feel like it could be the central objective of a compelling story or TV series.`
+Format as a simple numbered list (1-3 goals maximum). Each goal should be one clear sentence stating what needs to be accomplished.`
 
       const userPrompt = hasPlot
-        ? `Create a campaign goal for ${gameSystem} that emerges from and aligns with this plot: ${campaignPlot.substring(0, 500)}`
-        : `Create an engaging campaign goal for ${gameSystem} with clear objectives and actionable elements.`
+        ? `Create 1-3 specific campaign goals for ${gameSystem} that align with this plot context: ${campaignPlot.substring(0, 300)}`
+        : `Create 1-3 specific campaign goals for ${gameSystem}.`
 
       const messages = [
         {
@@ -2218,33 +2224,37 @@ Make the goal detailed enough to provide clear direction but concise enough to b
       ].filter(sub => sub.trim().length > 0)
 
       // Build the subplot generation prompt
-      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling subplot for the specified game system that would work well as a secondary story in a TV show or novel. The subplot must be lore-accurate and include specific, actionable elements - no vague or fluffy descriptions.
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a focused subplot ${subplotNumber} for the specified game system. Focus ONLY on this specific side story and its single goal - do NOT include main plot details, locations, or other subplots as those are handled separately.
 
 Game System: ${gameSystem}
-${hasPlot ? `Main Campaign Plot: ${campaignPlot}` : ""}
-Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignGoal ? ` Goal: ${campaignGoal}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
+${hasPlot ? `Main Campaign Plot Context: ${campaignPlot}` : ""}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignGoal ? ` Main Goal Context: ${campaignGoal}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
 
 ${existingSubplots.length > 0 ? `Existing Subplots (make this one DIFFERENT): ${existingSubplots.join("; ")}` : ""}
 
-Generate a subplot that includes:
-1. Clear, specific secondary conflict or opportunity
-2. Tangible objectives separate from the main plot
-3. Specific locations, characters, or factions involved
-4. Actionable side quest elements and story hooks
-5. Concrete rewards, stakes, or consequences
-6. Connection points to the main story (but not dependent on it)
+Generate subplot ${subplotNumber} that includes ONLY:
+1. One specific secondary conflict or opportunity
+2. One clear goal for this subplot (what needs to be accomplished)
+3. Key characters or factions involved in THIS subplot only
+4. What makes this subplot unique and different from the main plot
+
+Do NOT include:
+- Main plot details (handled in Campaign Plot field)
+- Starting locations (handled in Starting Location field)
+- Goals from other subplots or main campaign
+- Step-by-step action plans
 
 ${
   hasPlot
-    ? `The subplot should occur in approximately the same locations as the main plot and have at least one overlapping element (character, faction, location, or theme) while remaining a distinct story thread.`
-    : `Create an engaging subplot that fits the themes and tone of ${gameSystem}. Draw inspiration from popular side stories, subplots, or secondary quests that would fit this game system.`
+    ? `The subplot should connect to the main plot context but remain a distinct, standalone story thread with its own goal.`
+    : `Create an engaging subplot that fits the themes and tone of ${gameSystem}.`
 }
 
-Make this subplot different from any existing subplots. The subplot should be detailed enough to be immediately usable but concise enough to be clear. Focus on concrete, actionable elements rather than abstract concepts. This should feel like a compelling side story that enhances the main campaign.`
+Keep this subplot concise (2-3 sentences) and focused on its unique story and single goal. Make it different from any existing subplots.`
 
       const userPrompt = hasPlot
-        ? `Create subplot ${subplotNumber} for ${gameSystem} that connects to but is separate from this main plot: ${campaignPlot.substring(0, 400)}`
-        : `Create an engaging subplot ${subplotNumber} for ${gameSystem} with clear objectives and actionable side quest elements.`
+        ? `Create focused subplot ${subplotNumber} for ${gameSystem} that connects to this main plot context: ${campaignPlot.substring(0, 300)}`
+        : `Create a focused subplot ${subplotNumber} for ${gameSystem} with one clear goal.`
 
       const messages = [
         {
