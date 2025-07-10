@@ -630,6 +630,243 @@ export const CampaignInformationDialog: React.FC<
     }
   }
 
+  const handleGenerateCampaignName = () => {
+    // Check if Campaign Plot or Campaign Goal have text
+    const hasPlot = campaignPlot.trim().length > 0
+    const hasGoal = campaignGoal.trim().length > 0
+
+    if (hasPlot || hasGoal) {
+      // Generate name based on plot and/or goal
+      const contextText = [campaignPlot.trim(), campaignGoal.trim()]
+        .filter(text => text.length > 0)
+        .join(" ")
+
+      const generatedName = generateCampaignNameFromContext(contextText)
+      setCampaignName(generatedName)
+      toast.success("Campaign name generated based on plot and goals")
+    } else {
+      // Generate random name based on game system
+      const randomName = generateRandomCampaignName(gameSystem)
+      setCampaignName(randomName)
+      toast.success("Random campaign name generated")
+    }
+  }
+
+  const generateCampaignNameFromContext = (context: string): string => {
+    // Extract key themes and concepts from the context
+    const words = context.toLowerCase().split(/\s+/)
+
+    // Common fantasy/sci-fi themes and their associated name patterns
+    const themes = {
+      // Fantasy themes
+      dragon: ["Dragon's", "Dragonheart", "Wyrm's", "Scale"],
+      magic: ["Arcane", "Mystic", "Enchanted", "Spellbound"],
+      kingdom: ["Crown", "Throne", "Royal", "Empire"],
+      dark: ["Shadow", "Darkness", "Void", "Eclipse"],
+      light: ["Dawn", "Radiance", "Beacon", "Celestial"],
+      war: ["Conflict", "Battle", "Strife", "Warfare"],
+      ancient: ["Elder", "Primordial", "Forgotten", "Lost"],
+      power: ["Dominion", "Ascension", "Sovereignty", "Supremacy"],
+
+      // Sci-fi themes (especially Dune)
+      spice: ["Spice", "Melange", "Desert", "Arrakis"],
+      empire: ["Imperial", "Galactic", "Imperium", "Dynasty"],
+      house: ["House", "Clan", "Lineage", "Bloodline"],
+      desert: ["Dune", "Sands", "Wasteland", "Arid"],
+      water: ["Water", "Moisture", "Oasis", "Precious"],
+      prophecy: ["Prophecy", "Vision", "Foretelling", "Destiny"],
+      politics: ["Intrigue", "Conspiracy", "Alliance", "Betrayal"],
+      awakening: ["Awakening", "Rising", "Emergence", "Ascension"]
+    }
+
+    // Find matching themes
+    const foundThemes = []
+    for (const [key, variations] of Object.entries(themes)) {
+      if (words.some(word => word.includes(key))) {
+        foundThemes.push(
+          variations[Math.floor(Math.random() * variations.length)]
+        )
+      }
+    }
+
+    // Campaign name templates
+    const templates = [
+      "The %s Chronicles",
+      "Tales of %s",
+      "The %s Saga",
+      "Legacy of %s",
+      "Rise of %s",
+      "The %s Prophecy",
+      "Shadows of %s",
+      "The %s Conspiracy",
+      "Echoes of %s",
+      "The %s Awakening"
+    ]
+
+    if (foundThemes.length > 0) {
+      const theme = foundThemes[Math.floor(Math.random() * foundThemes.length)]
+      const template = templates[Math.floor(Math.random() * templates.length)]
+      return template.replace("%s", theme)
+    }
+
+    // Fallback: extract meaningful words and create a name
+    const meaningfulWords = words.filter(
+      word =>
+        word.length > 4 &&
+        ![
+          "the",
+          "and",
+          "but",
+          "for",
+          "nor",
+          "yet",
+          "so",
+          "with",
+          "from",
+          "they",
+          "them",
+          "their",
+          "this",
+          "that",
+          "will",
+          "have",
+          "been",
+          "were",
+          "said",
+          "each",
+          "which",
+          "what",
+          "when",
+          "where",
+          "while",
+          "would",
+          "could",
+          "should"
+        ].includes(word)
+    )
+
+    if (meaningfulWords.length > 0) {
+      const word =
+        meaningfulWords[Math.floor(Math.random() * meaningfulWords.length)]
+      const capitalized = word.charAt(0).toUpperCase() + word.slice(1)
+      const template = templates[Math.floor(Math.random() * templates.length)]
+      return template.replace("%s", capitalized)
+    }
+
+    // Final fallback
+    return "The Great Campaign"
+  }
+
+  const generateRandomCampaignName = (gameSystem: string): string => {
+    const system = gameSystem.toLowerCase()
+
+    // System-specific name generators
+    if (system.includes("dune")) {
+      const duneNames = [
+        "The Spice Must Flow",
+        "House Wars of Arrakis",
+        "The Golden Path",
+        "Desert Power Rising",
+        "Shadows of the Imperium",
+        "The Water Sellers",
+        "Prophecy of the Desert",
+        "The Spacing Guild Chronicles",
+        "Fremen Resistance",
+        "The Great Convention",
+        "Melange Conspiracy",
+        "The Sardaukar Campaign",
+        "Arrakeen Intrigues",
+        "The Kwisatz Haderach",
+        "Desert Storm Rising"
+      ]
+      return duneNames[Math.floor(Math.random() * duneNames.length)]
+    }
+
+    if (system.includes("d&d") || system.includes("dungeons")) {
+      const dndNames = [
+        "The Dragon's Hoard",
+        "Tales of the Sword Coast",
+        "The Forgotten Realms",
+        "Rise of the Underdark",
+        "The Elemental Chaos",
+        "Heroes of the Vale",
+        "The Shadowfell Conspiracy",
+        "The Feywild Adventures",
+        "The Astral Sea",
+        "Curse of the Ancient",
+        "The Planar Convergence",
+        "Legends of the North",
+        "The Arcane Brotherhood",
+        "Storm King's Thunder",
+        "The Nine Hells"
+      ]
+      return dndNames[Math.floor(Math.random() * dndNames.length)]
+    }
+
+    if (system.includes("pathfinder")) {
+      const pathfinderNames = [
+        "The Pathfinder Chronicles",
+        "Rise of the Runelords",
+        "The Kingmaker Campaign",
+        "Wrath of the Righteous",
+        "The Serpent's Skull",
+        "Council of Thieves",
+        "The Jade Regent",
+        "Skull & Shackles",
+        "The Shattered Star",
+        "Reign of Winter",
+        "The Mummy's Mask",
+        "Iron Gods Rising",
+        "The Giantslayer",
+        "Hell's Rebels",
+        "Strange Aeons"
+      ]
+      return pathfinderNames[Math.floor(Math.random() * pathfinderNames.length)]
+    }
+
+    if (system.includes("cyberpunk") || system.includes("shadowrun")) {
+      const cyberpunkNames = [
+        "Neon Nights",
+        "The Corporate Wars",
+        "Data Runners",
+        "Chrome and Steel",
+        "The Matrix Conspiracy",
+        "Cyber Rebellion",
+        "The Net Prophets",
+        "Digital Shadows",
+        "The Hack Collective",
+        "Neural Storm",
+        "The Datastream",
+        "Virtual Vendetta",
+        "The Code Breakers",
+        "Synthetic Dreams",
+        "The Ghost Protocol"
+      ]
+      return cyberpunkNames[Math.floor(Math.random() * cyberpunkNames.length)]
+    }
+
+    // Generic fantasy/adventure names
+    const genericNames = [
+      "The Epic Quest",
+      "Heroes of Legend",
+      "The Grand Adventure",
+      "Tales of Glory",
+      "The Chosen Few",
+      "Rise of Heroes",
+      "The Great Journey",
+      "Legends Reborn",
+      "The Heroic Age",
+      "The Adventure Begins",
+      "The Lost Chronicles",
+      "The Forgotten Tales",
+      "The New Legends",
+      "The Eternal Quest",
+      "The Mythic Campaign"
+    ]
+
+    return genericNames[Math.floor(Math.random() * genericNames.length)]
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -674,9 +911,7 @@ export const CampaignInformationDialog: React.FC<
                     variant="outline"
                     size="sm"
                     className="size-6 p-0"
-                    onClick={() => {
-                      // Command button functionality will be added later
-                    }}
+                    onClick={handleGenerateCampaignName}
                   >
                     <IconTerminal className="size-4" />
                   </Button>
