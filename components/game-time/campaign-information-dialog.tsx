@@ -2384,6 +2384,201 @@ Make this subplot different from any existing subplots. The subplot should be de
     }
   }
 
+  const handleGenerateStartingLocation = async () => {
+    if (!profile || !selectedWorkspace) {
+      toast.error(
+        "Unable to generate starting location - user profile not available"
+      )
+      return
+    }
+
+    // Use existing chat settings or create default ones
+    const currentChatSettings = chatSettings || {
+      model: "gpt-4" as LLMID,
+      prompt: "You are a helpful assistant for tabletop RPG campaign creation.",
+      temperature: 0.8,
+      contextLength: 4096,
+      includeProfileContext: false,
+      includeWorkspaceInstructions: false,
+      embeddingsProvider: "openai" as const
+    }
+
+    try {
+      // Check if Campaign Plot or any Subplot mentions locations
+      const plotText = campaignPlot?.trim() || ""
+      const subplot1Text = subplot1?.trim() || ""
+      const subplot2Text = subplot2?.trim() || ""
+      const subplot3Text = subplot3?.trim() || ""
+
+      const allPlotContent = [
+        plotText,
+        subplot1Text,
+        subplot2Text,
+        subplot3Text
+      ]
+        .filter(text => text.length > 0)
+        .join(" ")
+
+      const hasLocationContext = allPlotContent.length > 0
+
+      // Build the starting location generation prompt
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling starting location for the specified game system that serves as an effective opening scene for the campaign. The location must be lore-accurate, actionable, and immediately engaging - no vague or fluffy descriptions.
+
+Game System: ${gameSystem}
+Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignGoal ? ` Goal: ${campaignGoal.substring(0, 200)}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
+${hasLocationContext ? `\nPlot Context:\n${allPlotContent.substring(0, 800)}` : ""}
+
+Generate a starting location that includes:
+1. Clear, specific place name and type (city, tavern, wilderness, etc.)
+2. Immediate visual details the player characters would notice
+3. Current situation or activity happening when they arrive
+4. Obvious hooks or opportunities for action/investigation
+5. Specific NPCs present or nearby locations of interest
+6. Sensory details (sounds, smells, atmosphere)
+7. Clear next steps or directions for the characters
+
+${
+  hasLocationContext
+    ? `The starting location MUST align with and connect to the locations, events, or themes mentioned in the campaign plot and subplots. Choose or create a location that naturally leads into the main story elements.`
+    : `Create an engaging starting location that fits the themes and tone of ${gameSystem}. Draw inspiration from memorable opening scenes in stories, movies, or TV shows that would fit this game system.`
+}
+
+Make the description concrete and actionable - focus on what the characters see, hear, and can immediately interact with. The location should feel alive and provide clear opportunities for the characters to begin their adventure. Avoid generic taverns unless they have specific, interesting details that make them memorable.`
+
+      const userPrompt = hasLocationContext
+        ? `Create a starting location for ${gameSystem} that connects to these plot elements and provides a natural entry point into the story: ${allPlotContent.substring(0, 400)}`
+        : `Create an engaging, memorable starting location for ${gameSystem} with specific details and immediate adventure hooks.`
+
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ]
+
+      // Check API key availability based on model
+      const modelProvider = currentChatSettings.model.includes("gpt")
+        ? "openai"
+        : currentChatSettings.model.includes("claude")
+          ? "anthropic"
+          : currentChatSettings.model.includes("gemini")
+            ? "google"
+            : "openai"
+
+      let apiKey = ""
+      if (modelProvider === "openai") {
+        apiKey = profile.openai_api_key || ""
+      } else if (modelProvider === "anthropic") {
+        apiKey = profile.anthropic_api_key || ""
+      } else if (modelProvider === "google") {
+        apiKey = profile.google_gemini_api_key || ""
+      }
+
+      if (!apiKey) {
+        toast.error(
+          `${modelProvider.charAt(0).toUpperCase() + modelProvider.slice(1)} API key not found. Please set it in your profile settings.`
+        )
+        return
+      }
+
+      const loadingMessage = hasLocationContext
+        ? "Generating starting location based on plot context..."
+        : "Generating starting location..."
+
+      toast.info(loadingMessage)
+
+      // Make API call to generate starting location
+      const response = await fetch(`/api/chat/${modelProvider}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chatSettings: currentChatSettings,
+          messages: messages
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.message || "Failed to generate starting location"
+        )
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let generatedText = ""
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          // For OpenAI streaming responses, we might get JSON chunks
+          // Try to handle both direct text and JSON responses
+          try {
+            // Check if it looks like a streaming JSON response
+            if (chunk.trim().startsWith("data: ")) {
+              const lines = chunk.split("\n")
+              for (const line of lines) {
+                if (line.startsWith("data: ") && !line.includes("[DONE]")) {
+                  try {
+                    const jsonStr = line.substring(6) // Remove 'data: '
+                    const parsed = JSON.parse(jsonStr)
+                    const content = parsed.choices?.[0]?.delta?.content
+                    if (content) {
+                      generatedText += content
+                    }
+                  } catch (e) {
+                    // Ignore JSON parse errors for individual chunks
+                  }
+                }
+              }
+            } else {
+              // Direct text response
+              generatedText += chunk
+            }
+          } catch (e) {
+            // If parsing fails, treat as direct text
+            generatedText += chunk
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!generatedText.trim()) {
+        throw new Error("No starting location data generated")
+      }
+
+      // Update Starting Location field
+      setStartingLocation(generatedText)
+
+      const successMessage = hasLocationContext
+        ? "Starting location generated based on plot context!"
+        : "Starting location generated successfully!"
+
+      toast.success(successMessage)
+    } catch (error) {
+      console.error("Error generating starting location:", error)
+      toast.error(
+        `Failed to generate starting location: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
+  }
+
   const currentCampaign = campaigns.find(c => c.id === currentCampaignId)
 
   return (
@@ -2717,9 +2912,7 @@ Make this subplot different from any existing subplots. The subplot should be de
                   variant="outline"
                   size="sm"
                   className="size-6 p-0"
-                  onClick={() => {
-                    // Command button functionality will be added later
-                  }}
+                  onClick={handleGenerateStartingLocation}
                 >
                   <IconTerminal className="size-4" />
                 </Button>
