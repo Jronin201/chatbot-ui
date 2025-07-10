@@ -2422,32 +2422,28 @@ Make this subplot different from any existing subplots. The subplot should be de
       const hasLocationContext = allPlotContent.length > 0
 
       // Build the starting location generation prompt
-      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a compelling starting location for the specified game system that serves as an effective opening scene for the campaign. The location must be lore-accurate, actionable, and immediately engaging - no vague or fluffy descriptions.
+      const systemPrompt = `You are an expert tabletop RPG campaign designer. Create a brief, practical starting location for the specified game system. Keep the description short and focused - only describe the location itself and what it looks like.
 
 Game System: ${gameSystem}
 Campaign Context: ${campaignName ? `Campaign: ${campaignName}` : ""}${campaignGoal ? ` Goal: ${campaignGoal.substring(0, 200)}` : ""}${characterInfo ? ` Player Character Context: ${characterInfo.substring(0, 200)}` : ""}${keyNPCs ? ` Key NPCs: ${keyNPCs.substring(0, 200)}` : ""}
 ${hasLocationContext ? `\nPlot Context:\n${allPlotContent.substring(0, 800)}` : ""}
 
-Generate a starting location that includes:
-1. Clear, specific place name and type (city, tavern, wilderness, etc.)
-2. Immediate visual details the player characters would notice
-3. Current situation or activity happening when they arrive
-4. Obvious hooks or opportunities for action/investigation
-5. Specific NPCs present or nearby locations of interest
-6. Sensory details (sounds, smells, atmosphere)
-7. Clear next steps or directions for the characters
+Generate a starting location description that includes ONLY:
+1. Specific place name and type (city, tavern, spaceport, etc.)
+2. Key visual details that define the location
+3. Essential atmosphere/mood of the place
 
 ${
   hasLocationContext
-    ? `The starting location MUST align with and connect to the locations, events, or themes mentioned in the campaign plot and subplots. Choose or create a location that naturally leads into the main story elements.`
-    : `Create an engaging starting location that fits the themes and tone of ${gameSystem}. Draw inspiration from memorable opening scenes in stories, movies, or TV shows that would fit this game system.`
+    ? `The starting location MUST align with and connect to the locations mentioned in the campaign plot and subplots.`
+    : `Create a location that fits the themes and tone of ${gameSystem}.`
 }
 
-Make the description concrete and actionable - focus on what the characters see, hear, and can immediately interact with. The location should feel alive and provide clear opportunities for the characters to begin their adventure. Avoid generic taverns unless they have specific, interesting details that make them memorable.`
+Keep the description to 2-3 sentences maximum. Focus only on the location itself - no NPCs, no activities, no plot hooks. Just the place and what it looks like. Be concrete and practical, avoid flowery language.`
 
       const userPrompt = hasLocationContext
-        ? `Create a starting location for ${gameSystem} that connects to these plot elements and provides a natural entry point into the story: ${allPlotContent.substring(0, 400)}`
-        : `Create an engaging, memorable starting location for ${gameSystem} with specific details and immediate adventure hooks.`
+        ? `Create a brief starting location for ${gameSystem} that connects to these plot elements: ${allPlotContent.substring(0, 300)}`
+        : `Create a brief starting location for ${gameSystem}.`
 
       const messages = [
         {
